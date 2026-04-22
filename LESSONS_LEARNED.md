@@ -47,7 +47,30 @@ This document tracks the technical challenges, troubleshooting steps, and engine
 
 ---
 
-## 4. Key Takeaway: IT vs. OT Mindset
+## 4. Detection Engineering & Centralized Logging
+
+### 4.1 Protocol-Aware Anomaly Detection
+- **Problem:** Simple port-based detection generated too much noise and didn't catch malicious activity on authorized ports (e.g., Modbus Port 502).
+- **Solution:** Implemented **Deep Packet Inspection (DPI)** logic using Python/Scapy to inspect the Modbus payload. By verifying the **MBAP header offsets** (Function Code at index 7), we could specifically alert on **Write Commands** (FC 6, 16) from unauthorized sources.
+- **Strategy:** Adopted an **Allow-listing** approach. Rather than blacklisting attackers, we strictly defined the HMI and EWS as the only authorized "Write" sources.
+
+### 4.2 Sliding-Window Brute Force Detection
+- **Problem:** Tracking every single Modbus error was inefficient for high-speed scanners.
+- **Solution:** Developed a sliding-window algorithm that tracks the frequency of **Modbus Exception Codes** (FC > 128). If a threshold (e.g., 5 errors in 60s) is exceeded, it triggers an alert.
+- **Lesson:** Centralized logging to a **JSON format** (`alerts.json`) is essential for auditability. It transforms raw packet capture into machine-readable intelligence that a SIEM or Incident Responder can actually use.
+
+---
+
+## 5. Hardening & Compliance Mindset
+
+### 5.1 Compensating Controls
+- **Challenge:** PLCs often lack built-in security features like antivirus or complex authentication.
+- **Solution:** Implemented **Compensating Controls** at the network boundary. The lack of host-based security on the PLC is mitigated by the **Industrial DMZ** and the **Gateway Firewall**, enforcing the security requirements of **IEC 62443**.
+- **Takeaway:** IT security is about the *host*; OT security is about the *perimeter and the process*.
+
+---
+
+## 6. Key Takeaway: IT vs. OT Mindset
 Building this lab highlighted a fundamental difference in security engineering:
 - In **IT**, we often prioritize **Confidentiality** and automated tool-sets.
 - In **OT**, we must prioritize **Availability and Safety**. Every "fix" in this lab—from routing to firewalling—had to be verified manually to ensure that "documented and necessary" industrial traffic was not accidentally blocked (which would stop the "process"), while still preventing the "IT breach" from traversing into the "Control Zone."

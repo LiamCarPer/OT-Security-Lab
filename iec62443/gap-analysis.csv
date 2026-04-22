@@ -1,0 +1,8 @@
+requirement_id,requirement_description,iec62443_ref,security_level_target,status,gap_description,remediation
+SR_1.1,Identification and authentication control,62443-3-3,SL-2,Partial,HMI has login but PLC relies on network isolation,Implement physical or cryptographic logic protection on PLCs
+SR_2.1,Usage enforcement (Authorization),62443-3-3,SL-2,Implemented,Firewall restricts Modbus to HMI only,None
+SR_3.1,System integrity (Malware protection),62443-3-3,SL-2,N/A,No antivirus on PLCs (by design),Use passive network IDS (Suricata/Python) for behavior monitoring
+SR_5.1,Network segmentation (Zones/Conduits),62443-3-2,SL-3,Implemented,Purdue Model fully implemented with L1-L4 isolation,None
+SR_5.2,Zone boundary protection (Firewalls),62443-3-3,SL-2,Implemented,Gateway container running iptables with default-drop,None
+SR_6.1,Audit logs (Security logging),62443-3-3,SL-2,Implemented,Centralized JSON alerts for Modbus anomalies,Integrate with external SIEM/Loki
+SR_7.1,System availability (DoS protection),62443-3-3,SL-1,Partial,Rate limiting on gateway but no PLC-side controls,Implement connection limits on PLC Modbus server
