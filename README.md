@@ -121,3 +121,24 @@ docker-compose up -d
 *   **Industrial:** OpenPLC Runtime, ScadaBR (HMI), Modbus/TCP
 *   **Security:** `iptables`, Python (Detection Rules)
 *   **Frameworks:** IEC 62443, MITRE ATT&CK for ICS, Purdue Model
+
+---
+
+## 7. Known Limitations & Future Work
+This project is a high-fidelity simulation intended for security validation and architectural demonstration. However, it incorporates specific abstractions compared to a production ICS environment:
+
+### Current Limitations:
+*   **Logical vs. Physical Data Diode:** The "Unidirectional" data flow between Level 2 and Level 3 is enforced via `iptables` and application-layer proxying. In high-consequence production sites, this would be achieved via hardware-based optical data diodes.
+*   **Protocol Scope:** The lab currently focuses on **Modbus/TCP**. While common, it does not reflect the complexity of proprietary or "secure" industrial protocols like S7comm-plus or CIP Security.
+*   **Simulation vs. Emulation:** PLCs are simulated using OpenPLC (software) rather than emulated at the hardware level. Physical I/O and electrical characteristics are not modeled.
+
+### Future Roadmap:
+*   **Protocol Expansion:** Integration of DNP3 and EtherNet/IP (CIP) actors.
+*   **Centralized SIEM:** Integration of an ELK or Grafana/Loki stack for centralized "Industrial SOC" visualization.
+*   **Automated Adversary Emulation:** Development of TRITON and Industroyer-style attack playbooks to test detection efficacy under real-world pressure.
+
+---
+
+## 8. Compliance Mapping
+*   **IEC 62443-3-2:** Zones and Conduits implemented.
+*   **MITRE ATT&CK for ICS:** Tactics T0800–T0890 mapped in threat model.
