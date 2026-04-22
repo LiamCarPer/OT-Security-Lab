@@ -111,14 +111,14 @@ git clone https://github.com/yourusername/ot-security-lab.git
 cd ot-security-lab/lab-environment
 
 # Start the environment
-docker-compose up -d
+sudo docker compose up -d
 ```
 
 ---
 
 ## 6. Technologies Used
-*   **Virtualization:** Docker, Docker Compose
-*   **Industrial:** OpenPLC Runtime, ScadaBR (HMI), Modbus/TCP
+*   **Virtualization:** Docker, Docker Compose V2
+*   **Industrial:** OpenPLC Runtime (v4), Scada-LTS (HMI), Modbus/TCP
 *   **Security:** `iptables`, Python (Detection Rules)
 *   **Frameworks:** IEC 62443, MITRE ATT&CK for ICS, Purdue Model
 
