@@ -47,4 +47,4 @@ def process_packet(packet):
                         )
 
 print("Starting Modbus Anomaly Detection (Logging to JSON)...")
-scapy.sniff(iface="any", filter="tcp port 502", prn=process_packet, store=0)
+scapy.sniff(iface=None, filter="tcp port 502", prn=process_packet, store=0)

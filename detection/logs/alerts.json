@@ -1,0 +1,4 @@
+{"timestamp": "2026-04-22T20:27:14.211118", "alert_type": "TEST"}
+{"timestamp": "2026-04-22T20:29:38.231625", "alert_type": "UNAUTHORIZED_MODBUS_WRITE", "source_ip": "172.26.0.2", "target_register": 1, "mitre_id": "T0831", "description": "Unauthorized Modbus write command detected from an untrusted source."}
+{"timestamp": "2026-04-22T20:29:38.231794", "alert_type": "UNAUTHORIZED_MODBUS_WRITE", "source_ip": "172.26.0.2", "target_register": 1, "mitre_id": "T0831", "description": "Unauthorized Modbus write command detected from an untrusted source."}
+{"timestamp": "2026-04-22T20:29:41.317664", "alert_type": "OT_BRUTE_FORCE_SCAN", "source_ip": "172.26.0.2", "error_count": 5, "mitre_id": "T0846", "description": "Excessive Modbus exceptions detected. Possible scanning or brute-force activity."}

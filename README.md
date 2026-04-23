@@ -2,6 +2,15 @@
 
 [![Compliance](https://img.shields.io/badge/IEC_62443--3--2-Mapped-blue)](./architecture/zone-conduit-design.md)
 [![Framework](https://img.shields.io/badge/MITRE_ATT%26CK_for_ICS-Implemented-red)](./threat-model/mitre-ics-mapping.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+| Category | Specification |
+| :--- | :--- |
+| **Industry** | Water Treatment & Filtration |
+| **Frameworks** | IEC 62443, MITRE ATT&CK for ICS, ISA-95 Purdue Model |
+| **Environment** | 5-Zone Segmented Docker Lab with L3/L4 Firewall |
+| **Monitoring** | Protocol-Aware (Modbus/TCP) Anomaly detection |
+| **Evidence** | [Verified Attack Simulation Logs](./detection/logs/alerts.json) |
 
 ## Project Overview
 This repository contains a full-scale, simulated industrial environment designed to demonstrate the implementation of robust security controls within an Operational Technology (OT) context. The project encompasses the entire lifecycle of an IT/OT Security Engineer's responsibilities: from **architectural design** and **network segmentation** based on the Purdue Model, to **threat modeling**, **detection engineering**, and **IEC 62443 compliance mapping**.
@@ -65,7 +74,7 @@ graph TD
 *   **Level 4/5 (Enterprise):** Corporate LAN, Attacker Simulation, External Monitoring.
 *   **Industrial DMZ:** Broker for remote access (Jump Host) and data visualization (Proxy).
 *   **Level 3 (Operations):** Historian (InfluxDB) and the segregated Engineering Workstation (EWS).
-*   **Level 2 (Supervisory):** Centralized SCADA/HMI (ScadaBR) for plant-wide visibility.
+*   **Level 2 (Supervisory):** Centralized SCADA/HMI (Scada-LTS) for plant-wide visibility.
 *   **Level 1 (Control):** Distributed Control via three PLCs (Intake, Treatment, Distribution).
 *   **Level 0 (Field):** Physical process assets (Valves, Pumps, Flow Meters).
 
@@ -73,32 +82,36 @@ graph TD
 
 ## 3. Table of Contents
 1.  [Architecture & Design](./architecture/)
-    *   [Purdue Model Diagram](./architecture/purdue-model.png)
     *   [Network Segmentation (Zones & Conduits)](./architecture/zone-conduit-design.md)
     *   [Architecture Decision Records (ADR)](./architecture/architecture-decisions.md)
 2.  [Lab Environment](./lab-environment/)
-    *   [Deployment Guide](./lab-environment/README.md)
+    *   [Deployment & Validation Guide](./lab-environment/README.md)
     *   [Docker Compose Setup](./lab-environment/docker-compose.yml)
-3.  [Asset Inventory](./asset-inventory/assets.csv)
+3.  [Asset Inventory](./asset-inventory/)
+    *   [Master Asset List](./asset-inventory/assets.csv)
+    *   [Inventory Schema](./asset-inventory/inventory-schema.md)
 4.  [Threat Model & Risk Analysis](./threat-model/)
     *   [Threat Landscape](./threat-model/THREAT_MODEL.md)
     *   [MITRE ATT&CK for ICS Mapping](./threat-model/mitre-ics-mapping.md)
-5.  [Detection & Monitoring](./detection/)
+5. Detection & Monitoring
     *   [Modbus Anomaly Detection](./detection/rules/modbus_anomaly.py)
     *   [Cross-Zone Traffic Alerter](./detection/rules/cross_zone_traffic.py)
+    *   [Brute Force Detection](./detection/rules/ot_brute_force.py)
+    *   [**Live Detection Evidence (JSON Logs)**](./detection/logs/alerts.json) 
 6.  [Hardening & Compliance](./hardening/)
     *   [Security Hardening Checklist](./hardening/HARDENING_CHECKLIST.md)
     *   [IEC 62443 Gap Analysis](./iec62443/gap-analysis.csv)
 7.  [Incident Response](./incident-response/)
     *   [PLC Unauthorized Change Playbook](./incident-response/ir-playbook-unauthorised-plc-change.md)
+8.  [Engineering Post-Mortem](./LESSONS_LEARNED.md)
 
 ---
 
 ## 4. Key Findings & Engineering Judgments
-*(To be completed after final build phase)*
-*   **Design Choice 1:** Why we segregated Level 3 from Level 2.
-*   **Security Control:** Implementation of restrictive `iptables` at the DMZ boundary.
-*   **Detection Efficacy:** Lessons learned from False Positive tuning of Modbus write alerts.
+
+*   **Tiered Data Architecture (ADR-02):** By isolating the Historian in Level 3 (Operations) rather than Level 2 (Supervisory), we create a unidirectional data flow that prevents corporate IT users from ever reaching the control network directly. This fulfills the **IEC 62443** requirement for restricted data access between functional zones.
+*   **Chokepoint Enforcement (ADR-05):** Utilizing a dedicated Linux gateway running `iptables` instead of standard Docker bridge networking allows for granular **L3/L4 traffic control**. This architecture ensures that every inter-zone conduit is explicitly authorized, mirroring the functionality of industrial-grade firewalls.
+*   **Availability-First Detection:** Our custom detection rules prioritize **high-signal industrial anomalies** (e.g., Modbus writes from unauthorized IPs) over generic signature matching. This approach minimizes false positives, ensuring that security monitoring does not interfere with the availability of critical industrial processes.
 
 ---
 
@@ -112,30 +125,32 @@ cd ot-security-lab/lab-environment
 
 # Start the environment
 sudo docker compose up -d
+
+# Apply firewall rules
+sudo docker cp network-config/firewall-rules.sh ot_gateway:/firewall-rules.sh
+sudo docker exec ot_gateway /firewall-rules.sh
 ```
 
 ---
 
 ## 6. Technologies Used
 *   **Virtualization:** Docker, Docker Compose V2
-*   **Industrial:** OpenPLC Runtime (v4), Scada-LTS (HMI), Modbus/TCP
-*   **Security:** `iptables`, Python (Detection Rules)
-*   **Frameworks:** IEC 62443, MITRE ATT&CK for ICS, Purdue Model
+*   **Industrial:** OpenPLC Runtime (v4), Scada-LTS (HMI), InfluxDB 1.8 (Historian)
+*   **Security Infrastructure:** `iptables` (Zone Firewall), Scapy (Custom IDS), `iputils-ping`, `nmap`
+*   **Frameworks:** IEC 62443-3-2 (Zones/Conduits), MITRE ATT&CK for ICS, ISA-95 Purdue Model
+*   **Monitoring:** Centralized JSON logging (`alerts.json`)
 
 ---
 
 ## 7. Known Limitations & Future Work
-This project is a high-fidelity simulation intended for security validation and architectural demonstration. However, it incorporates specific abstractions compared to a production ICS environment:
-
 ### Current Limitations:
-*   **Logical vs. Physical Data Diode:** The "Unidirectional" data flow between Level 2 and Level 3 is enforced via `iptables` and application-layer proxying. In high-consequence production sites, this would be achieved via hardware-based optical data diodes.
-*   **Protocol Scope:** The lab currently focuses on **Modbus/TCP**. While common, it does not reflect the complexity of proprietary or "secure" industrial protocols like S7comm-plus or CIP Security.
-*   **Simulation vs. Emulation:** PLCs are simulated using OpenPLC (software) rather than emulated at the hardware level. Physical I/O and electrical characteristics are not modeled.
+*   **Logical vs. Physical Data Diode:** Unidirectional flow is enforced via `iptables`. High-consequence sites require hardware-based optical data diodes.
+*   **Protocol Scope:** Currently limited to **Modbus/TCP**.
+*   **Simulation vs. Emulation:** PLCs are software-simulated (OpenPLC) rather than hardware-emulated.
 
 ### Future Roadmap:
-*   **Protocol Expansion:** Integration of DNP3 and EtherNet/IP (CIP) actors.
-*   **Centralized SIEM:** Integration of an ELK or Grafana/Loki stack for centralized "Industrial SOC" visualization.
-*   **Automated Adversary Emulation:** Development of TRITON and Industroyer-style attack playbooks to test detection efficacy under real-world pressure.
+*   **SIEM Integration:** Centralizing logs into a Grafana/Loki or ELK stack.
+*   **Adversary Emulation:** Developing playbooks for Industroyer and TRITON-style attack simulations.
 
 ---
 

@@ -45,4 +45,4 @@ def process_packet(packet):
             )
 
 print("Starting Cross-Zone Traffic Monitor (Logging to JSON)...")
-scapy.sniff(iface="any", filter="ip", prn=process_packet, store=0)
+scapy.sniff(iface=None, filter="ip", prn=process_packet, store=0)

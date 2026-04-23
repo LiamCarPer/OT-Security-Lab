@@ -50,4 +50,4 @@ def process_packet(packet):
                     error_tracker[src_ip] = []
 
 print("Starting OT Brute-Force Detection (Logging to JSON)...")
-scapy.sniff(iface="any", filter="tcp port 502", prn=process_packet, store=0)
+scapy.sniff(iface=None, filter="tcp port 502", prn=process_packet, store=0)

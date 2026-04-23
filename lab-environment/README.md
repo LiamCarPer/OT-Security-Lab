@@ -26,34 +26,32 @@ sudo docker exec ot_gateway chmod +x /firewall-rules.sh
 sudo docker exec ot_gateway /firewall-rules.sh
 ```
 
-## 4. Detection Verification (Simulating an Attack)
+### 4. Detection Verification (Simulating an Attack)
 To verify that the detection scripts and centralized logging are working, follow these steps:
 
-### 4.1. Start the Detection Monitor
-In one terminal, run the Modbus IDS:
+#### 4.1. Start the Detection Monitor
+In one terminal, run one of the detection scripts (e.g., Modbus IDS):
 ```bash
 sudo docker exec -it ot_gateway python3 /detection/rules/modbus_anomaly.py
 ```
 
-### 4.2. Simulate the Breach (Attacker Container)
-In a second terminal, enter the attacker container and attempt a Modbus write:
+#### 4.2. Run the Automated Attack Simulation
+In a second terminal, execute the automated attack script from the `ot_attacker` container. This script is designed to trigger all three detection rules:
 ```bash
-# 1. Access the attacker
-sudo docker exec -it ot_attacker bash
+# 1. Copy the simulation script to the attacker
+sudo docker cp attacker/simulate_attack.py ot_attacker:/simulate_attack.py
 
-# 2. Add the route to the control network (if not already done)
-ip route add 172.21.0.0/16 via 172.24.0.3
-
-# 3. Simulate a malicious Modbus write using nmap or a python script
-nmap -Pn -p 502 --script modbus-discover 172.21.0.2
+# 2. Run the simulation
+sudo docker exec -it ot_attacker python3 /simulate_attack.py
 ```
 
-### 4.3. Verify the Logs
-Check the centralized JSON log file for the alert:
+#### 4.3. Verify the Logs
+Check the centralized JSON log file to see the alerts being captured in real-time:
 ```bash
 cat detection/logs/alerts.json
 ```
-**Expected Result:** A JSON entry with `alert_type: "UNAUTHORIZED_MODBUS_WRITE"` and `mitre_id: "T0831"`.
+**Expected Result:** You will see timestamped JSON entries for `CROSS_ZONE_VIOLATION`, `UNAUTHORIZED_MODBUS_WRITE`, and `OT_BRUTE_FORCE_SCAN`.
+
 
 ## 5. Maintenance
 To stop and clean up the environment:

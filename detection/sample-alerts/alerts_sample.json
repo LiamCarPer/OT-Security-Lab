@@ -1,0 +1,26 @@
+[
+  {
+    "timestamp": "2026-04-22T10:15:32.456Z",
+    "alert_type": "CROSS_ZONE_VIOLATION",
+    "source_ip": "172.24.0.2",
+    "dest_ip": "172.21.0.2",
+    "mitre_id": "T0886",
+    "description": "Unauthorized direct communication from IT to Control zone detected."
+  },
+  {
+    "timestamp": "2026-04-22T10:16:05.123Z",
+    "alert_type": "UNAUTHORIZED_MODBUS_WRITE",
+    "source_ip": "172.24.0.2",
+    "target_register": 1024,
+    "mitre_id": "T0831",
+    "description": "Unauthorized Modbus write command detected from an untrusted source."
+  },
+  {
+    "timestamp": "2026-04-22T10:17:12.890Z",
+    "alert_type": "OT_BRUTE_FORCE_SCAN",
+    "source_ip": "172.24.0.2",
+    "error_count": 7,
+    "mitre_id": "T0846",
+    "description": "Excessive Modbus exceptions detected. Possible scanning or brute-force activity."
+  }
+]

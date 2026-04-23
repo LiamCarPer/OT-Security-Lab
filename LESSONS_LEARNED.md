@@ -70,7 +70,13 @@ This document tracks the technical challenges, troubleshooting steps, and engine
 
 ---
 
-## 6. Key Takeaway: IT vs. OT Mindset
-Building this lab highlighted a fundamental difference in security engineering:
-- In **IT**, we often prioritize **Confidentiality** and automated tool-sets.
-- In **OT**, we must prioritize **Availability and Safety**. Every "fix" in this lab—from routing to firewalling—had to be verified manually to ensure that "documented and necessary" industrial traffic was not accidentally blocked (which would stop the "process"), while still preventing the "IT breach" from traversing into the "Control Zone."
+## 6. Personal Reflection: The Mindset Shift
+
+Building this project from scratch forced a fundamental shift in how I view security engineering. Coming from an IT background, my instinct was to "scan and patch." In this lab, I learned that **the network is the security**, and the **process is the priority**.
+
+### Key Realizations:
+- **Scans can be Attacks:** In IT, an Nmap scan is a standard audit tool. In OT, a high-speed scan can actually crash legacy PLC network stacks, causing a physical process failure. Detection of reconnaissance is therefore a "Safety" requirement.
+- **Context is Everything:** An unauthorized "Write" to a PLC isn't just a security violation; it's a potential safety hazard. Mapping detection rules to **MITRE ATT&CK for ICS** provided the necessary context to understand *why* a specific packet matters.
+- **The Power of Segmentation:** Implementing the **Purdue Model** isn't just about firewall rules; it's about building a predictable environment where "Normal" is strictly defined, making "Anomaly" much easier to catch.
+
+This lab is not just a simulation; it is a demonstration of how **Engineering Judgment** and **Protocol-Awareness** are the most effective tools in securing critical infrastructure.
