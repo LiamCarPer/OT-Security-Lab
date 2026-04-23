@@ -1,10 +1,10 @@
 asset_id,hostname,ip_address,zone,purdue_level,device_type,manufacturer,model,firmware_version,open_ports,last_seen,notes
-ASSET-01,plc-intake,172.21.0.2,Control,L1,PLC,Autonomy Logic,OpenPLC-v4,4.0.7,502/tcp,2026-04-22,Critical Intake Control
-ASSET-02,plc-treatment,172.21.0.3,Control,L1,PLC,Autonomy Logic,OpenPLC-v4,4.0.7,502/tcp,2026-04-22,Filtration/Dosing Logic
-ASSET-03,plc-distribution,172.21.0.4,Control,L1,PLC,Autonomy Logic,OpenPLC-v4,4.0.7,502/tcp,2026-04-22,Safe Distribution
-ASSET-04,ot-hmi,172.22.0.2,Supervisory,L2,SCADA/HMI,Scada-LTS,v2.7.0,2.7.0,8080/tcp,2026-04-22,Main Plant Dashboard
-ASSET-05,ot-historian,172.23.0.2,Operations,L3,Historian,InfluxData,InfluxDB-1.8,1.8,8086/tcp,2026-04-22,Process Audit Log
-ASSET-06,ot-gateway,172.24.0.3,iDMZ,L3.5,Firewall/Gateway,Alpine Linux,v3.18,3.18,None,2026-04-22,Zone-based Chokepoint
+ASSET-01,plc-intake,172.21.0.10,Control,L1,PLC,Autonomy Logic,OpenPLC-v4,4.0.7,502/tcp,2026-04-23,Critical Intake Control
+ASSET-02,plc-treatment,172.21.0.11,Control,L1,PLC,Autonomy Logic,OpenPLC-v4,4.0.7,502/tcp,2026-04-23,Filtration/Dosing Logic
+ASSET-03,plc-distribution,172.21.0.12,Control,L1,PLC,Autonomy Logic,OpenPLC-v4,4.0.7,502/tcp,2026-04-23,Safe Distribution stage
+ASSET-04,ot-hmi,172.22.0.10,Supervisory,L2,SCADA/HMI,Scada-LTS,v2.7.0,2.7.0,8080/tcp,2026-04-23,Main Plant Dashboard
+ASSET-05,ot-historian,172.23.0.10,Operations,L3,Historian,InfluxData,InfluxDB-1.8,1.8,8086/tcp,2026-04-23,Process Audit Log
+ASSET-06,ot-gateway,172.24.0.2,iDMZ,L3.5,Firewall/Gateway,Alpine Linux,v3.18,3.18,None,2026-04-23,Zone-based Chokepoint (Primary IP)
 ASSET-07,eng-ws-01,172.23.0.4,Operations,L3,Workstation,Dell,Precision-OT,v1.2,3389/tcp,2026-04-22,Engineering Workstation
-ASSET-08,flow-sensor-01,172.21.0.10,Control,L0,Sensor,Endress+Hauser,Proline-500,v2.1,Modbus,2026-04-22,Intake Flow Rate
-ASSET-09,valve-actuator-01,172.21.0.11,Control,L0,Actuator,Rotork,IQ3,v4.0,Modbus,2026-04-22,Main Intake Valve
+ASSET-08,flow-sensor-01,172.21.0.100,Control,L0,Sensor,Endress+Hauser,Proline-500,v2.1,Modbus,2026-04-22,Intake Flow Rate
+ASSET-09,valve-actuator-01,172.21.0.101,Control,L0,Actuator,Rotork,IQ3,v4.0,Modbus,2026-04-22,Main Intake Valve

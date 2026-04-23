@@ -10,8 +10,8 @@ import time
 from scapy.all import IP, TCP, Raw, send
 
 # 1. Configuration: Target IPs based on the Purdue Model
-PLC_IP = "172.25.0.2"   # Target: Control Zone (L1)
-HMI_IP = "172.26.0.2"   # Target: Supervisory Zone (L2) (Attacker subnet in this run)
+PLC_IP = "172.21.0.10"   # Target: Intake PLC (Level 1)
+HMI_IP = "172.22.0.10"   # Target: HMI (Level 2)
 MODBUS_PORT = 502
 
 def send_modbus_packet(target, function_code, unit_id=1, payload=b"\x00\x01\x00\x01"):
