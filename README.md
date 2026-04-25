@@ -94,8 +94,12 @@ graph TD
     *   [Threat Landscape](./threat-model/THREAT_MODEL.md)
     *   [MITRE ATT&CK for ICS Mapping](./threat-model/mitre-ics-mapping.md)
 5. Detection & Monitoring
-    *   [Modbus Anomaly Detection](./detection/rules/modbus_anomaly.py)
-    *   [Cross-Zone Traffic Alerter](./detection/rules/cross_zone_traffic.py)
+
+![Physics-Aware Violation Demo](./evidence/physics_violation_demo.png)
+
+    * [Modbus Anomaly Detection](./detection/rules/modbus_anomaly.py)
+    * [**Physics-Aware Safety Monitor**](./detection/rules/process_safety_violation.py)
+    * [Cross-Zone Traffic Alerter](./detection/rules/cross_zone_traffic.py)
     *   [Brute Force Detection](./detection/rules/ot_brute_force.py)
     *   [**Live Detection Evidence (JSON Logs)**](./detection/logs/alerts.json) 
 6.  [Hardening & Compliance](./hardening/)

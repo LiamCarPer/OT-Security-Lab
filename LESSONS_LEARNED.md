@@ -58,6 +58,11 @@ This document tracks the technical challenges, troubleshooting steps, and engine
 - **Problem:** Tracking every single Modbus error was inefficient for high-speed scanners.
 - **Solution:** Developed a sliding-window algorithm that tracks the frequency of **Modbus Exception Codes** (FC > 128). If a threshold (e.g., 5 errors in 60s) is exceeded, it triggers an alert.
 - **Lesson:** Centralized logging to a **JSON format** (`alerts.json`) is essential for auditability. It transforms raw packet capture into machine-readable intelligence that a SIEM or Incident Responder can actually use.
+    
+### 4.3 Stateful vs. Stateless Analysis (The Physics-Aware Shift)
+- **Problem:** Simple IP-based "Allow-listing" fails if an authorized host (like the HMI) is compromised or if an attacker uses "living-off-the-land" techniques with legitimate Modbus commands.
+- **Solution:** Implemented **Stateful Process Shadowing**. The detection engine (`process_safety_violation.py`) tracks the "Physical State" of the plant by sniffing PLC-to-HMI responses. It builds an internal "shadow" of the tank level.
+- **Engineering Judgment:** Even if a command is protocol-valid and IP-authorized, if it violates the safety logic of the physical process (e.g., opening an inlet valve when a tank is already full), it must be flagged. This moves the project's maturity from "IT-equivalent Network Security" to true "OT-specific Cyber-Safety."
 
 ---
 
