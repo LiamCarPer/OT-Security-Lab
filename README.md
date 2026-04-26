@@ -117,7 +117,16 @@ graph TD
 
 ---
 
-## 4. Key Findings & Engineering Judgments
+## 4. Governance, Risk & Compliance (GRC)
+To bridge the gap between technical implementation and industrial standards (Exceltic/ISA-62443 requirements), this lab includes formal documentation:
+
+*   **[Risk Assessment (MAGERIT Methodology)](./governance/risk_assessment/OT_RISK_ASSESSMENT_MAGERIT.md):** A structured assets-threats-safeguards analysis.
+*   **[Industrial Hardening Guide (STIG)](./governance/hardening/LINUX_OT_GATEWAY_STIG.md):** A mandatory security baseline (Bastionado) for the Gateway.
+*   **[Verification Test Plan](./governance/testing/CYBERSECURITY_TEST_PLAN.md):** Formal mapping of simulations to security requirements (V&V).
+
+---
+
+## 5. Key Findings & Engineering Judgments
 
 *   **Tiered Data Architecture (ADR-02):** By isolating the Historian in Level 3 (Operations) rather than Level 2 (Supervisory), we create a unidirectional data flow that prevents corporate IT users from ever reaching the control network directly. This fulfills the **IEC 62443** requirement for restricted data access between functional zones.
 *   **Chokepoint Enforcement (ADR-05):** Utilizing a dedicated Linux gateway running `iptables` instead of standard Docker bridge networking allows for granular **L3/L4 traffic control**. This architecture ensures that every inter-zone conduit is explicitly authorized, mirroring the functionality of industrial-grade firewalls.
