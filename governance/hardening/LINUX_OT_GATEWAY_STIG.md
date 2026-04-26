@@ -47,5 +47,15 @@ This document outlines the hardening (bastionado) procedures for the **Industria
 
 ---
 
-## 4. Maintenance & Compliance
+## 4. PLC-Level Hardening (Compensating Controls)
+- **Problem:** Many legacy PLCs (including OpenPLC) lack native encryption or authentication for the Modbus protocol.
+- **Strategy:** Implementation of **Compensating Controls** at the Gateway Conduit.
+- **Rules:**
+    - Disable all unused PLC ports (e.g., HTTP/8080) if they are not required for SCADA.
+    - Change Default Admin Passwords on the PLC web interface (OpenPLC: `openplc`/`openplc`).
+    - Enable **Read-Only Mode** on the Modbus server where physical control is not required.
+
+---
+
+## 5. Maintenance & Compliance
 This guide shall be reviewed quarterly or upon significant network changes in accordance with **MAGERIT** periodic risk reviews.

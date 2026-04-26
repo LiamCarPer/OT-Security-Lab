@@ -1,0 +1,8 @@
+Asset_ID,Name,Zone,IP_Address,MAC_Protocol,Criticality,Description,Owner
+A.01,PLC_Intake,Control (L1),172.21.0.10,Modbus TCP,High,Water Input Controller,Operations
+A.02,PLC_Treatment,Control (L1),172.21.0.11,Modbus TCP,High,Chemical Dosing Controller,Operations
+A.03,PLC_Distribution,Control (L1),172.21.0.12,Modbus TCP,High,Pump Station Controller,Operations
+A.04,OT_HMI,Supervisory (L2),172.22.0.10,Modbus/HTTP,Medium,Operator Interface,Plant Manager
+A.05,OT_Historian,Operations (L3),172.23.0.21,InfluxDB/UDP,Medium,Data Logging,IT/Engineering
+A.06,Industrial_Gateway,Boundary (L3.5),172.24.0.2,Multi-Zone,Critical,Firewall/IDS,Security
+A.07,SOC_Dashboard,Enterprise (L4),172.24.0.22,HTTP,Low,Visibility,Security
