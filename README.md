@@ -109,6 +109,12 @@ graph TD
     *   [PLC Unauthorized Change Playbook](./incident-response/ir-playbook-unauthorised-plc-change.md)
 8.  [Engineering Post-Mortem](./LESSONS_LEARNED.md)
 
+### Integrated SIEM Dashboard (Loki & Grafana)
+![SOC Overview Dashboard](evidence/SOC_Overview_Dashboard.png)
+
+### Forensic Log Analysis (MITRE ATT&CK Mapping)
+![Loki Raw Logs](evidence/Loki_Raw_Logs.png)
+
 ---
 
 ## 4. Key Findings & Engineering Judgments
@@ -153,7 +159,7 @@ sudo docker exec ot_gateway /firewall-rules.sh
 *   **Simulation vs. Emulation:** PLCs are software-simulated (OpenPLC) rather than hardware-emulated.
 
 ### Future Roadmap:
-*   **SIEM Integration:** Centralizing logs into a Grafana/Loki or ELK stack.
+*   **SIEM Integration:** Centralized logs using **Grafana, Loki, and Promtail**.
 *   **Adversary Emulation:** Developing playbooks for Industroyer and TRITON-style attack simulations.
 
 ---

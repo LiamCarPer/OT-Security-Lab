@@ -63,6 +63,20 @@ This document tracks the technical challenges, troubleshooting steps, and engine
 - **Problem:** Simple IP-based "Allow-listing" fails if an authorized host (like the HMI) is compromised or if an attacker uses "living-off-the-land" techniques with legitimate Modbus commands.
 - **Solution:** Implemented **Stateful Process Shadowing**. The detection engine (`process_safety_violation.py`) tracks the "Physical State" of the plant by sniffing PLC-to-HMI responses. It builds an internal "shadow" of the tank level.
 - **Engineering Judgment:** Even if a command is protocol-valid and IP-authorized, if it violates the safety logic of the physical process (e.g., opening an inlet valve when a tank is already full), it must be flagged. This moves the project's maturity from "IT-equivalent Network Security" to true "OT-specific Cyber-Safety."
+### 4.4 The SIEM "Observability" Pivot
+- **Challenge:** Transforming raw JSON logs (`alerts.json`) into an industry-standard monitoring stack without overwhelming local machine resources.
+- **Solution:** Deployed a **Grafana/Loki** stack. Unlike heavyweight solutions like Splunk or ELK, Loki uses metadata-based indexing which is ideal for high-volume logs from a resource-constrained industrial gateway.
+
+### 4.5 The "Multi-Homed" DNS Trap (Docker Networking)
+- **Problem:** When the SIEM (Grafana) was connected to both the IT and Ops networks, it encountered "No route to host" and DNS resolution failures for the Loki backend. 
+- **The Lesson:** Multi-homed containers (bridging two subnets) often confuse the internal Docker DNS resolver (127.0.0.11), which may try to route requests out of the wrong interface.
+- **Solution:** Consolidated the SIEM stack on the IT network exclusively. Promtail still ingests logs via host-mounted volumes, but network communication between Grafana and Loki is now confined to a single, stable bridge.
+- **Engineering Judgment:** In a real-world OT environment, monitoring tools (Grafana) should ideally reside in the Corporate Zone (Level 4/5) and pull data from an Aggregation Zone (Level 3/DMZ), rather than having a foot in every isolated industrial subnet.
+
+### 4.6 Dashboard Immutability (Infrastructure as Code)
+- **Problem:** Manual changes made to the Grafana UI were being lost after container restarts.
+- **Solution:** Switched to a full **Dashboard Provisioning** model using JSON templates stored in `siem/dashboards/`.
+- **The Takeaway:** In high-compliance industrial environments, "Click-Ops" is a risk. Adopting an **Infrastructure as Code (IaC)** approach ensures that the SIEM state is reproducible, version-controlled, and immutable.
 
 ---
 

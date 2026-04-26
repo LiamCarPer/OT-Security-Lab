@@ -103,6 +103,46 @@ services:
       it_network:
         ipv4_address: 172.24.0.10
 
+  # --- SIEM STACK (Level 3 & Level 4 Integration) ---
+
+  # 8. Log Storage (Loki) - Level 4 Enterprise
+  loki:
+    image: grafana/loki:latest
+    container_name: ot_loki
+    volumes:
+      - ../siem/configs/loki-config.yaml:/etc/loki/local-config.yaml
+    networks:
+      it_network:
+        ipv4_address: 172.24.0.20
+
+  # 9. Log Collector (Promtail) - Level 4 Enterprise
+  promtail:
+    image: grafana/promtail:latest
+    container_name: ot_promtail
+    volumes:
+      - ../siem/configs/promtail-config.yaml:/etc/promtail/config.yml
+      - ../detection/logs:/logs
+    networks:
+      it_network:
+        ipv4_address: 172.24.0.21
+
+  # 10. Visualization (Grafana) - Level 4 Enterprise
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ot_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ../siem/configs/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ../siem/configs/grafana-dashboards-provider.yaml:/etc/grafana/provisioning/dashboards/provider.yaml
+      - ../siem/dashboards:/var/lib/grafana/dashboards
+    networks:
+      it_network:
+        ipv4_address: 172.24.0.22
+
 networks:
   it_network:
     driver: bridge
