@@ -6,8 +6,8 @@ import time
 from datetime import datetime
 
 # 1. Configuration
-HMI_IP = "172.22.0.2"
-EWS_IP = "172.23.0.4"
+HMI_IP = "172.22.0.10"
+EWS_IP = "172.23.0.10"
 LOG_FILE = "detection/logs/alerts.json"
 
 def log_alert(alert_type, src_ip, target_register, mitre_id, description):
