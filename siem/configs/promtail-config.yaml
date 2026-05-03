@@ -27,3 +27,12 @@ scrape_configs:
   - timestamp:
       source: timestamp
       format: RFC3339
+- job_name: endpoint_edr_logs
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: sysmon_edr
+      env: ot_lab
+      __path__: /var/log/ot-lab/edr_sysmon_sample.json
+
