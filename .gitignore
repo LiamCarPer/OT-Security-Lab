@@ -28,9 +28,19 @@ db/
 
 # Project Specific
 # detection/logs/*.json  # Commented out to allow committing Live Detection Evidence for portfolio proof
+detection/logs/*.out
 rule-alerts.json/
 .DS_Store
 .vscode/
 .idea/
 *.log
 *.pcap
+
+# Testing & Tooling
+.pytest_cache/
+.ruff_cache/
+.venv/
+.coverage
+htmlcov/
+coverage.xml
+bandit.json

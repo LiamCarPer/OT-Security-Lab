@@ -1,0 +1,43 @@
+name: Compliance Gate (Live Lab Validation)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lab-validation:
+    name: Boot Lab, Simulate Attacks, Assert Detection
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Boot the OT lab
+        working-directory: lab-environment
+        run: docker compose up -d --wait --wait-timeout 300
+
+      - name: Show firewall policy applied on gateway
+        run: docker exec ot_gateway iptables -L -n | head -40
+
+      - name: Run attack simulations and assert detection
+        run: python3 governance/testing/run_security_tests.py --reset
+
+      - name: Collect evidence
+        if: always()
+        run: |
+          mkdir -p evidence/ci
+          cp -r detection/logs evidence/ci/
+          docker exec ot_gateway sh -c "ls -la /detection/logs" > evidence/ci/gateway_ids.txt || true
+          docker exec ot_gateway iptables -L -n > evidence/ci/firewall_rules.txt || true
+          docker exec ot_gateway iptables -L -n -t nat > evidence/ci/firewall_nat.txt || true
+
+      - name: Upload compliance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-evidence
+          path: evidence/ci/
