@@ -8,7 +8,8 @@ RUN apk add --no-cache iptables iproute2 python3 py3-pip libpcap \
 #   and AF_PACKET capture; compensating controls: default-deny conduits,
 #   no-new-privileges, dropped capabilities, and rate-limited log output.
 
-HEALTHCHECK CMD pgrep -f start_ids.sh || exit 1
+# start_ids.sh exits after launching the rules; health reflects the rules
+HEALTHCHECK CMD pgrep -f /detection/rules || exit 1
 
 # Runtime config is bind-mounted:
 #   /network-config/firewall-rules.sh  (zone firewall, applied on boot)
