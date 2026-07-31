@@ -1,0 +1,39 @@
+%YAML 1.1
+---
+
+# OT Security Lab - minimal Suricata configuration
+# Runs inside the ot_gateway container so it can observe inter-zone traffic
+# (Docker bridge isolation prevents sniffing from a separate container).
+
+vars:
+  address-groups:
+    CONTROL_ZONE: "[172.21.0.0/24]"
+    IT_ZONE: "[172.24.0.0/24]"
+  port-groups:
+    MODBUS_PORTS: "[502]"
+
+default-rule-path: /etc/suricata/rules
+rule-files:
+  - ot-security.rules
+
+pcap:
+  - interface: eth0
+  - interface: eth1
+  - interface: eth2
+  - interface: eth3
+
+app-layer:
+  protocols:
+    modbus:
+      enabled: yes
+
+outputs:
+  - fast:
+      enabled: yes
+      filename: fast.log
+  - eve-log:
+      enabled: no
+  - stats:
+      enabled: no
+
+runmode: autofp

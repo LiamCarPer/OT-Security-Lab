@@ -1,0 +1,14 @@
+{
+  "distribution": {
+    "program": "plc/distribution.st",
+    "sha256": "1b9194c30362a71ec24619ef20e842965f2836db94a67cb254da0ce3a254bfe1"
+  },
+  "intake": {
+    "program": "plc/intake.st",
+    "sha256": "5a8503ebc1a96d501328b53b49d1bffe8252ff97e88f48d1492c315cd1b43f05"
+  },
+  "treatment": {
+    "program": "plc/treatment.st",
+    "sha256": "39f480bf626720f6687ac095d38ef9ec6189919c6688668cc835dce42d754482"
+  }
+}

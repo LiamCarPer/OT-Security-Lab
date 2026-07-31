@@ -1,0 +1,21 @@
+# OT Security Lab - Custom Suricata ruleset
+# Mirrors the custom Scapy rules with signature-based equivalents, intended to
+# run inside the ot_gateway container (the only point that sees inter-zone
+# traffic in the Docker lab). See README.md in this directory for deployment.
+
+# --- Unauthorized Modbus writes (allow-list: HMI + EWS only) ---
+# T0831 Manipulation of Control
+alert tcp ! [172.22.0.10,172.23.0.4] any -> 172.21.0.0/24 502 (msg:"OT: Unauthorized Modbus Write (FC6)"; modbus_func:6; classtype:attempted-admin; sid:2000001; rev:1;)
+alert tcp ! [172.22.0.10,172.23.0.4] any -> 172.21.0.0/24 502 (msg:"OT: Unauthorized Modbus Write (FC16)"; modbus_func:16; classtype:attempted-admin; sid:2000002; rev:1;)
+
+# --- Cross-zone violation (IT to Control) ---
+# T0886 Lateral Movement
+alert tcp 172.24.0.0/24 any -> 172.21.0.0/24 any (msg:"OT: Cross-Zone Violation (IT to Control)"; classtype:policy-violation; sid:2000003; rev:1;)
+
+# --- Modbus exception flood (brute force / scanning) ---
+# T0846 Reconnaissance - Modbus exception responses carry FC | 0x80 (e.g. 0x83)
+alert tcp any any -> 172.21.0.0/24 502 (msg:"OT: Modbus Exception Flood"; content:"|83|"; offset:7; depth:1; classtype:attempted-recon; threshold: type both, track by_src, count 5, seconds 60; sid:2000004; rev:1;)
+
+# --- Unsafe valve command (stateful logic is in the Python physics monitor) ---
+# T0836 - signature approximates the pattern; final verdict from shadow state
+alert tcp 172.22.0.10 any -> 172.21.0.10 502 (msg:"OT: Inlet Valve Open Command (correlate with physics monitor)"; modbus_func:6; content:"|00 00 00 01|"; offset:8; depth:4; classtype:attempted-admin; sid:2000005; rev:1;)
