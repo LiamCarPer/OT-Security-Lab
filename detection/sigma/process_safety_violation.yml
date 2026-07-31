@@ -1,0 +1,22 @@
+title: Process Safety Interlock Violation
+id: 9e4b7d10-3c5a-4d8e-9b6a-0f2c7e1a5d80
+status: test
+description: Detects a protocol-valid command that would violate the physical safety logic of the process (e.g., opening an inlet valve while the tank is at overflow capacity), based on stateful shadowing of PLC registers.
+references:
+  - https://attack.mitre.org/techniques/T0836/
+author: OT Security Lab
+date: 2026/08/01
+tags:
+  - attack.ics
+  - attack.ics.t0836
+logsource:
+  product: ot
+  service: modbus
+  category: process-monitor
+detection:
+  selection:
+    alert_type: PROCESS_SAFETY_VIOLATION
+  condition: selection
+falsepositives:
+  - Operator manual overrides with active safety bypass procedures
+level: critical

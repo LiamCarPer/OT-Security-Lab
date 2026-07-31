@@ -1,0 +1,25 @@
+title: Unauthorized Modbus Write Command
+id: 4f2b9c1e-6a3d-4b8a-9e1c-2d5f8a7b3c10
+status: test
+description: Detects Modbus write operations (FC 6/16) from sources that are not the authorized HMI or Engineering Workstation.
+references:
+  - https://attack.mitre.org/techniques/T0831/
+author: OT Security Lab
+date: 2026/08/01
+tags:
+  - attack.ics
+  - attack.ics.t0831
+logsource:
+  product: ot
+  service: modbus
+  category: gateway
+detection:
+  selection:
+    alert_type: UNAUTHORIZED_MODBUS_WRITE
+    source_ip|not_in:
+      - 172.22.0.10
+      - 172.23.0.4
+  condition: selection
+falsepositives:
+  - Engineering workstations with dynamically assigned addresses
+level: high

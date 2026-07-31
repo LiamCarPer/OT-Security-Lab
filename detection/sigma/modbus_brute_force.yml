@@ -1,0 +1,22 @@
+title: Modbus Exception Flood (Brute-Force / Scan)
+id: 8a1d3f52-9b4c-4e7a-8f3d-1c6e9a2b5f70
+status: test
+description: Detects a high rate of Modbus exception responses (FC > 128) from a single source, indicative of register scanning or credential/function-code brute-forcing.
+references:
+  - https://attack.mitre.org/techniques/T0846/
+author: OT Security Lab
+date: 2026/08/01
+tags:
+  - attack.ics
+  - attack.ics.t0846
+logsource:
+  product: ot
+  service: modbus
+  category: gateway
+detection:
+  selection:
+    alert_type: OT_BRUTE_FORCE_SCAN
+  condition: selection
+falsepositives:
+  - Misconfigured HMI/PLC clients issuing repeated invalid requests
+level: medium

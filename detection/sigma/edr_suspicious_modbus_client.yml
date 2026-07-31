@@ -1,0 +1,28 @@
+title: Suspicious Modbus Client Initiated from Endpoint
+id: b7f2c8e5-4a1d-4e3b-9d8c-3a6f1b9e2d50
+status: test
+description: Detects an endpoint process initiating outbound Modbus/TCP (502) connections, potentially indicating a compromised engineering workstation or malicious tool.
+references:
+  - https://attack.mitre.org/techniques/T0884/
+author: OT Security Lab
+date: 2026/08/01
+tags:
+  - attack.ics
+  - attack.ics.t0884
+logsource:
+  product: windows
+  service: sysmon
+  category: network_connection
+detection:
+  selection:
+    event_id: 3
+    DestinationPort: 502
+    Initiated: 'true'
+    Image|endswith:
+      - '\poll_plc.exe'
+      - '\modbus_scan.exe'
+      - '\memdump.exe'
+  condition: selection
+falsepositives:
+  - Legitimate OT engineering tools deployed by IT
+level: high

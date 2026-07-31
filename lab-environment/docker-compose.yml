@@ -140,6 +140,7 @@ services:
       - ALL
     volumes:
       - ../siem/configs/loki-config.yaml:/etc/loki/local-config.yaml
+      - ../siem/configs/alerting-rules.yml:/etc/loki/rules/ot-security/rules.yml:ro
     networks:
       it_network:
         ipv4_address: 172.24.0.20
@@ -187,6 +188,42 @@ services:
     networks:
       it_network:
         ipv4_address: 172.24.0.22
+
+  # 11. Alert Manager - Level 4 Enterprise
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: ot_alertmanager
+    restart: unless-stopped
+    mem_limit: 128m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - ../siem/configs/alertmanager-config.yaml:/etc/alertmanager/alertmanager.yml:ro
+    networks:
+      it_network:
+        ipv4_address: 172.24.0.23
+
+  # 12. Alert Webhook Receiver (SOAR-lite) - Level 4 Enterprise
+  webhook:
+    image: python:3.12-slim
+    container_name: ot_webhook
+    restart: unless-stopped
+    mem_limit: 128m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    command: python3 /app/webhook_receiver.py
+    environment:
+      - OT_WEBHOOK_LOG=/logs/siem_alerts.json
+    volumes:
+      - ../automation/playbooks/webhook_receiver.py:/app/webhook_receiver.py:ro
+      - ../detection/logs:/logs
+    networks:
+      it_network:
+        ipv4_address: 172.24.0.24
 
 networks:
   it_network:

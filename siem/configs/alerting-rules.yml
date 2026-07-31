@@ -1,0 +1,48 @@
+groups:
+  - name: ot_security_alerts
+    rules:
+      - alert: UnauthorizedModbusWrite
+        expr: sum(count_over_time({job="ot_alerts"} | json | alert_type="UNAUTHORIZED_MODBUS_WRITE" [1m])) > 0
+        labels:
+          severity: high
+          mitre: T0831
+        annotations:
+          summary: "Unauthorized Modbus write command observed"
+          description: "A Modbus write (FC 6/16) from a non-authorized source was detected on the control network."
+
+      - alert: ModbusExceptionFlood
+        expr: sum(count_over_time({job="ot_alerts"} | json | alert_type="OT_BRUTE_FORCE_SCAN" [5m])) > 0
+        labels:
+          severity: medium
+          mitre: T0846
+        annotations:
+          summary: "Modbus exception flood (brute-force / scan)"
+          description: "A source exceeded the exception-rate threshold, indicating register scanning or brute-forcing."
+
+      - alert: CrossZoneViolation
+        expr: sum(count_over_time({job="ot_alerts"} | json | alert_type="CROSS_ZONE_VIOLATION" [5m])) > 3
+        labels:
+          severity: high
+          mitre: T0886
+        annotations:
+          summary: "Repeated cross-zone traffic violations"
+          description: "Multiple direct IT-to-Control communications observed, bypassing the OT conduits."
+
+      - alert: ProcessSafetyViolation
+        expr: sum(count_over_time({job="ot_alerts"} | json | alert_type="PROCESS_SAFETY_VIOLATION" [1m])) > 0
+        labels:
+          severity: critical
+          mitre: T0836
+        annotations:
+          summary: "Process safety interlock violation"
+          description: "A protocol-valid command would violate the physical safety logic of the process."
+
+  - name: ot_siem_health
+    rules:
+      - alert: NoOTAlertsIngested
+        expr: sum(count_over_time({job="ot_alerts"} [10m])) == 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "No alerts ingested in the last 10 minutes"
+          description: "Promtail/Loki pipeline may be down, or the gateway IDS stopped."
