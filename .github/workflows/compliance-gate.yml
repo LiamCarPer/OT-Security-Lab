@@ -19,7 +19,12 @@ jobs:
 
       - name: Boot the OT lab
         working-directory: lab-environment
-        run: docker compose up -d --build --wait --wait-timeout 300
+        run: |
+          set +e
+          docker compose up -d --build --wait --wait-timeout 300 2>&1 | tee /tmp/boot.log
+          code=${PIPESTATUS[0]}
+          echo "BOOT_EXIT=$code" | tee -a /tmp/boot.log
+          exit $code
 
       - name: Show firewall policy applied on gateway
         run: docker exec ot_gateway iptables -L -n | head -40
@@ -35,20 +40,26 @@ jobs:
           {
             echo "## Compliance Gate Diagnostics - ${{ github.sha }}"
             echo ""
+            echo "### Boot log (compose output)"
+            cat /tmp/boot.log 2>/dev/null || echo "(boot log not available)"
+            echo ""
             echo "### Container states"
             docker ps -a
             echo ""
-            echo "### Gateway IDS processes"
-            docker exec ot_gateway sh -c "pgrep -af python3 || echo NO_IDS_RUNNING" || true
+            echo "### Gateway logs dir listing"
+            docker exec ot_gateway sh -c "ls -la /detection/logs" || true
+            echo ""
+            echo "### Gateway process table"
+            docker exec ot_gateway sh -c "ps aux" || true
             echo ""
             echo "### Gateway IDS rule outputs"
-            docker exec ot_gateway sh -c "for f in /detection/logs/*.out; do echo --- \$f; tail -15 \"\$f\"; done" || true
+            docker exec ot_gateway sh -c "for f in /detection/logs/*.out; do echo --- \$f; tail -25 \"\$f\"; done" || true
             echo ""
             echo "### alerts.json tail"
             tail -25 detection/logs/alerts.json 2>/dev/null || echo "alerts.json missing or empty"
             echo ""
-            echo "### Attacker routes"
-            docker exec ot_attacker sh -c "ip route" || true
+            echo "### Attacker routes and tools"
+            docker exec ot_attacker sh -c "ip route; echo; which pgrep || echo NO_PGREP" || true
             echo ""
             echo "### Gateway firewall"
             docker exec ot_gateway iptables -L -n || true
@@ -59,9 +70,12 @@ jobs:
             echo "### Attacker container log"
             docker logs ot_attacker --tail 40 || true
             echo ""
-            echo "### Webhook container state and log"
-            docker inspect ot_webhook --format "{{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}}" || true
+            echo "### Webhook state and log"
+            docker inspect ot_webhook --format "status={{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}} error={{.State.Error}} cmd={{.Config.Cmd}}" || true
             docker logs ot_webhook --tail 40 || true
+            echo ""
+            echo "### Webhook process table"
+            docker top ot_webhook || true
           } | tee /tmp/cg-diag.txt
           echo ""
           echo "Posting diagnostics to issue..."

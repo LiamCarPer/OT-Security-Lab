@@ -16,6 +16,7 @@ RUN apt-get update \
 # checkov:skip=CKV_DOCKER_3:Attacker needs NET_ADMIN/NET_RAW (pivot routes,
 #   raw packet injection) which Docker grants only to root; lab-only role.
 
-HEALTHCHECK CMD pgrep -f "tail -f /dev/null" || exit 1
+# Minimal kali images lack procps (pgrep); health reflects the pivot routes
+HEALTHCHECK CMD ip route | grep -q 172.21.0.0/24 || exit 1
 
 # Simulation scripts are bind-mounted at /attacker

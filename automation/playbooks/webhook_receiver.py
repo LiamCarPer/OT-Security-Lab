@@ -52,8 +52,13 @@ class Handler(BaseHTTPRequestHandler):
         print(f"[WEBHOOK] {fmt % args}")
 
 def main():
-    print(f"[WEBHOOK] Listening on {HOST}:{PORT}, writing to {LOG_PATH}")
-    HTTPServer((HOST, PORT), Handler).serve_forever()
+    print(f"[WEBHOOK] Starting on {HOST}:{PORT}, writing to {LOG_PATH}", flush=True)
+    try:
+        HTTPServer((HOST, PORT), Handler).serve_forever()
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        raise
 
 if __name__ == "__main__":
     main()
