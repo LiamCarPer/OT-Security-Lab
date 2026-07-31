@@ -215,7 +215,7 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    command: python3 /app/webhook_receiver.py
+    command: /app/webhook_receiver.py  # python image ENTRYPOINT is already python3
     environment:
       - OT_WEBHOOK_LOG=/logs/siem_alerts.json
     volumes:

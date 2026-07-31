@@ -58,6 +58,10 @@ jobs:
             echo ""
             echo "### Attacker container log"
             docker logs ot_attacker --tail 40 || true
+            echo ""
+            echo "### Webhook container state and log"
+            docker inspect ot_webhook --format "{{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}}" || true
+            docker logs ot_webhook --tail 40 || true
           } | tee /tmp/cg-diag.txt
           echo ""
           echo "Posting diagnostics to issue..."
