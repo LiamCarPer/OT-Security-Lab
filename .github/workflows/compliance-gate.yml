@@ -26,6 +26,22 @@ jobs:
       - name: Run attack simulations and assert detection
         run: python3 governance/testing/run_security_tests.py --reset
 
+      - name: Diagnostics (on failure)
+        if: failure()
+        run: |
+          echo "===== CONTAINER STATES ====="
+          docker ps -a
+          echo "===== GATEWAY IDS PROCESSES ====="
+          docker exec ot_gateway sh -c "pgrep -af python3 || echo 'NO IDS PROCESSES RUNNING'" || true
+          echo "===== GATEWAY IDS OUTPUTS ====="
+          docker exec ot_gateway sh -c "for f in /detection/logs/*.out; do echo \"--- \$f ---\"; tail -15 \"\$f\"; done" || true
+          echo "===== ALERTS JSON (last 25 lines) ====="
+          tail -25 detection/logs/alerts.json || echo "alerts.json missing or empty"
+          echo "===== ATTACKER ROUTES ====="
+          docker exec ot_attacker sh -c "ip route" || true
+          echo "===== GATEWAY FIREWALL ====="
+          docker exec ot_gateway iptables -L -n || true
+
       - name: Collect evidence
         if: always()
         run: |

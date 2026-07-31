@@ -89,6 +89,25 @@ def wait_for_attacker_ready(retries=36, delay=5):
         time.sleep(delay)
     return False
 
+def dump_diagnostics():
+    """Print container and IDS state to help debug failed detections."""
+    print("\n===== DIAGNOSTICS =====")
+    for cmd in [
+        "docker ps -a",
+        "docker exec ot_gateway sh -c 'pgrep -af python3 || echo NO_IDS_RUNNING'",
+        "docker exec ot_gateway sh -c 'for f in /detection/logs/*.out; do echo --- $f; tail -10 $f; done'",
+        "docker exec ot_attacker sh -c 'ip route'",
+    ]:
+        print(f"$ {cmd}")
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        print((result.stdout or result.stderr).strip()[:2000] or "(no output)")
+    if ALERT_LOG.exists():
+        print(f"$ tail alerts.json ({ALERT_LOG.stat().st_size} bytes)")
+        print(ALERT_LOG.read_text(encoding="utf-8")[-1500:])
+    else:
+        print(f"$ alerts.json MISSING at {ALERT_LOG}")
+    print("===== END DIAGNOSTICS =====\n")
+
 def main():
     parser = argparse.ArgumentParser(description="OT Security Lab compliance test suite")
     parser.add_argument("--reset", action="store_true", help="Archive current alerts.json before testing")
@@ -136,6 +155,7 @@ def main():
             print(f"[FAIL] Expected alerts NOT produced: {', '.join(missing)}")
             results.append((test["name"], "FAIL"))
             all_passed = False
+            dump_diagnostics()
 
     print("\n" + "=" * 60)
     print("FINAL SECURITY COMPLIANCE REPORT")
