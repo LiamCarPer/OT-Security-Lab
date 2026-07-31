@@ -18,7 +18,7 @@ jobs:
 
       - name: Boot the OT lab
         working-directory: lab-environment
-        run: docker compose up -d --wait --wait-timeout 300
+        run: docker compose up -d --build --wait --wait-timeout 300
 
       - name: Show firewall policy applied on gateway
         run: docker exec ot_gateway iptables -L -n | head -40

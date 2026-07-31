@@ -23,12 +23,15 @@ Grafana/Loki/Promtail SIEM stack.
 
 ### What happens on boot
 
-1. `ot_gateway` installs `iptables`/Python/Scapy.
-2. `firewall-rules.sh` **auto-detects** its interfaces by subnet (never assume
-   `ethX` ordering — see `LESSONS_LEARNED.md` §2.1) and applies default-DROP
-   zone/conduit rules (IEC 62443-3-2).
+1. The gateway and attacker images are **pre-baked** (Dockerfiles in
+   `gateway/` and `attacker/`) — no runtime package installs; containers are
+   ready in seconds.
+2. `ot_gateway` applies `firewall-rules.sh`: it **auto-detects** its interfaces
+   by subnet (never assume `ethX` ordering — see `LESSONS_LEARNED.md` §2.1) and
+   applies default-DROP zone/conduit rules (IEC 62443-3-2).
 3. `start_ids.sh` launches all `detection/rules/*.py` as persistent background
    services, writing alerts to `/detection/logs/alerts.json`.
+4. `ot_attacker` adds its pivot routes to the OT zones via the gateway.
 
 ## 3. Network Topology Verification
 

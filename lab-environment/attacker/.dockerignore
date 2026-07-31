@@ -1,0 +1,4 @@
+.git
+*.md
+simulate_*.py
+playbooks/
