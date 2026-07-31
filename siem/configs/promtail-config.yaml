@@ -34,5 +34,5 @@ scrape_configs:
     labels:
       job: sysmon_edr
       env: ot_lab
-      __path__: /var/log/ot-lab/edr_sysmon_sample.json
+      __path__: /logs/edr_sysmon_sample.json
 

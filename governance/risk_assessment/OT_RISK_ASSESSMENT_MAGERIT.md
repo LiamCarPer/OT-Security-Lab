@@ -6,10 +6,10 @@
 
 | Asset ID | Name | Category | Criticality (C/I/A) | Description |
 | --- | --- | --- | --- | --- |
-| A.01 | PLC_Intake | Hardware/Logic | H / H / H | Siemens PLC controlling water input. |
+| A.01 | PLC_Intake | Hardware/Logic | H / H / H | OpenPLC runtime controlling water input (172.21.0.10). |
 | A.02 | OT_Gateway | Network/Software | M / H / H | Trust boundary & Security monitoring. |
 | A.03 | Alerts_Log | Data | L / H / H | Evidence of unauthorized activity. |
-| A.04 | HMI_Dashboard | Software | M / M / H | Operational visibility. |
+| A.04 | HMI_Dashboard | Software | M / M / H | Operational visibility (Scada-LTS). |
 
 ## 2. Threat Analysis (Amenazas)
 

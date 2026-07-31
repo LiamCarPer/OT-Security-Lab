@@ -3,6 +3,8 @@
 [![Compliance](https://img.shields.io/badge/IEC_62443--3--2-Mapped-blue)](./architecture/zone-conduit-design.md)
 [![Framework](https://img.shields.io/badge/MITRE_ATT%26CK_for_ICS-Implemented-red)](./threat-model/mitre-ics-mapping.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://img.shields.io/github/actions/workflow/status/yourusername/ot-security-lab/ci.yml?label=CI)](./.github/workflows/ci.yml)
+[![Compliance Gate](https://img.shields.io/github/actions/workflow/status/yourusername/ot-security-lab/compliance-gate.yml?label=Compliance)](./.github/workflows/compliance-gate.yml)
 
 | Category | Specification |
 | :--- | :--- |
@@ -143,45 +145,50 @@ This lab currently utilizes **Modbus TCP** as a representative industrial protoc
 
 ---
 
-## 5. Getting Started
+## 7. Getting Started
 To spin up the entire simulated environment (OpenPLC, HMI, Historian, and Firewall):
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/ot-security-lab.git
-cd ot-security-lab/lab-environment
+cd ot-security-lab
 
-# Start the environment
-sudo docker compose up -d
+# Start the environment (firewall rules and IDS rules apply automatically)
+make up
 
-# Apply firewall rules
-sudo docker cp network-config/firewall-rules.sh ot_gateway:/firewall-rules.sh
-sudo docker exec ot_gateway /firewall-rules.sh
+# Validate the environment: simulate attacks and assert detection
+make compliance
 ```
 
+The gateway container applies the IEC 62443 zone firewall on boot and launches
+all custom detection rules as persistent services (`make up` is sufficient; no
+manual `docker cp`/`docker exec` steps are required).
+
 ---
 
-## 6. Technologies Used
-*   **Virtualization:** Docker, Docker Compose V2
-*   **Industrial:** OpenPLC Runtime (v4), Scada-LTS (HMI), InfluxDB 1.8 (Historian)
+## 8. Technologies Used
+*   **Virtualization:** Docker, Docker Compose V2 (pinned images, resource limits, `restart` policies)
+*   **Industrial:** OpenPLC Runtime (v4), Scada-LTS (HMI), InfluxDB 1.8.10 (Historian)
 *   **Security Infrastructure:** `iptables` (Zone Firewall), Scapy (Custom IDS), `iputils-ping`, `nmap`
 *   **Frameworks:** IEC 62443-3-2 (Zones/Conduits), MITRE ATT&CK for ICS, ISA-95 Purdue Model
-*   **Monitoring:** Centralized JSON logging (`alerts.json`)
+*   **Monitoring:** Grafana 11 + Loki 3 (SIEM), Promtail (log shipping), centralized JSON logging
+*   **DevSecOps:** GitHub Actions (CI + Compliance Gate), ruff, bandit, shellcheck, gitleaks, pip-audit, checkov, Trivy, pytest
 
 ---
 
-## 7. Known Limitations & Future Work
+## 9. Known Limitations & Future Work
 ### Current Limitations:
 *   **Logical vs. Physical Data Diode:** Unidirectional flow is enforced via `iptables`. High-consequence sites require hardware-based optical data diodes.
-*   **Protocol Scope:** Currently limited to **Modbus/TCP**.
+*   **Protocol Scope:** Detection is currently implemented for **Modbus/TCP** and **DNP3** (see `detection/rules/dnp3_anomaly.py`).
 *   **Simulation vs. Emulation:** PLCs are software-simulated (OpenPLC) rather than hardware-emulated.
 
 ### Future Roadmap:
-*   **SIEM Integration:** Centralized logs using **Grafana, Loki, and Promtail**.
-*   **Adversary Emulation:** Developing playbooks for Industroyer and TRITON-style attack simulations.
+*   **Adversary Emulation:** Playbooks for Industroyer and TRITON-style attack simulations (see `lab-environment/attacker/playbooks/`).
+*   **EDR Integration:** Wazuh agent on the Engineering Workstation, correlated with network alerts in the SIEM.
+*   **Suricata:** Gateway-side Suricata with the ET ICS ruleset alongside the custom Scapy rules (see `siem/suricata/`).
 
 ---
 
-## 8. Compliance Mapping
+## 10. Compliance Mapping
 *   **IEC 62443-3-2:** Zones and Conduits implemented.
 *   **MITRE ATT&CK for ICS:** Tactics T0800–T0890 mapped in threat model.

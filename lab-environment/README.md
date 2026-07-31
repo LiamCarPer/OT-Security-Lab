@@ -1,60 +1,84 @@
 # Deployment & Validation Guide
 
-This document explains how to deploy the `ot-security-lab` and verify its security configurations.
+This document explains how to deploy the `ot-security-lab` and verify its
+security configurations. The environment is fully automated: **firewall rules
+and IDS rules are applied automatically when the gateway container boots** — no
+manual `docker cp` / `docker exec` steps are required.
 
-## 1. Deployment
-Ensure you have **Docker Compose V2** installed.
+## 1. Prerequisites
+
+- **Docker Engine** with **Compose V2** (`docker compose` plugin).
+- ~4 GB of available memory for the full stack.
+
+## 2. Deployment
 
 ```bash
 cd lab-environment
 sudo docker compose up -d
 ```
 
-## 2. Network Topology Verification
-Verify the IP addresses and interface mapping for the Purdue zones:
+This starts: 3 OpenPLC runtimes (L1), Scada-LTS HMI (L2), InfluxDB historian (L3),
+the zone gateway (firewall + persistent IDS), the Kali attacker (L4), and the
+Grafana/Loki/Promtail SIEM stack.
+
+### What happens on boot
+
+1. `ot_gateway` installs `iptables`/Python/Scapy.
+2. `firewall-rules.sh` **auto-detects** its interfaces by subnet (never assume
+   `ethX` ordering — see `LESSONS_LEARNED.md` §2.1) and applies default-DROP
+   zone/conduit rules (IEC 62443-3-2).
+3. `start_ids.sh` launches all `detection/rules/*.py` as persistent background
+   services, writing alerts to `/detection/logs/alerts.json`.
+
+## 3. Network Topology Verification
+
 ```bash
-# Check container statuses and IPs
+# Container status and IPs
 sudo docker ps
 sudo docker inspect ot_gateway
+
+# Firewall policy as applied
+sudo docker exec ot_gateway iptables -L -n
+
+# IDS rules running?
+sudo docker exec ot_gateway sh -c "pgrep -af python3"
+sudo docker exec ot_gateway sh -c "tail -5 /detection/logs/*.out"
 ```
 
-## 3. Applying the Firewall
-The `ot_gateway` must be manually configured with the zone-based firewall rules:
+## 4. Detection Verification (Simulated Attacks)
+
+The attacker container includes automated simulation scripts:
+
+| Script | Triggers |
+| :--- | :--- |
+| `simulate_attack.py` | `CROSS_ZONE_VIOLATION`, `UNAUTHORIZED_MODBUS_WRITE`, `OT_BRUTE_FORCE_SCAN` |
+| `simulate_lateral_movement.py` | Sequential `CROSS_ZONE_VIOLATION` (Intake → Treatment → Distribution) |
+| `simulate_process_violation.py` | `PROCESS_SAFETY_VIOLATION` (spoofed high tank level + unsafe valve command) |
+
 ```bash
-sudo docker cp network-config/firewall-rules.sh ot_gateway:/firewall-rules.sh
-sudo docker exec ot_gateway chmod +x /firewall-rules.sh
-sudo docker exec ot_gateway /firewall-rules.sh
+sudo docker exec ot_attacker python3 /attacker/simulate_attack.py
+sudo docker exec ot_attacker python3 /attacker/simulate_process_violation.py
+tail -f detection/logs/alerts.json
 ```
 
-### 4. Detection Verification (Simulating an Attack)
-To verify that the detection scripts and centralized logging are working, follow these steps:
+### Automated Compliance Test
 
-#### 4.1. Start the Detection Monitor
-In one terminal, run one of the detection scripts (e.g., Modbus IDS):
+From the repository root, run the full validation suite (it archives the
+previous evidence, replays every simulation, and asserts each expected alert):
+
 ```bash
-sudo docker exec -it ot_gateway python3 /detection/rules/modbus_anomaly.py
+python3 governance/testing/run_security_tests.py --reset
 ```
 
-#### 4.2. Run the Automated Attack Simulation
-In a second terminal, execute the automated attack script from the `ot_attacker` container. This script is designed to trigger all three detection rules:
+## 5. SIEM Access
+
+- **Grafana:** http://localhost:3000 (anonymous admin access enabled for the lab)
+- **Loki:** http://localhost:3100 (metrics/health only)
+
+## 6. Maintenance
+
 ```bash
-# 1. Copy the simulation script to the attacker
-sudo docker cp attacker/simulate_attack.py ot_attacker:/simulate_attack.py
-
-# 2. Run the simulation
-sudo docker exec -it ot_attacker python3 /simulate_attack.py
-```
-
-#### 4.3. Verify the Logs
-Check the centralized JSON log file to see the alerts being captured in real-time:
-```bash
-cat detection/logs/alerts.json
-```
-**Expected Result:** You will see timestamped JSON entries for `CROSS_ZONE_VIOLATION`, `UNAUTHORIZED_MODBUS_WRITE`, and `OT_BRUTE_FORCE_SCAN`.
-
-
-## 5. Maintenance
-To stop and clean up the environment:
-```bash
-sudo docker compose down
+sudo docker compose down          # stop everything
+sudo docker compose down -v       # stop + remove volumes/networks
+sudo docker compose up -d --build # rebuild
 ```

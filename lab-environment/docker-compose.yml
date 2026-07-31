@@ -2,8 +2,9 @@
 services:
   # 1. The "Firewall" / Router / Gateway
   gateway:
-    image: alpine:latest
+    image: alpine:3.19
     container_name: ot_gateway
+    restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -13,7 +14,8 @@ services:
       - NET_RAW
     sysctls:
       - net.ipv4.ip_forward=1
-    command: /bin/sh -c "apk add --no-cache iptables python3 py3-pip libpcap && pip3 install scapy --break-system-packages && sh /scripts/gateway_firewall.sh && tail -f /dev/null"
+    mem_limit: 512m
+    command: /bin/sh -c "apk add --no-cache iptables iproute2 python3 py3-pip libpcap && pip3 install scapy --break-system-packages && sh /network-config/firewall-rules.sh && sh /scripts/start_ids.sh && tail -f /dev/null"
     volumes:
       - ../detection/rules:/detection/rules
       - ../detection/logs:/detection/logs
@@ -33,6 +35,8 @@ services:
   plc_intake:
     image: ghcr.io/autonomy-logic/openplc-runtime:latest
     container_name: plc_intake
+    restart: unless-stopped
+    mem_limit: 256m
     ports:
       - "8443:8443"
     cap_add:
@@ -46,6 +50,8 @@ services:
   plc_treatment:
     image: ghcr.io/autonomy-logic/openplc-runtime:latest
     container_name: plc_treatment
+    restart: unless-stopped
+    mem_limit: 256m
     ports:
       - "8444:8443"
     cap_add:
@@ -59,6 +65,8 @@ services:
   plc_distribution:
     image: ghcr.io/autonomy-logic/openplc-runtime:latest
     container_name: plc_distribution
+    restart: unless-stopped
+    mem_limit: 256m
     ports:
       - "8445:8443"
     cap_add:
@@ -72,6 +80,8 @@ services:
   hmi:
     image: scadalts/scadalts:latest
     container_name: ot_hmi
+    restart: unless-stopped
+    mem_limit: 1g
     ports:
       - "8080:8080"
     networks:
@@ -82,8 +92,10 @@ services:
 
   # 6. Process Historian (Level 3 - Operations)
   historian:
-    image: influxdb:1.8
+    image: influxdb:1.8.10
     container_name: ot_historian
+    restart: unless-stopped
+    mem_limit: 256m
     environment:
       - INFLUXDB_DB=ot_data
     networks:
@@ -94,6 +106,8 @@ services:
   attacker:
     image: kalilinux/kali-rolling
     container_name: ot_attacker
+    restart: unless-stopped
+    mem_limit: 512m
     tty: true
     stdin_open: true
     cap_add:
@@ -116,8 +130,10 @@ services:
 
   # 8. Log Storage (Loki) - Level 4 Enterprise
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:3.0.0
     container_name: ot_loki
+    restart: unless-stopped
+    mem_limit: 512m
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -130,8 +146,10 @@ services:
 
   # 9. Log Collector (Promtail) - Level 4 Enterprise
   promtail:
-    image: grafana/promtail:latest
+    image: grafana/promtail:3.0.0
     container_name: ot_promtail
+    restart: unless-stopped
+    mem_limit: 128m
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -145,8 +163,10 @@ services:
 
   # 10. Visualization (Grafana) - Level 4 Enterprise
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.0.0
     container_name: ot_grafana
+    restart: unless-stopped
+    mem_limit: 512m
     security_opt:
       - no-new-privileges:true
     cap_drop:
