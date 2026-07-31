@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   lab-validation:
@@ -28,19 +29,44 @@ jobs:
 
       - name: Diagnostics (on failure)
         if: failure()
+        shell: bash
         run: |
-          echo "===== CONTAINER STATES ====="
-          docker ps -a
-          echo "===== GATEWAY IDS PROCESSES ====="
-          docker exec ot_gateway sh -c "pgrep -af python3 || echo 'NO IDS PROCESSES RUNNING'" || true
-          echo "===== GATEWAY IDS OUTPUTS ====="
-          docker exec ot_gateway sh -c "for f in /detection/logs/*.out; do echo \"--- \$f ---\"; tail -15 \"\$f\"; done" || true
-          echo "===== ALERTS JSON (last 25 lines) ====="
-          tail -25 detection/logs/alerts.json || echo "alerts.json missing or empty"
-          echo "===== ATTACKER ROUTES ====="
-          docker exec ot_attacker sh -c "ip route" || true
-          echo "===== GATEWAY FIREWALL ====="
-          docker exec ot_gateway iptables -L -n || true
+          set +e
+          {
+            echo "## Compliance Gate Diagnostics - ${{ github.sha }}"
+            echo ""
+            echo "### Container states"
+            docker ps -a
+            echo ""
+            echo "### Gateway IDS processes"
+            docker exec ot_gateway sh -c "pgrep -af python3 || echo NO_IDS_RUNNING" || true
+            echo ""
+            echo "### Gateway IDS rule outputs"
+            docker exec ot_gateway sh -c "for f in /detection/logs/*.out; do echo --- \$f; tail -15 \"\$f\"; done" || true
+            echo ""
+            echo "### alerts.json tail"
+            tail -25 detection/logs/alerts.json 2>/dev/null || echo "alerts.json missing or empty"
+            echo ""
+            echo "### Attacker routes"
+            docker exec ot_attacker sh -c "ip route" || true
+            echo ""
+            echo "### Gateway firewall"
+            docker exec ot_gateway iptables -L -n || true
+            echo ""
+            echo "### Gateway container log"
+            docker logs ot_gateway --tail 40 || true
+            echo ""
+            echo "### Attacker container log"
+            docker logs ot_attacker --tail 40 || true
+          } | tee /tmp/cg-diag.txt
+          echo ""
+          echo "Posting diagnostics to issue..."
+          BODY=$(python3 -c "import json; print(json.dumps(open('/tmp/cg-diag.txt').read()))")
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues" \
+            -d "{\"title\":\"Compliance Gate diagnostics ${{ github.sha }}\",\"body\":$BODY}" || true
 
       - name: Collect evidence
         if: always()

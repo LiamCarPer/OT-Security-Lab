@@ -112,11 +112,13 @@ services:
     stdin_open: true
     cap_add:
       - NET_ADMIN
-    # Add the pivot routes to reach the OT zones via the gateway on startup
+    depends_on:
+      - gateway
+    # Add the pivot routes to reach the OT zones via the gateway. Routes are
+    # retried until the gateway is reachable (it is created in parallel).
     command: >
-      /bin/sh -c "ip route add 172.21.0.0/24 via 172.24.0.2 &&
-      ip route add 172.22.0.0/24 via 172.24.0.2 &&
-      ip route add 172.23.0.0/24 via 172.24.0.2 &&
+      /bin/sh -c "for net in 172.21.0.0/24 172.22.0.0/24 172.23.0.0/24; do
+      until ip route add $$net via 172.24.0.2 2>/dev/null; do sleep 2; done; done;
       tail -f /dev/null"
     volumes:
       - ./attacker:/attacker
