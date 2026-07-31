@@ -3,8 +3,8 @@
 [![Compliance](https://img.shields.io/badge/IEC_62443--3--2-Mapped-blue)](./architecture/zone-conduit-design.md)
 [![Framework](https://img.shields.io/badge/MITRE_ATT%26CK_for_ICS-Implemented-red)](./threat-model/mitre-ics-mapping.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://img.shields.io/github/actions/workflow/status/yourusername/ot-security-lab/ci.yml?label=CI)](./.github/workflows/ci.yml)
-[![Compliance Gate](https://img.shields.io/github/actions/workflow/status/yourusername/ot-security-lab/compliance-gate.yml?label=Compliance)](./.github/workflows/compliance-gate.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/LiamCarPer/OT-Security-Lab/ci.yml?label=CI)](./.github/workflows/ci.yml)
+[![Compliance Gate](https://img.shields.io/github/actions/workflow/status/LiamCarPer/OT-Security-Lab/compliance-gate.yml?label=Compliance)](./.github/workflows/compliance-gate.yml)
 
 | Category | Specification |
 | :--- | :--- |
@@ -157,7 +157,7 @@ To spin up the entire simulated environment (OpenPLC, HMI, Historian, and Firewa
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ot-security-lab.git
+git clone https://github.com/LiamCarPer/OT-Security-Lab.git
 cd ot-security-lab
 
 # Start the environment (firewall rules and IDS rules apply automatically)
