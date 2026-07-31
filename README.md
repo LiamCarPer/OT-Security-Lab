@@ -126,6 +126,13 @@ To bridge the gap between technical implementation and industrial standards (Exc
 *   **[Incident Response Playbook](./governance/incident_response/IR_PLAYBOOK_PLC_TAMPERING.md):** "Safety-First" response procedures for industrial security events.
 *   **[Hardening Guide (STIG)](./governance/hardening/LINUX_OT_GATEWAY_STIG.md):** Mandatory security baselines for both Gateway and PLCs.
 *   **[Verification Test Plan](./governance/testing/CYBERSECURITY_TEST_PLAN.md):** Formal mapping of simulations to security requirements (V&V).
+*   **[Risk Register](./governance/risk_register.csv) & [BIA](./governance/bia.md):** Full risk register (12 scenarios) and business impact analysis with RTO/RPO.
+*   **[Remediation Roadmap](./governance/remediation_roadmap.md):** Prioritized findings-to-fix mapping with effort estimates.
+*   **[Standards Coverage](./governance/standards/):** NIST SP 800-82, ISO 27019, NIS2, C2M2, SIS/BPCS separation, remote-access design.
+*   **[Policies & Procedures](./governance/policies/):** Access control, change management (MOC), remote access, backup/DR drafts.
+*   **[Assessment Methodology](./governance/assessment-methodology/):** Scoping questionnaire, discovery checklist, findings template.
+*   **[Executive Package](./governance/executive/executive-summary.md) & [Tabletop Kit](./governance/tabletop/tabletop-exercise-kit.md):** Board-level brief and IR exercise materials.
+*   **[To-Be Architecture](./architecture/to-be-architecture.md):** Phased future-state roadmap (data diode, SIS zone, OT SOC).
 
 ---
 
