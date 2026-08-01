@@ -48,15 +48,17 @@ jobs:
             exit 0
           fi
           git commit -m "chore(evidence): refresh compliance gate alert evidence [skip ci]"
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             if git push origin main 2>/dev/null; then
               echo "Evidence refreshed and pushed."
               exit 0
             fi
             echo "Push failed (attempt $attempt) - rebasing and retrying..."
-            git pull --rebase origin main 2>/dev/null || true
+            # -X ours: concurrent gates may commit evidence simultaneously;
+            # either run's alerts are valid evidence, ours wins the race
+            git pull --rebase -X ours origin main 2>/dev/null || { git rebase --abort 2>/dev/null; git reset --hard origin/main 2>/dev/null; }
           done
-          echo "Could not push evidence after 3 attempts."
+          echo "Could not push evidence after 5 attempts."
           exit 1
 
       # Debugging aid: publishes full diagnostics (boot log, container
@@ -90,7 +92,14 @@ jobs:
           cp /tmp/boot.log ci-boot.log 2>/dev/null
           git add ci-diagnostics.txt ci-boot.log 2>/dev/null
           git commit -m "compliance diagnostics ${{ github.sha }}" --allow-empty
-          git push origin ci-diagnostics --force
+          for attempt in 1 2 3; do
+            if git push origin ci-diagnostics --force 2>/dev/null; then
+              echo "Diagnostics pushed."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Could not push diagnostics after 3 attempts."
 
       - name: Collect evidence
         if: always()
