@@ -7,6 +7,7 @@ Fulfills 'Enhancement 1' - Fires all 3 detection rules:
 3. Brute Force (High Exception Rate)
 """
 import time
+
 from scapy.all import IP, TCP, Raw, send
 
 # 1. Configuration: Target IPs based on the Purdue Model
@@ -44,7 +45,7 @@ time.sleep(1)
 # Sending a burst of packets to trigger exceptions (requires the PLC to be reachable).
 # Even if blocked by the firewall, the gateway's IDS will see the attempts.
 print("\n[STEP 3] Triggering Brute Force (High Exception Rate)...")
-for i in range(7):
+for _i in range(7):
     # To simulate errors, we can send invalid Function Codes (> 128)
     # A real error from a PLC would be FC + 128.
     send_modbus_packet(PLC_IP, 131) # Exception for Read (3 + 128)
