@@ -2,6 +2,76 @@
 
 ### Bug Fixes
 
+- Resilient evidence push (rebase-retry on concurrent pushes)
+
+- Normalize CHANGELOG trailing newline and cliff footer
+
+- Pin SBOM verification identity to the running ref
+
+
+### CI/CD
+
+- Converge concurrent gate pushes instead of failing
+
+- Make release CHANGELOG push resilient to concurrent pushes
+
+
+### Chores
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **deps:** Bump python in /automation/playbooks (#4)
+
+- **deps:** Bump alpine from 3.19 to 3.24 in /lab-environment/gateway (#6)
+
+- **deps:** Bump kalilinux/kali-rolling in /lab-environment/attacker (#7)
+
+- **deps:** Bump actions/upload-artifact from 4 to 7 (#5)
+
+- **deps:** Bump actions/checkout from 4 to 7 (#9)
+
+- **deps:** Bump gitleaks/gitleaks-action from 2.3.6 to 3.0.0 (#11)
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **deps:** Bump actions/setup-python from 5 to 7 (#12)
+
+- **deps-dev:** Update pre-commit requirement from >=3.0 to >=4.6.1 (#8)
+
+- **deps-dev:** Update scapy requirement from >=2.5.0 to >=2.7.0 (#13)
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **deps-dev:** Update requirement pip-audit>=2.7.0 to pip-audit>=2.10.1 (#10)
+
+- **deps-dev:** Update requirement ruff>=0.4.0 to ruff>=0.16.0 (#15)
+
+- **deps-dev:** Update pytest requirement from >=8.0 to >=9.1.1 (#14)
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+
+### Documentation
+
+- Update CHANGELOG for v1.0.0 [skip ci]
+
+- Add the CI/CD debugging saga to lessons learned
+
+- Update roadmap - adversary emulation shipped, refine remaining items
+
+
+### Bug Fixes
+
 - Consolidate zone firewall, persist IDS services, and harden the lab stack
 
 - Repair CI gates and make the lab boot deterministic in CI
