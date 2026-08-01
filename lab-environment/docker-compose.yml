@@ -206,7 +206,9 @@ services:
         ipv4_address: 172.24.0.23
 
   # 12. Alert Webhook Receiver (SOAR-lite) - Level 4 Enterprise
+  # Optional: enable with `docker compose --profile soar up -d`
   webhook:
+    profiles: ["soar"]
     build: ../automation/playbooks
     container_name: ot_webhook
     restart: unless-stopped

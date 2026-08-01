@@ -40,54 +40,28 @@ jobs:
           set +e
           {
             echo "## Compliance Gate Diagnostics - ${{ github.sha }}"
-            echo ""
-            echo "### Boot log (compose output)"
-            cat /tmp/boot.log 2>/dev/null || echo "(boot log not available)"
-            echo ""
-            echo "### Container states"
+            echo "### boot.log"
+            cat /tmp/boot.log 2>/dev/null
+            echo "### docker ps -a"
             docker ps -a
-            echo ""
-            echo "### Gateway logs dir listing"
-            docker exec ot_gateway sh -c "ls -la /detection/logs" || true
-            echo ""
-            echo "### Gateway process table"
-            docker exec ot_gateway sh -c "ps aux" || true
-            echo ""
-            echo "### Gateway IDS rule outputs"
-            docker exec ot_gateway sh -c "for f in /detection/logs/*.out; do echo --- \$f; tail -25 \"\$f\"; done" || true
-            echo ""
-            echo "### alerts.json tail"
-            tail -25 detection/logs/alerts.json 2>/dev/null || echo "alerts.json missing or empty"
-            echo ""
-            echo "### Attacker routes and tools"
-            docker exec ot_attacker sh -c "ip route; echo; which pgrep || echo NO_PGREP" || true
-            echo ""
-            echo "### Gateway firewall"
-            docker exec ot_gateway iptables -L -n || true
-            echo ""
-            echo "### Gateway container log"
-            docker logs ot_gateway --tail 40 || true
-            echo ""
-            echo "### Attacker container log"
-            docker logs ot_attacker --tail 40 || true
-            echo ""
-            echo "### Webhook state and log"
-            docker inspect ot_webhook --format "status={{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}} error={{.State.Error}} cmd={{.Config.Cmd}}" || true
-            docker logs ot_webhook --tail 40 || true
-            echo ""
-            echo "### Webhook process table"
-            docker top ot_webhook || true
-          } | tee /tmp/cg-diag.txt
-          echo ""
-          echo "Publishing diagnostics to public paste..."
-          PASTE_URL=$(curl -sS --max-time 30 --data-binary @/tmp/cg-diag.txt https://paste.rs 2>&1)
-          echo "PASTE_URL=$PASTE_URL"
-          echo "Posting paste URL as commit status..."
+            echo "### gateway logs"
+            docker logs ot_gateway --tail 60
+            echo "### gateway logs dir"
+            docker exec ot_gateway sh -c "ls -la /detection/logs"
+            echo "### gateway rule outputs"
+            docker exec ot_gateway sh -c "for f in /detection/logs/*.out; do echo --- \$f; tail -30 \"\$f\"; done"
+            echo "### webhook logs"
+            docker logs ot_webhook --tail 60
+          } > /tmp/diag.txt 2>&1
+          cat /tmp/diag.txt
+          echo "=== publishing paste ==="
+          URL=$(curl -sS --max-time 30 --data-binary @/tmp/diag.txt https://paste.rs)
+          echo "PASTE_URL=$URL"
           curl -sS --max-time 30 -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}" \
-            -d "{\"state\":\"failure\",\"context\":\"compliance-diagnostics\",\"description\":\"Diagnostics: $PASTE_URL\"}" || true
+            -d "{\"state\":\"failure\",\"context\":\"compliance-diagnostics\",\"description\":\"Diagnostics: $URL\"}"
 
       - name: Collect evidence
         if: always()
