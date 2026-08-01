@@ -26,6 +26,8 @@ jobs:
 
       - name: Commit CHANGELOG
         run: |
+          # normalize: exactly one trailing newline (pre-commit gate)
+          python3 -c "import pathlib; p = pathlib.Path('CHANGELOG.md'); p.write_text(p.read_text().rstrip('\n') + '\n')"
           git config user.name "ot-security-lab-ci"
           git config user.email "ci@ot-security-lab.invalid"
           git add CHANGELOG.md

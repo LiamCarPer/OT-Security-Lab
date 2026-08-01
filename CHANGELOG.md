@@ -112,5 +112,3 @@
 ### Testing
 
 - Make detection rules testable and add CI gates (pytest, ruff, bandit, scans)
-
-
