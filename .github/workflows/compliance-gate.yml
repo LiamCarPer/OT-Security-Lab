@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
   issues: write
   statuses: write
 
@@ -33,9 +33,8 @@ jobs:
       - name: Run attack simulations and assert detection
         run: python3 governance/testing/run_security_tests.py --reset
 
-      - name: Diagnostics (on failure)
+      - name: Publish diagnostics (on failure)
         if: failure()
-        shell: bash
         run: |
           set +e
           {
@@ -45,23 +44,24 @@ jobs:
             echo "### docker ps -a"
             docker ps -a
             echo "### gateway logs"
-            docker logs ot_gateway --tail 60
-            echo "### gateway logs dir"
-            docker exec ot_gateway sh -c "ls -la /detection/logs"
-            echo "### gateway rule outputs"
-            docker exec ot_gateway sh -c "for f in /detection/logs/*.out; do echo --- \$f; tail -30 \"\$f\"; done"
+            docker logs ot_gateway --tail 80
+            echo "### gateway logs dir + rule outputs"
+            docker exec ot_gateway sh -c "ls -la /detection/logs; for f in /detection/logs/*.out; do echo --- \$f; tail -30 \"\$f\"; done"
+            echo "### gateway inspect state"
+            docker inspect ot_gateway --format "{{json .State}}"
+            echo "### attacker logs"
+            docker logs ot_attacker --tail 40
             echo "### webhook logs"
-            docker logs ot_webhook --tail 60
-          } > /tmp/diag.txt 2>&1
-          cat /tmp/diag.txt
-          echo "=== publishing paste ==="
-          URL=$(curl -sS --max-time 30 --data-binary @/tmp/diag.txt https://paste.rs)
-          echo "PASTE_URL=$URL"
-          curl -sS --max-time 30 -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}" \
-            -d "{\"state\":\"failure\",\"context\":\"compliance-diagnostics\",\"description\":\"Diagnostics: $URL\"}"
+            docker logs ot_webhook --tail 40
+          } > ci-diagnostics.txt 2>&1
+          cat ci-diagnostics.txt
+          git config user.name "ot-security-lab-ci"
+          git config user.email "ci@ot-security-lab.invalid"
+          git switch -c ci-diagnostics
+          cp /tmp/boot.log ci-boot.log 2>/dev/null
+          git add ci-diagnostics.txt ci-boot.log 2>/dev/null
+          git commit -m "compliance diagnostics ${{ github.sha }}" --allow-empty
+          git push origin ci-diagnostics --force
 
       - name: Collect evidence
         if: always()
