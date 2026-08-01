@@ -30,7 +30,8 @@ jobs:
           git config user.email "ci@ot-security-lab.invalid"
           git add CHANGELOG.md
           git commit -m "docs: update CHANGELOG for ${GITHUB_REF_NAME} [skip ci]" || echo "no changes"
-          git push origin main
+          # tag checkouts land on detached HEAD; push by refspec
+          git push origin HEAD:main
 
       - name: Extract latest release notes
         id: notes
