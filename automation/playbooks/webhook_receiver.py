@@ -14,10 +14,7 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-LOG_PATH = Path(os.getenv(
-    "OT_WEBHOOK_LOG",
-    Path(__file__).resolve().parents[2] / "detection" / "logs" / "siem_alerts.json",
-))
+LOG_PATH = Path(os.getenv("OT_WEBHOOK_LOG") or "/logs/siem_alerts.json")
 HOST, PORT = "0.0.0.0", 9095  # nosec B104 - container must accept connections from Alertmanager
 
 def persist(payload):

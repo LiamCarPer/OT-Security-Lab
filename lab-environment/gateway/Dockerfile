@@ -9,8 +9,8 @@ RUN apk add --no-cache iptables iproute2 python3 py3-pip libpcap \
 #   no-new-privileges, dropped capabilities, and rate-limited log output.
 
 # start_ids.sh exits after launching the rules; health reflects the rules
-# ([p] bracket avoids pgrep matching the healthcheck's own command line)
-HEALTHCHECK CMD pgrep -f "[p]ython3 /detection/rules" || exit 1
+# ([d] bracket avoids pgrep matching the healthcheck's own command line)
+HEALTHCHECK CMD pgrep -f "[d]etection/rules/" || exit 1
 
 # Runtime config is bind-mounted:
 #   /network-config/firewall-rules.sh  (zone firewall, applied on boot)
