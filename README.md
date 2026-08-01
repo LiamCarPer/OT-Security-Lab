@@ -5,6 +5,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://img.shields.io/github/actions/workflow/status/LiamCarPer/OT-Security-Lab/ci.yml?label=CI)](./.github/workflows/ci.yml)
 [![Compliance Gate](https://img.shields.io/github/actions/workflow/status/LiamCarPer/OT-Security-Lab/compliance-gate.yml?label=Compliance)](./.github/workflows/compliance-gate.yml)
+[![Site](https://img.shields.io/badge/Site-GitHub_Pages-blue)](https://LiamCarPer.github.io/OT-Security-Lab/)
+[![Contributing](https://img.shields.io/badge/Contributing-Guide-green)](./CONTRIBUTING.md)
+[![Security](https://img.shields.io/badge/Security-Policy-important)](./SECURITY.md)
 
 | Category | Specification |
 | :--- | :--- |
