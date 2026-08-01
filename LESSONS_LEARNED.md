@@ -99,3 +99,67 @@ Building this project from scratch forced a fundamental shift in how I view secu
 - **The Power of Segmentation:** Implementing the **Purdue Model** isn't just about firewall rules; it's about building a predictable environment where "Normal" is strictly defined, making "Anomaly" much easier to catch.
 
 This lab is not just a simulation; it is a demonstration of how **Engineering Judgment** and **Protocol-Awareness** are the most effective tools in securing critical infrastructure.
+
+---
+
+## 7. CI/CD Debugging: The Compliance Gate Saga
+
+Adding a machine-verified pipeline (10 CI gates + a live Compliance Gate that boots the lab and replays attacks) produced some of the hardest bugs in this project — all of them invisible to local development. These are the traps and the reasoning that cracked each one.
+
+### 7.1 The Yanked Image Trap
+- **Problem:** The Trivy container-scan job failed instantly with no useful error; the Dockerfile-based action `aquasecurity/trivy-action@0.24.0` pulls `ghcr.io/aquasecurity/trivy:0.53.0`.
+- **Root Cause:** The Trivy v0.53.0 release had been deleted upstream ("yanked"), so the image no longer existed and the action failed at pull time — a failure mode invisible in any local run.
+- **Solution:** Inspected the action's `Dockerfile` via the raw GitHub URL to discover the hidden image pin, then moved to `trivy-action@v0.36.0`, a composite action that uses the runner's own Trivy binary.
+- **The Lesson:** Docker-based GitHub Actions pin images you cannot see from your workflow file. Verify action tags and their Dockerfiles before pinning, and prefer composite (non-container) actions.
+
+### 7.2 The Nonexistent Action
+- **Problem:** The shellcheck job failed instantly; the workflow referenced `koalaman/shellcheck-action`.
+- **Root Cause:** That repository does not exist (HTTP 404). The maintained action is `ludeeus/action-shellcheck`.
+- **Solution:** Verified candidate repos and their release tags through the GitHub API before repinning.
+- **The Lesson:** Treat third-party action names and tags as untrusted input; validate them against the API rather than assuming they exist.
+
+### 7.3 checkov's Phantom Framework
+- **Problem:** The IaC scan failed with `Invalid frameworks specified: docker_compose`.
+- **Root Cause:** `docker_compose` is not a checkov framework; compose files are scanned under `all` (CKV_DOCKER checks).
+- **Solution:** Switched to `framework: all`, which surfaced real findings (CKV_DOCKER_2/3/7) on the new Dockerfiles: added HEALTHCHECKs, pinned the kali base image by digest (kali publishes only rolling tags), and added inline `# checkov:skip` with explicit reasons for the rootful gateway (legitimate for iptables/NET_ADMIN, with compensating controls).
+- **The Lesson:** A "fixing" a gate by pointing it at nothing is worse than failing it loudly. Use the failure annotations to find the real findings and fix those.
+
+### 7.4 The Race Hidden by Slow Boot Installs
+- **Problem:** After baking dependencies into images (no runtime apt/pip installs), the Compliance Gate boot started failing at container start.
+- **Root Cause:** The original attacker container added its pivot routes *minutes* into startup, after apt installs — long after the gateway was ready. Prebuilt images made the container add routes in the first seconds, racing the gateway's network readiness; a failed `ip route add` terminated the `&&` chain and the container exited.
+- **Solution:** A retry loop (`until ip route add ...; do sleep 2; done`) plus `depends_on: gateway`.
+- **The Lesson:** Eliminating slow runtime setup exposes latent ordering assumptions. Deterministic images are correct — but the ordering logic they reveal must be made explicit.
+
+### 7.5 cap_drop: ALL Silently Strips DAC_OVERRIDE
+- **Problem:** The gateway healthcheck reported unhealthy and `docker compose --wait` failed with `container ot_gateway is unhealthy`; all five IDS rules had "Started" but no `.out` log files existed.
+- **Root Cause:** `cap_drop: ALL` removes CAP_DAC_OVERRIDE. Even as root, the gateway could not write the bind-mounted `detection/logs` (owned by uid 1001 on the runner, mode 755). Every rule died at its first log write; the missing `.out` files were the forensic clue.
+- **Solution:** Re-add only the needed capabilities: `cap_add: NET_ADMIN, NET_RAW, DAC_OVERRIDE`, keeping `no-new-privileges` and the dropped set otherwise.
+- **The Lesson:** Root without capabilities is not root. When hardening containers with capability discipline, audit every filesystem the process must write — including bind mounts owned by other UIDs.
+
+### 7.6 The pgrep Self-Match
+- **Problem:** The gateway healthcheck passed while the IDS rules were dead.
+- **Root Cause:** `pgrep -f /detection/rules` matches its own command line, so the healthcheck always succeeded.
+- **Solution:** The bracket trick — `pgrep -f "[d]etection/rules/"` — the character class prevents the pattern from matching the healthcheck's own command line.
+- **The Lesson:** A healthcheck you have never seen fail is not a healthcheck. Prove the failure path before trusting the green state.
+
+### 7.7 The Invisible Webhook Crash
+- **Problem:** The alert webhook container crash-looped with exit 1 and *zero* output for several runs; diagnostics showed nothing.
+- **Root Cause:** A module-level default `Path(__file__).resolve().parents[2]` raises `IndexError` when the script lives at `/app/` (only two path levels deep). The crash happened before the first print, so logs were empty. Secondary confusion: `python:3.12-slim` has **no** ENTRYPOINT, and exec'ing a non-executable mounted script directly yields 126.
+- **Solution:** Environment-driven default path, the script baked into its own image with an explicit `CMD`, and a verbose startup wrapper (`echo`, `ls`, `python3 -V`) so the next failure prints its own autopsy.
+- **The Lesson:** Path-derived defaults break silently when the deployment layout changes. Make startup logging loud enough that a crash explains itself.
+
+### 7.8 The Workflow YAML Heredoc Trap
+- **Problem:** The Compliance Gate run appeared with the workflow *filename* as its name and zero jobs.
+- **Root Cause:** A heredoc body written at column 0 inside a `run: |` block scalar terminated the YAML block early — the workflow failed at load time.
+- **Solution:** Indented the heredoc body within the block scalar and validated every workflow with `yaml.safe_load` before pushing.
+- **The Lesson:** A workflow that fails to parse produces a run with no jobs and a filename as its title. Parse-check workflow YAML locally; that signature is the tell.
+
+### 7.9 Self-Reporting Diagnostics
+- **Problem:** Step logs were unreadable (no token), and every attempt to publish failure diagnostics — GitHub issue posts, commit statuses, paste services — failed silently, leaving each failed run unexplained.
+- **Solution:** On failure, the pipeline commits its own diagnostics (boot log, container states, gateway/webhook logs) to a dedicated `ci-diagnostics` branch. An `--allow-empty` commit made the step itself observable, and the branch was readable from the public API. This channel finally produced the tracebacks that cracked 7.5 and 7.7.
+- **The Lesson:** When a remote pipeline is a black box, make it publish its own post-mortem to a channel you can read. Self-reporting CI is a feature, not a hack.
+
+### 7.10 Evidence-Refresh Loop Control
+- **Problem:** The Compliance Gate commits fresh evidence back to `main` on every green run; unguarded, that push would re-trigger the workflows forever.
+- **Solution:** `[skip ci]` in the evidence commit message (Actions honors the convention for push events), plus a rebase-and-retry loop so the evidence push survives races with other writers (e.g., the release workflow's CHANGELOG commit).
+- **The Lesson:** Self-modifying pipelines need an explicit loop breaker, and every push to `main` from a workflow must account for concurrent writers.
