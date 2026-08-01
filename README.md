@@ -197,9 +197,9 @@ manual `docker cp`/`docker exec` steps are required).
 *   **Simulation vs. Emulation:** PLCs are software-simulated (OpenPLC) rather than hardware-emulated.
 
 ### Future Roadmap:
-*   **Adversary Emulation:** Playbooks for Industroyer and TRITON-style attack simulations (see `lab-environment/attacker/playbooks/`).
 *   **EDR Integration:** Wazuh agent on the Engineering Workstation, correlated with network alerts in the SIEM.
-*   **Suricata:** Gateway-side Suricata with the ET ICS ruleset alongside the custom Scapy rules (see `siem/suricata/`).
+*   **Suricata:** Deploy gateway-side Suricata (config and rules exist in `siem/suricata/`) with the ET ICS ruleset alongside the custom Scapy rules.
+*   **Automation:** Full SOAR loop from SIEM alert to automatic containment (playbooks and webhook receiver exist in `automation/`; the loop is currently demonstrated, not enforced).
 
 ---
 
