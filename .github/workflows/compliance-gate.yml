@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Boot the OT lab
         working-directory: lab-environment
@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload compliance evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: compliance-evidence
           path: evidence/ci/
