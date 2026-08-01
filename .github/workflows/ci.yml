@@ -152,7 +152,7 @@ jobs:
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
             ot-security-lab.sbom.spdx.json
       - name: Upload SBOM artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sboms
           path: |
