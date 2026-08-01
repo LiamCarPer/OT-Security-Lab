@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
       - name: Ruff lint
-        run: ruff check detection automation governance tests
+        run: ruff check detection automation governance tests plc lab-environment
       - name: Bandit SAST
         run: bandit -q -r detection automation governance -x governance/testing
 
@@ -129,46 +129,33 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      - name: Generate repository SBOM
-        uses: anchore/sbom-action@v0.24.0
-        with:
-          path: .
-          format: spdx-json
-          artifact-name: ot-security-lab-sbom
-          upload-artifact: true
-      - name: Generate gateway base image SBOM
-        uses: anchore/sbom-action@v0.24.0
-        with:
-          image: alpine:3.19
-          format: spdx-json
-          artifact-name: gateway-base-sbom
-          upload-artifact: true
-      - name: Install cosign
+      - name: Install syft and cosign
         run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
           curl -sSLo cosign https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64
           chmod +x cosign
           sudo mv cosign /usr/local/bin/
+          syft version
           cosign version
-      - name: Keyless sign SBOM via Sigstore
+      - name: Generate repository SBOM
+        run: syft scan dir:. -o spdx-json --file ot-security-lab.sbom.spdx.json
+      - name: Generate gateway base image SBOM
+        run: syft scan registry:alpine:3.19 -o spdx-json --file gateway-base.sbom.spdx.json
+      - name: Keyless sign repository SBOM via Sigstore
         run: |
-          SBOM=$(find . -name "*.spdx.json" | head -1)
-          echo "Signing: $SBOM"
-          cosign sign-blob --yes "$SBOM" \
-            --output-signature sbom.sig \
-            --output-certificate sbom.pem
+          cosign sign-blob --yes ot-security-lab.sbom.spdx.json --bundle sbom.bundle
       - name: Verify signature (identity pinned)
         run: |
-          SBOM=$(find . -name "*.spdx.json" | head -1)
           cosign verify-blob \
-            --certificate sbom.pem \
-            --signature sbom.sig \
+            --bundle sbom.bundle \
             --certificate-identity "https://github.com/LiamCarPer/OT-Security-Lab/.github/workflows/ci.yml@refs/heads/main" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-            "$SBOM"
-      - name: Upload signature artifacts
+            ot-security-lab.sbom.spdx.json
+      - name: Upload SBOM artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-signature
+          name: sboms
           path: |
-            sbom.sig
-            sbom.pem
+            ot-security-lab.sbom.spdx.json
+            gateway-base.sbom.spdx.json
+            sbom.bundle

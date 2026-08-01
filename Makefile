@@ -30,7 +30,7 @@ test:
 	python3 -m pytest tests -q
 
 lint:
-	ruff check detection automation governance tests
+	ruff check detection automation governance tests plc lab-environment
 	bandit -q -r detection automation governance -x governance/testing
 
 scan:
