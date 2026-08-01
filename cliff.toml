@@ -9,7 +9,7 @@ body = """
 {% endfor %}
 {% endfor %}
 """
-footer = ""
+footer = "\n"
 
 [git]
 conventional_commits = true
