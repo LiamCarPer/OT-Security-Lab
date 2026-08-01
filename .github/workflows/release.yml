@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Tagged Release with Changelog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate full CHANGELOG
+        uses: orhun/git-cliff-action@v4.8.0
+        with:
+          config: cliff.toml
+          args: --output CHANGELOG.md
+        env:
+          OUTPUT: CHANGELOG.md
+
+      - name: Commit CHANGELOG
+        run: |
+          git config user.name "ot-security-lab-ci"
+          git config user.email "ci@ot-security-lab.invalid"
+          git add CHANGELOG.md
+          git commit -m "docs: update CHANGELOG for ${GITHUB_REF_NAME} [skip ci]" || echo "no changes"
+          git push origin main
+
+      - name: Extract latest release notes
+        id: notes
+        uses: orhun/git-cliff-action@v4.8.0
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file RELEASE_NOTES.md \
+            evidence/SOC_Overview_Dashboard.png \
+            evidence/Loki_Raw_Logs.png \
+            evidence/physics_violation_demo.png

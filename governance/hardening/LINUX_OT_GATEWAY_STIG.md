@@ -8,7 +8,7 @@ This document outlines the hardening (bastionado) procedures for the **Industria
 
 ### [ID: OT-GW-01] Network Interface Isolation
 - **Control:** The gateway must maintain strict interface separation.
-- **Implementation:** 
+- **Implementation:**
     - `eth0`: IT_NETWORK (Static IP: 172.24.0.2)
     - `eth1`: OPS_NETWORK (Static IP: 172.23.0.2)
     - `eth2`: SUPERVISORY_NETWORK (Static IP: 172.22.0.2)
@@ -17,7 +17,7 @@ This document outlines the hardening (bastionado) procedures for the **Industria
 
 ### [ID: OT-GW-02] Least-Privilege Routing (Conduits)
 - **Control:** IP Forwarding is disabled by default and enabled ONLY for specific conduits.
-- **Implementation:** 
+- **Implementation:**
     - DROP ALL traffic by default (IPTables Policy).
     - ALLOW Modbus (TCP/502) only from HMI (172.23.0.5) to PLCs (172.21.0.10-12).
     - DENY all traffic from Control Zone to IT Zone.

@@ -103,7 +103,7 @@ graph TD
     * [**Physics-Aware Safety Monitor**](./detection/rules/process_safety_violation.py)
     * [Cross-Zone Traffic Alerter](./detection/rules/cross_zone_traffic.py)
     *   [Brute Force Detection](./detection/rules/ot_brute_force.py)
-    *   [**Live Detection Evidence (JSON Logs)**](./detection/logs/alerts.json) 
+    *   [**Live Detection Evidence (JSON Logs)**](./detection/logs/alerts.json) — refreshed automatically by the Compliance Gate on every green run
 6.  [Hardening & Compliance](./hardening/)
     *   [Security Hardening Checklist](./hardening/HARDENING_CHECKLIST.md)
     *   [IEC 62443 Gap Analysis](./iec62443/gap-analysis.csv)
@@ -179,7 +179,14 @@ manual `docker cp`/`docker exec` steps are required).
 *   **Security Infrastructure:** `iptables` (Zone Firewall), Scapy (Custom IDS), `iputils-ping`, `nmap`
 *   **Frameworks:** IEC 62443-3-2 (Zones/Conduits), MITRE ATT&CK for ICS, ISA-95 Purdue Model
 *   **Monitoring:** Grafana 11 + Loki 3 (SIEM), Promtail (log shipping), centralized JSON logging
-*   **DevSecOps:** GitHub Actions (CI + Compliance Gate), ruff, bandit, shellcheck, gitleaks, pip-audit, checkov, Trivy, pytest
+*   **DevSecOps:** GitHub Actions (CI + Compliance Gate + Release), ruff, bandit, shellcheck, gitleaks, pip-audit, checkov, Trivy, pytest, **OPA/conftest (policy-as-code)**, **Syft SBOMs with keyless Sigstore signing**, **pre-commit hooks**, **Dependabot**
+
+## 8.1 CI/CD & Supply Chain
+
+*   **CI (`ci.yml`):** 10 gates — lint & SAST (ruff/bandit), unit tests (pytest), shellcheck, gitleaks, pip-audit, checkov, Trivy, OPA policy enforcement on the compose stack, pre-commit hooks, and SBOM generation with keyless cosign attestation (Sigstore).
+*   **Compliance Gate (`compliance-gate.yml`):** boots the full lab, replays all attack simulations, asserts detection, and **commits the fresh alert evidence back to `detection/logs/alerts.json`** — the repository always shows current, machine-generated evidence.
+*   **Release (`release.yml`):** tagged releases (v*) with a git-cliff changelog and evidence screenshots attached.
+*   **Dependabot:** weekly dependency updates for pip, GitHub Actions, and the lab Dockerfiles.
 
 ---
 

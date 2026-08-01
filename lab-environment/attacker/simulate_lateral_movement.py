@@ -23,9 +23,9 @@ def send_modbus_read(target, description):
     """Sends a Modbus Read Holding Registers (FC 3) packet."""
     # MBAP Header: Trans ID (2), Proto ID (2), Length (2), Unit ID (1)
     # Unit ID 1, FC 3 (Read), Start 0, Quantity 1
-    mbap = b"\x00\x01\x00\x00\x00\x06\x01" 
+    mbap = b"\x00\x01\x00\x00\x00\x06\x01"
     modbus_data = b"\x03\x00\x00\x00\x01"
-    
+
     packet = IP(dst=target)/TCP(dport=MODBUS_PORT)/Raw(load=mbap + modbus_data)
     send(packet, verbose=False)
     print(f"[LATERAL] {description} -> Targeting {target}")

@@ -35,3 +35,9 @@ lint:
 
 scan:
 	pip-audit -r requirements-dev.txt
+
+policy:
+	conftest test -p tests/policy lab-environment/docker-compose.yml
+
+precommit:
+	pre-commit run --all-files

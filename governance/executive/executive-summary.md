@@ -30,7 +30,7 @@ The intrusion campaign of 2026-05-01 demonstrates the architecture working as de
 
 | Rank | Risk | Level | Key Mitigation (Implemented or Planned) |
 | :--- | :--- | :--- | :--- |
-| 1 | Unauthorized Modbus write to control logic (T0831) | EXTREME | Gateway allow-lists (Modbus restricted to HMI 172.21.0.20), UNAUTHORIZED_MODBUS_WRITE detection, IR playbook | 
+| 1 | Unauthorized Modbus write to control logic (T0831) | EXTREME | Gateway allow-lists (Modbus restricted to HMI 172.21.0.20), UNAUTHORIZED_MODBUS_WRITE detection, IR playbook |
 | 2 | Process safety violation (T0836) | HIGH | Physics-aware IDS shadowing tank levels; safety interlock at overflow capacity |
 | 3 | Ransomware on historian data | HIGH | Zone isolation in place; **automated offline backups required (P1)** |
 | 4 | Denial of service on PLC network stack | HIGH | Gateway rate limiting; **PLC-side connection limits required (P1)** |

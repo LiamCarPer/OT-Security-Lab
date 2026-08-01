@@ -4,7 +4,7 @@
 
 ## 1. Detection and Analysis (The "Grafana Alert")
 - **Trigger:** SIEM Alert `UNAUTHORIZED_MODBUS_WRITE` or `PROCESS_SAFETY_VIOLATION`.
-- **Validation:** 
+- **Validation:**
     - Verify timestamp in `alerts.json`.
     - Cross-reference with HMI logs: Was this a scheduled maintenance write?
     - Check Historian: Are physical process variables (tank level, pressure) deviating from normal?

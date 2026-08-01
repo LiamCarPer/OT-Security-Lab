@@ -58,7 +58,7 @@ This document tracks the technical challenges, troubleshooting steps, and engine
 - **Problem:** Tracking every single Modbus error was inefficient for high-speed scanners.
 - **Solution:** Developed a sliding-window algorithm that tracks the frequency of **Modbus Exception Codes** (FC > 128). If a threshold (e.g., 5 errors in 60s) is exceeded, it triggers an alert.
 - **Lesson:** Centralized logging to a **JSON format** (`alerts.json`) is essential for auditability. It transforms raw packet capture into machine-readable intelligence that a SIEM or Incident Responder can actually use.
-    
+
 ### 4.3 Stateful vs. Stateless Analysis (The Physics-Aware Shift)
 - **Problem:** Simple IP-based "Allow-listing" fails if an authorized host (like the HMI) is compromised or if an attacker uses "living-off-the-land" techniques with legitimate Modbus commands.
 - **Solution:** Implemented **Stateful Process Shadowing**. The detection engine (`process_safety_violation.py`) tracks the "Physical State" of the plant by sniffing PLC-to-HMI responses. It builds an internal "shadow" of the tank level.
@@ -68,7 +68,7 @@ This document tracks the technical challenges, troubleshooting steps, and engine
 - **Solution:** Deployed a **Grafana/Loki** stack. Unlike heavyweight solutions like Splunk or ELK, Loki uses metadata-based indexing which is ideal for high-volume logs from a resource-constrained industrial gateway.
 
 ### 4.5 The "Multi-Homed" DNS Trap (Docker Networking)
-- **Problem:** When the SIEM (Grafana) was connected to both the IT and Ops networks, it encountered "No route to host" and DNS resolution failures for the Loki backend. 
+- **Problem:** When the SIEM (Grafana) was connected to both the IT and Ops networks, it encountered "No route to host" and DNS resolution failures for the Loki backend.
 - **The Lesson:** Multi-homed containers (bridging two subnets) often confuse the internal Docker DNS resolver (127.0.0.11), which may try to route requests out of the wrong interface.
 - **Solution:** Consolidated the SIEM stack on the IT network exclusively. Promtail still ingests logs via host-mounted volumes, but network communication between Grafana and Loki is now confined to a single, stable bridge.
 - **Engineering Judgment:** In a real-world OT environment, monitoring tools (Grafana) should ideally reside in the Corporate Zone (Level 4/5) and pull data from an Aggregation Zone (Level 3/DMZ), rather than having a foot in every isolated industrial subnet.

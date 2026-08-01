@@ -18,7 +18,7 @@
    ```bash
    iptables -I FORWARD -s [ATTACKER_IP] -j DROP
    ```
-2. **"Local Mode" Over-ride:** Instruct the local plant operator to switch the `PLC-02` control selector from **"Remote/Auto"** to **"Local/Manual."** 
+2. **"Local Mode" Over-ride:** Instruct the local plant operator to switch the `PLC-02` control selector from **"Remote/Auto"** to **"Local/Manual."**
    - This ensures the PLC continues to run its safety logic but ignores any Modbus/Network write commands.
 3. **Physical Verification:** A technician must physically inspect the intake/output valves to ensure they match the HMI display.
 

