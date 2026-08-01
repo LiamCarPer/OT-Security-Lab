@@ -35,4 +35,3 @@ scrape_configs:
       job: sysmon_edr
       env: ot_lab
       __path__: /logs/edr_sysmon_sample.json
-
