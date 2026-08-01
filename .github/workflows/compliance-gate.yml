@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   issues: write
+  statuses: write
 
 jobs:
   lab-validation:
@@ -81,20 +82,12 @@ jobs:
           echo "Publishing diagnostics to public paste..."
           PASTE_URL=$(curl -sS --max-time 30 --data-binary @/tmp/cg-diag.txt https://paste.rs 2>&1)
           echo "PASTE_URL=$PASTE_URL"
-          echo "Posting diagnostics to issue (best effort)..."
-          python3 - "${{ github.sha }}" <<'PYEOF' > /tmp/body.json
-          import json, sys
-          payload = {
-              "title": f"Compliance Gate diagnostics {sys.argv[1]}",
-              "body": open("/tmp/cg-diag.txt").read(),
-          }
-          print(json.dumps(payload))
-          PYEOF
+          echo "Posting paste URL as commit status..."
           curl -sS --max-time 30 -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/issues" \
-            --data @/tmp/body.json || true
+            "https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -d "{\"state\":\"failure\",\"context\":\"compliance-diagnostics\",\"description\":\"Diagnostics: $PASTE_URL\"}" || true
 
       - name: Collect evidence
         if: always()
