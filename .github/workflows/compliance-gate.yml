@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: write
-  issues: write
-  statuses: write
 
 jobs:
   lab-validation:
@@ -33,6 +31,9 @@ jobs:
       - name: Run attack simulations and assert detection
         run: python3 governance/testing/run_security_tests.py --reset
 
+      # Debugging aid: publishes full diagnostics (boot log, container
+      # states, gateway/webhook logs) to the ci-diagnostics branch so
+      # failures can be inspected without read access to step logs.
       - name: Publish diagnostics (on failure)
         if: failure()
         run: |
