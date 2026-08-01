@@ -4,8 +4,8 @@ OT Security Lab - Lateral Movement Simulation Script
 Demonstrates an attacker pivoting across functional sub-processes (Intake -> Treatment -> Distribution).
 Fulfills ADR-01 by proving the value of functional separation and multi-PLC monitoring.
 """
-import time
 import sys
+import time
 
 try:
     from scapy.all import IP, TCP, Raw, send
