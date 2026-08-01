@@ -1,5 +1,5 @@
 # Zone gateway / IDS host - pre-baked dependencies (no runtime package installs)
-FROM alpine:3.19
+FROM alpine:3.24
 
 RUN apk add --no-cache iptables iproute2 python3 py3-pip libpcap \
     && pip3 install --no-cache-dir --break-system-packages scapy
