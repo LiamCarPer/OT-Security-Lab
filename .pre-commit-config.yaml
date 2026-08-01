@@ -9,7 +9,7 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-json
-        exclude: detection/logs/alerts.json  # NDJSON evidence, not a JSON document
+        exclude: detection/logs/  # NDJSON evidence, not JSON documents
       - id: check-added-large-files
       - id: check-case-conflict
 

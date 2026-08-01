@@ -6,8 +6,8 @@ This script demonstrates how a 'Physics-Aware' IDS detects unsafe commands.
 1. It first spoofs a PLC response indicating the tank level is dangerously high (95%).
 2. It then sends a 'Write' command to open the inlet valve, which would cause an overflow.
 """
-import time
 import sys
+import time
 
 try:
     from scapy.all import IP, TCP, Raw, send
