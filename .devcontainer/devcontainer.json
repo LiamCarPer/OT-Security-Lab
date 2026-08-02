@@ -1,0 +1,37 @@
+{
+  "name": "OT Security Lab",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/boot-lab.sh",
+  "forwardPorts": [3000, 8080, 8443, 8444, 8445, 8086, 9093],
+  "portsAttributes": {
+    "3000": { "label": "Grafana", "onAutoForward": "notify" },
+    "8080": { "label": "SCADA HMI", "onAutoForward": "notify" },
+    "8443": { "label": "PLC Intake", "onAutoForward": "notify" },
+    "8444": { "label": "PLC Treatment", "onAutoForward": "notify" },
+    "8445": { "label": "PLC Distribution", "onAutoForward": "notify" },
+    "8086": { "label": "InfluxDB Historian", "onAutoForward": "silent" },
+    "9093": { "label": "Alertmanager", "onAutoForward": "silent" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "tamasfe.even-better-toml"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}

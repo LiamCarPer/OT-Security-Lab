@@ -174,6 +174,24 @@ The gateway container applies the IEC 62443 zone firewall on boot and launches
 all custom detection rules as persistent services (`make up` is sufficient; no
 manual `docker cp`/`docker exec` steps are required).
 
+### Run in Codespaces (one click)
+
+No local Docker required — the whole lab runs in your browser:
+
+1. Open the repository → **Code → Codespaces → Create codespace on main**.
+2. Pick the **4-core / 8GB** machine type (the stack commits ~4.3GB RAM).
+3. Wait for the automatic build and boot (first time ~5-10 min; progress is
+   visible in the terminal). The devcontainer forwards:
+   Grafana `:3000` · SCADA HMI `:8080` · OpenPLC `:8443/:8444/:8445` ·
+   InfluxDB `:8086` · Alertmanager `:9093`.
+4. Validate the environment:
+   ```bash
+   make compliance
+   ```
+   This replays all attack simulations and asserts detection, then commits the
+   fresh evidence back to `detection/logs/alerts.json` — which you can watch
+   update live in the editor.
+
 ---
 
 ## 8. Technologies Used
