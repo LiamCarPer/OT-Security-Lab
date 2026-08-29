@@ -1,7 +1,7 @@
 # Attacker simulation host - pre-baked tooling (no runtime apt/pip installs)
 # Base pinned by digest (kali publishes only rolling tags; digest pinning
 # keeps the build reproducible - re-pin deliberately on image refresh).
-FROM kalilinux/kali-rolling@sha256:dea2bdf0e8c0ca1deb51b7a6253f481acae3ca9c2f1e2371077e6af55e5b2721
+FROM kalilinux/kali-rolling@sha256:ef7a551400b01dc501ff97f192c5b2b1ec629576dab5032822190cd2684ca4e1
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
