@@ -77,7 +77,8 @@ def push_to_loki(line: str) -> None:
         headers={"Content-Type": "application/json"},
     )
     try:
-        urllib.request.urlopen(request, timeout=3).read()
+        # Fixed internal Loki URL, not user input.
+        urllib.request.urlopen(request, timeout=3).read()  # nosec B310
     except OSError as error:
         print(f"[firewall] loki push failed: {error}", flush=True)
 
