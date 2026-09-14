@@ -12,7 +12,7 @@ produced by `pipelines/deploy.py` in
 [ot-detection-engineering](https://github.com/LiamCarPer/ot-detection-engineering)
 and copied from its `deploy/loki/rules/` output.
 
-- **Source commit:** `9bc1e1a511d9e873cad7f0e43513e67808b8d67a`
+- **Source commit:** `da0c8b587ac9bd0048d09700a539b81b77e12dac`
 - **Regenerate:** in that repository, `make deploy`, then refresh this directory.
 - **Mounted by:** `lab-environment/docker-compose.yml`, read-only, at
   `/etc/loki/rules/fake` (tenant `fake` because `auth_enabled` is false). The
