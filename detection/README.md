@@ -13,6 +13,7 @@ are launched automatically on gateway startup by `lab-environment/scripts/start_
 | `process_safety_violation.py` | Inhibit Response / Impair Process Control | **T0836** | Stateful process shadowing: alerts when a safety interlock would be violated (e.g., opening the inlet valve while tank level > 90%). |
 | `cross_zone_traffic.py` | Lateral Movement | **T0886** | Detects direct IP communication between Level 4 (IT `172.24.0.0/24`) and Level 1 (Control `172.21.0.0/24`). |
 | `ot_brute_force.py` | Reconnaissance | **T0846** | Sliding-window detection of high-frequency Modbus Exception codes (FC > 128), indicating scanning/brute-force. |
+| `firewall_events.py` | (telemetry) | — | Ships a normalized `ot_firewall` event to Loki for each new cross-zone flow the conduit policy denies, so the generated detection bundle in `siem/rules/` can evaluate firewall drops. |
 
 ## 2. Logic Implementation
 

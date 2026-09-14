@@ -141,7 +141,9 @@ services:
       - ALL
     volumes:
       - ../siem/configs/loki-config.yaml:/etc/loki/local-config.yaml
-      - ../siem/configs/alerting-rules.yml:/etc/loki/rules/ot-security/rules.yml:ro
+      - ../siem/rules:/etc/loki/rules/fake:ro
+    ports:
+      - "127.0.0.1:3100:3100"
     networks:
       it_network:
         ipv4_address: 172.24.0.20

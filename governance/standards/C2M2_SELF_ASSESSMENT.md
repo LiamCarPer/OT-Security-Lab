@@ -61,7 +61,7 @@ deliberately out of scope for a lab, the rating reflects the pattern demonstrate
 - Alert pipeline produces structured JSON consumed by Alertmanager webhook (SOAR-lite),
   demonstrating machine-readable output suitable for sharing.
 - No external threat-intelligence ingestion or formal ISAC-style sharing (gap to MIL-2).
-- *Evidence:* `automation/playbooks/webhook_receiver.py`, `siem/configs/alerting-rules.yml`
+- *Evidence:* `automation/playbooks/webhook_receiver.py`, `siem/rules/alerting-rules.yml`
 
 ### 6. Event and Incident Response (IR) — MIL-2
 - OT-specific "safety-first" playbook for unauthorized PLC change; containment prioritizes

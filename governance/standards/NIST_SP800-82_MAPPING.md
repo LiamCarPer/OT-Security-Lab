@@ -69,7 +69,7 @@ concrete implementations inside the lab. Maturity is rated per control:
 | NIST Guidance (SP 800-82) | Lab Implementation | Evidence | Maturity |
 | :--- | :--- | :--- | :--- |
 | Documented IR plan tailored to OT | "Safety-First" IR playbook for unauthorized PLC changes, with containment steps that preserve process availability | `incident-response/ir-playbook-unauthorised-plc-change.md`, `governance/incident_response/IR_PLAYBOOK_PLC_TAMPERING.md` | Implemented |
-| Detection-to-alert automation | IDS alerts flow to Loki alerting rules -> Alertmanager -> webhook receiver; verified in `detection/logs/alerts.json` and `siem/configs/alerting-rules.yml` | `lab-environment/docker-compose.yml`, `siem/configs/alerting-rules.yml` | Implemented |
+| Detection-to-alert automation | IDS alerts flow to Loki alerting rules -> Alertmanager -> webhook receiver; verified in `detection/logs/alerts.json` and `siem/rules/alerting-rules.yml` | `lab-environment/docker-compose.yml`, `siem/rules/alerting-rules.yml` | Implemented |
 | Backup / restore of control logic | Golden logic files stored on the EWS; automated periodic backup to offline storage is a documented gap | `iec62443/gap-analysis.csv` (SR_7.3 Simulated) | Simulated |
 | Validate security functionality | CI + Compliance Gate (GitHub Actions) runs the attacker simulation and asserts detection, plus bandit/checkov/Trivy/pip-audit scans | `make compliance`, README DevSecOps section, `lab-environment/attacker/simulate_attack.py` | Implemented |
 
