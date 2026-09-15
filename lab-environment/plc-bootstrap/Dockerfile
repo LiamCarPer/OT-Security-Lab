@@ -3,7 +3,7 @@
 # checkov:skip=CKV_DOCKER_3:Root is required to install the Control-zone route
 #   via the gateway (CAP_NET_ADMIN); a non-root process cannot use container
 #   capabilities. The deployer itself only makes outbound HTTPS calls.
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # iproute2 provides `ip`: the EWS routes Control-zone traffic through the zone
 # gateway so conduit C5 is enforced (a direct path would bypass the firewall).
