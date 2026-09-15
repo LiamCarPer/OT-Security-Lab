@@ -18,25 +18,25 @@ enforcement are implemented and test-verified; the material weaknesses are the
 absence of implemented historian backups (SR_7.3, simulated) and unencrypted
 control protocols (SR_4.1).
 
-## 2. Detection Posture (evidence window: 2026-09-15T14:28:14.221600 → 2026-09-15T14:30:54.841810)
+## 2. Detection Posture (evidence window: 2026-09-15T15:40:48.792376 → 2026-09-15T15:42:55.039992)
 | Detection | Alerts |
 | :--- | ---: |
-| `CROSS_ZONE_VIOLATION` | 30 |
-| `DNP3_UNAUTHORIZED_CONTROL` | 10 |
+| `CROSS_ZONE_VIOLATION` | 50 |
+| `UNAUTHORIZED_MODBUS_WRITE` | 23 |
+| `PROCESS_SAFETY_VIOLATION` | 7 |
+| `DNP3_UNAUTHORIZED_CONTROL` | 6 |
 | `S7COMM_PROGRAM_DOWNLOAD` | 6 |
 | `S7COMM_PROGRAM_UPLOAD` | 6 |
 | `OT_BRUTE_FORCE_SCAN` | 4 |
 | `S7COMM_CHANGE_OPERATING_MODE` | 4 |
-| `UNAUTHORIZED_MODBUS_WRITE` | 3 |
 | `DNP3_RESTART_COMMAND` | 2 |
 | `DNP3_UNSOLICITED_DISABLED` | 2 |
 | `OPCUA_BROWSE_REQUEST` | 2 |
 | `OPCUA_WRITE_REQUEST` | 2 |
 | `OPCUA_METHOD_CALL` | 2 |
-| `PROCESS_SAFETY_VIOLATION` | 1 |
-| **Total** | **74** |
+| **Total** | **116** |
 
-Distinct source addresses observed: 172.22.0.10, 172.23.0.20, 172.24.0.10. Source:
+Distinct source addresses observed: 172.23.0.20, 172.24.0.10. Source:
 `detection/logs/alerts.json`, aggregated by `automation/metrics.py`.
 
 ## 3. Risk Register
@@ -46,7 +46,7 @@ Registered risks by level: **1 EXTREME, 8 HIGH, 3 MEDIUM, 0 LOW** (see `governan
 - **Compliance:** IEC 62443-3-3 implementation score **72.7%**
   (weighted; see `iec62443/compliance-summary.md`).
 - **Zoning:** IEC 62443-3-2 zones/conduits verified by `tests/test_zone_isolation.py`.
-- **Detection:** 74 alerts from 3 distinct
+- **Detection:** 116 alerts from 2 distinct
   sources; `make compliance` asserts every scenario is detected.
 - **Recovery:** RTO/RPO defined per asset in `governance/bia.md`; restore
   exercises outstanding (roadmap RD-10).
