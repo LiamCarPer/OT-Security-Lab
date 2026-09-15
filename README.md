@@ -76,12 +76,13 @@ graph TD
 ```
 
 ### Purdue Levels Mapping:
-> **Note:** the Industrial DMZ components shown above (Jump Host/Bastion,
-> Reverse Proxy, Corporate Workstation) are **target-state** — see the gaps table
-> in [`CLAIMS.md`](./CLAIMS.md). The implemented environment comprises the four
-> zones below; L0 field devices are simulated by the controllers.
+> **Note:** the Industrial DMZ is implemented: a **jump host/bastion**
+> (`ot_bastion`, SSH) and a **reverse proxy** (`ot_reverse_proxy`) publish the
+> operator interface to the Enterprise zone, and a **corporate workstation**
+> exercises the DMZ access path. The gateway enforces the DMZ conduits (C9/C10).
+> L0 field devices are simulated by the controllers.
 
-*   **Level 4/5 (Enterprise):** Corporate LAN, Attacker Simulation, External Monitoring.
+*   **Level 4/5 (Enterprise):** Corporate LAN, Attacker Simulation, Corporate Workstation.
 *   **Industrial DMZ:** Broker for remote access (Jump Host) and data visualization (Proxy).
 *   **Level 3 (Operations):** Historian (InfluxDB) and the segregated Engineering Workstation (EWS).
 *   **Level 2 (Supervisory):** Centralized SCADA/HMI (Scada-LTS) for plant-wide visibility.
@@ -202,8 +203,8 @@ No local Docker required — the whole lab runs in your browser:
 2. Pick the **4-core / 8GB** machine type (the stack commits ~4.3GB RAM).
 3. Wait for the automatic build and boot (first time ~5-10 min; progress is
    visible in the terminal). The devcontainer forwards:
-   Grafana `:3000` · SCADA HMI `:8080` · OpenPLC `:8443/:8444/:8445` ·
-   InfluxDB `:8086` · Alertmanager `:9093`.
+   Grafana `:3000` · SCADA HMI `:8080` (via the DMZ reverse proxy) ·
+   OpenPLC `:8443/:8444/:8445` · Bastion SSH `:2222` · Alertmanager `:9093`.
 4. Validate the environment:
    ```bash
    make compliance

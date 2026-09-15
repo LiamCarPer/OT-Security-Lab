@@ -57,10 +57,12 @@ deny contains msg if {
     msg := sprintf("service %q drops capabilities but lacks no-new-privileges", [key])
 }
 
-# Only the enterprise (IT) zone may be non-internal; OT zones must be isolated
+# Only the boundary zones (Enterprise and Industrial DMZ) may be non-internal;
+# the OT zones must be isolated.
 deny contains msg if {
     input.networks[k]
     k != "it_network"
+    k != "dmz_network"
     not input.networks[k].internal
     msg := sprintf("network %q must be internal (OT zone isolation)", [k])
 }

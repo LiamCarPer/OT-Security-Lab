@@ -16,6 +16,7 @@ tested), `Partial`, `Planned`.
 | All protocol detections fire on live lab traffic | Verified | `detection/rules/*_dpi.py` → Loki ruler rules | `run_security_tests.py` asserts alerts **and** Loki rule state |
 | Historian is actually written (Modbus → InfluxDB → Grafana) | Verified | `process_state` measurement; L2 collector | `governance/testing/check_historian.py` |
 | HMI is a real Modbus master with history | Verified | Scada-LTS datasources + point history | `check_historian.py` Scada-history check |
+| Industrial DMZ (bastion + reverse proxy + corporate workstation) is deployed | Verified | `lab-environment/{bastion,reverse-proxy,corporate-workstation}`; corporate→proxy→HMI returns 200 | `tests/test_zone_isolation.py`; `grep 172.25` route checks |
 | Zone firewall is default-deny, source-restricted, no bypass | Verified | `network-config/firewall-rules.sh` | `tests/test_zone_isolation.py` |
 | Cross-zone IT→Control traffic is detected and blocked | Verified | `CROSS_ZONE_VIOLATION` alerts | `run_security_tests.py` |
 | IEC 62443-3-3 implementation score | Implemented | 72.7% weighted from `iec62443/gap-analysis.csv` | `tests/test_compliance_score.py` |
@@ -34,4 +35,3 @@ tested), `Partial`, `Planned`.
 | Hardware data diode | Planned | Unidirectional flow is `iptables`-enforced; optical diode is future work. |
 | PLC host-level integrity / secure boot | Planned | Control zone is SL-2; host hardening is the path to SL-3 (`iec62443/sl-mapping.md`). |
 | EDR on EWS/HMI | Planned | Sysmon sample telemetry exists for the dashboard; no live agent. |
-| DMZ jump host / reverse proxy / corporate workstation | Planned | Diagram shows the target DMZ; not yet deployed. |

@@ -17,3 +17,6 @@ ASSET-15,historian-poller,172.22.0.20,Supervisory,L2,Historian Collector,Open So
 ASSET-16,modbus-sim-intake,172.21.0.60,Control,L1,Process Simulator,Open Source,pymodbus,3.6.9,502/tcp,2026-04-23,Intake process stand-in (until OpenPLC bundles)
 ASSET-17,modbus-sim-treatment,172.21.0.61,Control,L1,Process Simulator,Open Source,pymodbus,3.6.9,502/tcp,2026-04-23,Treatment process stand-in
 ASSET-18,modbus-sim-distribution,172.21.0.62,Control,L1,Process Simulator,Open Source,pymodbus,3.6.9,502/tcp,2026-04-23,Distribution process stand-in
+ASSET-19,reverse-proxy,172.25.0.10,DMZ,L3.5,Reverse Proxy,nginx,nginx-1.27,1.27,80/tcp,2026-04-23,Publishes operator UI (host :8080)
+ASSET-20,bastion,172.25.0.11,DMZ,L3.5,Jump Host,OpenSSH,alpine,10.3,22/tcp,2026-04-23,Remote maintenance entry point
+ASSET-21,corp-ws,172.24.0.30,Enterprise,L4,Corporate Workstation,Alpine,corp-ws,v1.0,None,2026-04-23,Exercises the DMZ access path

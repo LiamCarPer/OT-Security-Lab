@@ -1,0 +1,9 @@
+# Lab bastion sshd configuration (DMZ jump host).
+Port 22
+Protocol 2
+PermitRootLogin no
+PasswordAuthentication yes
+AllowUsers engineer
+X11Forwarding no
+# Keep it simple and auditable for the lab.
+PrintMotd no

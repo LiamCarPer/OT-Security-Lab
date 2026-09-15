@@ -31,6 +31,8 @@ services:
         ipv4_address: 172.22.0.2
       control_network:
         ipv4_address: 172.21.0.2
+      dmz_network:
+        ipv4_address: 172.25.0.2
 
   # 2. Intake Process PLC (Level 1 - Control)
   plc_intake:
@@ -156,8 +158,6 @@ services:
       - NET_ADMIN
     environment:
       - CATALINA_OPTS=-Xmx768M -Xms256M
-    ports:
-      - "8080:8080"
     depends_on:
       database:
         condition: service_healthy
@@ -483,6 +483,83 @@ services:
       ops_network:
         ipv4_address: 172.23.0.20
 
+  # --- Industrial DMZ (Level 3.5) ---
+  # The boundary zone: corporate access terminates here and is proxied to the
+  # Supervisory HMI. It is the only non-internal network aside from the
+  # Enterprise zone, so the published proxy is reachable from the host.
+
+  # Reverse proxy: publishes the operator interface (host 8080 -> HMI via C10).
+  reverse-proxy:
+    image: nginx:1.27-alpine
+    container_name: ot_reverse_proxy
+    restart: unless-stopped
+    mem_limit: 64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    volumes:
+      - ./reverse-proxy/default.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    networks:
+      dmz_network:
+        ipv4_address: 172.25.0.10
+
+  # Route sidecar: DMZ -> Supervisory via the gateway (conduit C10).
+  proxy-route:
+    build: ./route-sidecar
+    container_name: ot_proxy_route
+    restart: unless-stopped
+    mem_limit: 32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    network_mode: "service:reverse-proxy"
+    command: >
+      /bin/sh -c "for net in 172.22.0.0/24 172.24.0.0/24; do
+      until ip route replace $$net via 172.25.0.2 2>/dev/null; do sleep 2; done; done;
+      exec tail -f /dev/null"
+    depends_on:
+      - reverse-proxy
+
+  # Jump host / bastion: the mandatory entry point for remote maintenance.
+  bastion:
+    build: ./bastion
+    container_name: ot_bastion
+    restart: unless-stopped
+    mem_limit: 64m
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "2222:22"
+    networks:
+      dmz_network:
+        ipv4_address: 172.25.0.11
+
+  # Corporate workstation (Enterprise zone) exercising the DMZ access path.
+  corporate-workstation:
+    build: ./corporate-workstation
+    container_name: ot_corp_ws
+    restart: unless-stopped
+    mem_limit: 64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    networks:
+      it_network:
+        ipv4_address: 172.24.0.30
+
   # --- SIEM STACK (Level 3 & Level 4 Integration) ---
 
   # 8. Log Storage (Loki) - Level 4 Enterprise
@@ -625,6 +702,13 @@ networks:
     ipam:
       config:
         - subnet: 172.21.0.0/24
+  # Industrial DMZ boundary zone: not internal, so the reverse proxy is
+  # reachable from the host; the gateway still enforces DMZ <-> OT conduits.
+  dmz_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
 
 volumes:
   # Scada-LTS configuration (datasources/datapoints) persists across restarts;

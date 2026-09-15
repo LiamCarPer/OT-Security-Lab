@@ -7,7 +7,8 @@ Each zone is a grouping of logical or physical assets that share common security
 
 | Zone Name | Purdue Level | Description | Target SL (SL-T) | Primary Assets |
 | :--- | :--- | :--- | :--- | :--- |
-| **Enterprise Zone** | 4/5 | Corporate IT infrastructure and external access. | SL-1 | Attacker Simulator, VPN Gateway. |
+| **Enterprise Zone** | 4/5 | Corporate IT infrastructure and external access. | SL-1 | Attacker Simulator, Corporate Workstation. |
+| **Industrial DMZ** | 3.5 | Boundary zone: remote access and proxied operator UI. | SL-2 | Reverse Proxy, Jump Host/Bastion. |
 | **Operations Zone** | 3 | Data aggregation and engineering workstations. | SL-2 | Historian (InfluxDB), EWS. |
 | **Supervisory Zone** | 2 | Real-time monitoring and operator interface. | SL-2 | HMI (Scada-LTS), historian collector. |
 | **Control Zone** | 1 | Real-time logic execution and control. | SL-3 | OpenPLC, DNP3/OPC UA/S7comm endpoints. |
@@ -72,6 +73,20 @@ applied by `lab-environment/network-config/firewall-rules.sh` on the gateway.
 *   **Requirement:** Source-restricted to `172.23.0.20`. Siemens engineering
   access (read/write, program download/upload, PLC control).
 
+### C9: Corporate Access to the DMZ (Enterprise → DMZ)
+*   **Source Zone:** Enterprise Zone (Level 4/5) — corporate workstation `172.24.0.30`
+*   **Destination Zone:** Industrial DMZ (Level 3.5) — reverse proxy `172.25.0.10`, bastion `172.25.0.11`
+*   **Protocol:** HTTP (Port 80), SSH (Port 22)
+*   **Requirement:** Corporate clients reach the operator UI and the jump host
+  only through the DMZ.
+
+### C10: DMZ to Supervisory (DMZ → Supervisory)
+*   **Source Zone:** Industrial DMZ (Level 3.5) — reverse proxy `172.25.0.10`
+*   **Destination Zone:** Supervisory Zone (Level 2) — HMI `172.22.0.10`
+*   **Protocol:** HTTP (Port 8080)
+*   **Requirement:** The proxy fronts the operator interface; the HMI itself is
+  never exposed to the Enterprise zone.
+
 ### Single chokepoint (no bypass)
 Every OT service is single-homed on its zone network and routes other zones'
 traffic through the gateway; the gateway is the only multi-homed container. The
@@ -84,10 +99,11 @@ the gateway is multi-homed; OT zones are internal; the firewall is default-deny)
 ### Host access to OT services
 The OT networks (`ops_network`, `supervisory_network`, `control_network`) are
 Docker `internal` networks, so Docker does not publish their ports on the host.
-Services in those zones (InfluxDB, Scada-LTS) are reached through the gateway or
-inspected with `docker exec`; only the Enterprise-zone services (Grafana, Loki)
-are host-published. This is a deliberate consequence of the segmentation, not a
-misconfiguration.
+The Enterprise and DMZ boundary zones are not internal: Grafana/Loki are
+host-published directly, and the **DMZ reverse proxy** publishes the operator UI
+on host `:8080` (proxied to the HMI via C10). InfluxDB and Scada-LTS themselves
+are reached through the gateway or inspected with `docker exec`. This is a
+deliberate consequence of the segmentation, not a misconfiguration.
 
 ---
 

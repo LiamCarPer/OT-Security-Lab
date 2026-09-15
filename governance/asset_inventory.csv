@@ -14,3 +14,5 @@ A.12,S7_PLC,Control (L1),172.21.0.52,S7comm/TCP,High,S7comm server endpoint,Engi
 A.13,EWS_Compromised,Operations (L3),172.23.0.20,Multi-Protocol,High,Adversary pivot (protocol clients),Security
 A.14,Historian_Poller,Supervisory (L2),172.22.0.20,Multi-Zone,High,Historian collector (Modbus->InfluxDB),Operations
 A.15,Process_Standin,Control (L1),172.21.0.60-62,Modbus TCP,Medium,Modbus process stand-in (x3),Operations
+A.16,DMZ_ReverseProxy,DMZ (L3.5),172.25.0.10,HTTP,Medium,Publishes operator UI,Security
+A.17,DMZ_Bastion,DMZ (L3.5),172.25.0.11,SSH,High,Remote maintenance jump host,Security

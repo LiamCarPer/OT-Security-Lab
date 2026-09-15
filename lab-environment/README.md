@@ -18,10 +18,11 @@ sudo docker compose up -d
 ```
 
 This starts: 3 OpenPLC runtimes (L1), real DNP3/OPC UA/S7comm endpoints (L1),
-Scada-LTS HMI + MySQL config store (L2),
-InfluxDB historian (L3), the EWS/plc-bootstrap deployer (L3), a compromised-EWS
-insider (L3), the zone gateway (firewall + persistent IDS), the Kali attacker
-(L4), and the Grafana/Loki/Promtail SIEM stack.
+Scada-LTS HMI + MySQL config store (L2), an Industrial DMZ with a reverse proxy
+and bastion (L3.5), InfluxDB historian (L3), the EWS/plc-bootstrap deployer (L3),
+a compromised-EWS insider (L3), the zone gateway (firewall + persistent IDS),
+the Kali attacker (L4), a corporate workstation (L4), and the
+Grafana/Loki/Promtail SIEM stack.
 
 ### What happens on boot
 

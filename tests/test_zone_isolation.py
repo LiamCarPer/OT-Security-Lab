@@ -32,6 +32,7 @@ def test_gateway_bridges_every_zone():
     networks = set(_compose()["services"]["gateway"]["networks"])
     assert {
         "it_network",
+        "dmz_network",
         "ops_network",
         "supervisory_network",
         "control_network",
@@ -40,8 +41,9 @@ def test_gateway_bridges_every_zone():
 
 def test_ot_zones_are_internal():
     networks = _compose()["networks"]
+    boundary = {"it_network", "dmz_network"}
     for name, config in networks.items():
-        if name == "it_network":
+        if name in boundary:
             continue
         assert config.get("internal") is True, f"{name} must be internal"
 

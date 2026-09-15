@@ -30,13 +30,14 @@ LOKI_URL = "http://172.24.0.20:3100/loki/api/v1/push"
 
 ZONES = {
     "it": ipaddress.ip_network("172.24.0.0/24"),
+    "dmz": ipaddress.ip_network("172.25.0.0/24"),
     "ops": ipaddress.ip_network("172.23.0.0/24"),
     "supervisory": ipaddress.ip_network("172.22.0.0/24"),
     "control": ipaddress.ip_network("172.21.0.0/24"),
 }
 
 # The gateway's own addresses (one per zone); its traffic is not a forwarded flow.
-GATEWAY_IPS = {"172.21.0.2", "172.22.0.2", "172.23.0.2", "172.24.0.2"}
+GATEWAY_IPS = {"172.21.0.2", "172.22.0.2", "172.23.0.2", "172.24.0.2", "172.25.0.2"}
 
 # Conduits allowed by lab-environment/network-config/firewall-rules.sh.
 CONDUITS = (
@@ -47,6 +48,9 @@ CONDUITS = (
     ("ops", "control", "TCP", 20000),
     ("ops", "control", "TCP", 4840),
     ("ops", "control", "TCP", 102),
+    ("it", "dmz", "TCP", 80),
+    ("it", "dmz", "TCP", 22),
+    ("dmz", "supervisory", "TCP", 8080),
 )
 
 

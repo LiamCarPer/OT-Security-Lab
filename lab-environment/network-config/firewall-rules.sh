@@ -19,8 +19,9 @@ IF_IT=$(get_iface "172.24.0.2/24")            # Level 4/5: Enterprise (IT)
 IF_OPS=$(get_iface "172.23.0.2/24")           # Level 3: Operations (Historian)
 IF_SUPERVISORY=$(get_iface "172.22.0.2/24")   # Level 2: Supervisory (HMI)
 IF_CONTROL=$(get_iface "172.21.0.2/24")       # Level 1: Control (PLCs)
+IF_DMZ=$(get_iface "172.25.0.2/24")           # Level 3.5: Industrial DMZ
 
-for zone in IT OPS SUPERVISORY CONTROL; do
+for zone in IT OPS SUPERVISORY CONTROL DMZ; do
     eval "iface=\${IF_$zone}"
     if [ -z "$iface" ]; then
         echo "[FIREWALL] ERROR: could not auto-detect interface for zone $zone"
@@ -78,6 +79,15 @@ iptables -A FORWARD -i "$IF_OPS" -o "$IF_CONTROL" -s 172.23.0.20 -p tcp --dport 
 
 # Conduit C8: insider (L3) -> S7comm server (L1): S7comm/TCP 102
 iptables -A FORWARD -i "$IF_OPS" -o "$IF_CONTROL" -s 172.23.0.20 -p tcp --dport 102 -j ACCEPT
+
+# --- 5c. DMZ conduits (Enterprise <-> DMZ <-> Supervisory) ---
+
+# Conduit C9: Enterprise (L4) -> DMZ: reverse proxy 80 and bastion 22
+iptables -A FORWARD -i "$IF_IT" -o "$IF_DMZ" -p tcp --dport 80 -j ACCEPT
+iptables -A FORWARD -i "$IF_IT" -o "$IF_DMZ" -p tcp --dport 22 -j ACCEPT
+
+# Conduit C10: DMZ -> Supervisory (L2): reverse proxy to the HMI 8080
+iptables -A FORWARD -i "$IF_DMZ" -o "$IF_SUPERVISORY" -p tcp --dport 8080 -j ACCEPT
 
 # --- 6. Denied-traffic logging (rate-limited, consumed by the SIEM) ---
 iptables -A FORWARD -m limit --limit 5/min --limit-burst 10 -j LOG --log-prefix "FW_DROP: " --log-level 4
