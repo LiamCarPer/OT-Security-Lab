@@ -7,7 +7,7 @@
 #
 # checkov:skip=CKV_DOCKER_3:Root is required to install the Control-zone route
 #   (CAP_NET_ADMIN); the container drops all other capabilities.
-FROM python:3.10-slim
+FROM python:3.14-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends iproute2 \
