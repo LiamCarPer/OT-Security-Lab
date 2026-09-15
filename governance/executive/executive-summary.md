@@ -18,7 +18,7 @@ enforcement are implemented and test-verified; the material weaknesses are the
 absence of implemented historian backups (SR_7.3, simulated) and unencrypted
 control protocols (SR_4.1).
 
-## 2. Detection Posture (evidence window: 2026-09-15T16:52:05.995171 → 2026-09-15T16:54:24.978768)
+## 2. Detection Posture (evidence window: 2026-09-15T17:03:01.435640 → 2026-09-15T17:05:18.482221)
 | Detection | Alerts |
 | :--- | ---: |
 | `CROSS_ZONE_VIOLATION` | 50 |
