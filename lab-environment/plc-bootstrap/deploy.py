@@ -22,9 +22,12 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Configuration
+# Targets are the controllers' Control-zone IPs: the deployer runs in
+# Operations and reaches them through the gateway (conduit C5), so Docker
+# service names do not resolve here.
 TARGETS = os.getenv(
     "OT_PLC_TARGETS",
-    "intake=plc_intake,treatment=plc_treatment,distribution=plc_distribution",
+    "intake=172.21.0.10,treatment=172.21.0.11,distribution=172.21.0.12",
 )
 PROGRAM_DIR = Path(os.getenv("OT_PROGRAM_DIR", "/programs"))
 PLC_USER = os.getenv("OT_PLC_USER", "otadmin")
@@ -127,7 +130,8 @@ def deploy(name, host, bundle):
     deadline = time.time() + START_TIMEOUT
     while time.time() < deadline:
         state = session.get(f"{base}/status", headers=headers, timeout=15).json()
-        if state.get("status") == "RUNNING":
+        # The runtime reports e.g. "STATUS:RUNNING" or "RUNNING".
+        if "RUNNING" in str(state.get("status", "")):
             log(f"{name}: RUNNING")
             return True
         time.sleep(2)

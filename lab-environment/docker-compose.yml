@@ -79,6 +79,67 @@ services:
       control_network:
         ipv4_address: 172.21.0.12
 
+  # 4a. Controller route sidecars - share each PLC's netns and route replies to
+  # the Supervisory/Operations zones through the gateway, so the HMI/collector/
+  # EWS reach the real controllers and the traffic stays observable (symmetric
+  # routing through the chokepoint; see LESSONS_LEARNED.md).
+  plc-intake-route:
+    build: ./route-sidecar
+    container_name: ot_plc_intake_route
+    restart: unless-stopped
+    mem_limit: 32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    network_mode: "service:plc_intake"
+    command: >
+      /bin/sh -c "for net in 172.22.0.0/24 172.23.0.0/24; do
+      until ip route replace $$net via 172.21.0.2 2>/dev/null; do sleep 2; done; done;
+      exec tail -f /dev/null"
+    depends_on:
+      - plc_intake
+
+  plc-treatment-route:
+    build: ./route-sidecar
+    container_name: ot_plc_treatment_route
+    restart: unless-stopped
+    mem_limit: 32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    network_mode: "service:plc_treatment"
+    command: >
+      /bin/sh -c "for net in 172.22.0.0/24 172.23.0.0/24; do
+      until ip route replace $$net via 172.21.0.2 2>/dev/null; do sleep 2; done; done;
+      exec tail -f /dev/null"
+    depends_on:
+      - plc_treatment
+
+  plc-distribution-route:
+    build: ./route-sidecar
+    container_name: ot_plc_distribution_route
+    restart: unless-stopped
+    mem_limit: 32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    network_mode: "service:plc_distribution"
+    command: >
+      /bin/sh -c "for net in 172.22.0.0/24 172.23.0.0/24; do
+      until ip route replace $$net via 172.21.0.2 2>/dev/null; do sleep 2; done; done;
+      exec tail -f /dev/null"
+    depends_on:
+      - plc_distribution
+
   # 5. Human Machine Interface (Level 2 - Supervisory)
   # Real Scada-LTS: polls the PLCs over Modbus/TCP and writes commands. Its
   # configuration lives in MySQL and is created by the scada-provisioner.

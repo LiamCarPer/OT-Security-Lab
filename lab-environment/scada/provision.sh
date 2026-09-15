@@ -10,9 +10,9 @@ BASE="${OT_SCADA_URL:-http://hmi:8080/Scada-LTS}"
 USER="${OT_SCADA_USER:-admin}"
 PASS="${OT_SCADA_PASS:-admin}"
 # TARGETS format: "<plc name> <stage> <datasource xid> <host> <registers...>" per PLC
-# Points at the Modbus process stand-in until the OpenPLC bundles are committed;
-# switch the hosts to the controllers (172.21.0.10/11/12) once they serve 502.
-TARGETS="${OT_SCADA_TARGETS:-PLC-01 Intake DS_PLC1 172.21.0.60 0 1 5 6;PLC-02 Treatment DS_PLC2 172.21.0.61 0 1 2 5 6;PLC-03 Distribution DS_PLC3 172.21.0.62 0 1 2 5 6}"
+# The real OpenPLC controllers (programmed by plc-bootstrap). Reachable from the
+# Supervisory zone through the gateway (conduit C1).
+TARGETS="${OT_SCADA_TARGETS:-PLC-01 Intake DS_PLC1 172.21.0.10 0 1 5 6;PLC-02 Treatment DS_PLC2 172.21.0.11 0 1 2 5 6;PLC-03 Distribution DS_PLC3 172.21.0.12 0 1 2 5 6}"
 
 SID=""
 

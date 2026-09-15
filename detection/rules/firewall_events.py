@@ -41,7 +41,6 @@ GATEWAY_IPS = {"172.21.0.2", "172.22.0.2", "172.23.0.2", "172.24.0.2"}
 # Conduits allowed by lab-environment/network-config/firewall-rules.sh.
 CONDUITS = (
     ("supervisory", "control", "TCP", 502),
-    ("ops", "control", "TCP", 502),
     ("supervisory", "ops", "TCP", 8086),
     ("it", "ops", "TCP", 8086),
     ("ops", "control", "TCP", 8443),

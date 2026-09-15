@@ -11,7 +11,6 @@ Usage:
 import argparse
 import json
 import os
-import re
 import subprocess
 import sys
 import time
@@ -99,24 +98,19 @@ TESTS = [
 
 
 def scada_get_value(xid, timeout=5):
-    """Authenticate to Scada-LTS and read a live point value.
+    """Read a live point value from Scada-LTS.
 
-    The session id is captured from the auth response and passed explicitly as a
-    Cookie header (curl's cookie jar is not reliably replayed in every image).
+    The OT zones are Docker `internal` networks, so Scada-LTS is not published
+    on the host; query it from inside its container via `docker exec`.
     """
-    auth = subprocess.run(
-        ["curl", "-s", "-D", "-", "-o", "/dev/null",
-         f"{SCADA_BASE}/api/auth/admin/admin"],
-        capture_output=True,
-        text=True,
+    command = (
+        "B=http://hmi:8080/Scada-LTS; "
+        'sid=$(curl -s -D - -o /dev/null "$B/api/auth/admin/admin" | tr -d "\\r" '
+        "| sed -n 's/^Set-Cookie: JSESSIONID=\\([^;]*\\).*/\\1/p'); "
+        f'curl -s -H "Cookie: JSESSIONID=$sid" "$B/api/point_value/getValue/{xid}"'
     )
-    session = re.search(r"JSESSIONID=([^;]+)", auth.stdout)
-    if not session:
-        return None
     result = subprocess.run(
-        ["curl", "-s", "--max-time", str(timeout),
-         "-H", f"Cookie: JSESSIONID={session.group(1)}",
-         f"{SCADA_BASE}/api/point_value/getValue/{xid}"],
+        ["docker", "exec", "ot_scada_provisioner", "sh", "-c", command],
         capture_output=True,
         text=True,
     )

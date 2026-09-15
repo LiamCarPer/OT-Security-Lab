@@ -24,12 +24,11 @@ applied by `lab-environment/network-config/firewall-rules.sh` on the gateway.
 *   **Protocol:** Modbus/TCP (Port 502)
 *   **Requirement:** Operator read/write access to controller holding registers.
 
-### C2: Historian Data Collection (Operations → Control)
-*   **Source Zone:** Operations Zone (Level 3) — Historian `172.23.0.10`
-*   **Destination Zone:** Control Zone (Level 1)
-*   **Protocol:** Modbus/TCP (Port 502)
-*   **Requirement:** Read-only process data collection. Reserved for a future
-  direct L3 collector; the implemented collector sits in L2 and uses C1.
+### C2: Direct Historian Collection (Operations → Control) — not used
+*   **Status:** Removed. The historian host has **no L3 → L1 path**; the L2
+  collector reads the controllers over C1 and writes the historian northbound
+  over C3. This keeps the tiered data architecture (ADR-02) one-directional with
+  respect to the historian.
 
 ### C3: HMI-to-Historian (Supervisory → Operations)
 *   **Source Zone:** Supervisory Zone (Level 2)
@@ -46,34 +45,41 @@ applied by `lab-environment/network-config/firewall-rules.sh` on the gateway.
 *   **Requirement:** Read-only reporting; no path from IT to the Control Zone.
 
 ### C5: Engineering Deployment (Operations → Control)
-*   **Source Zone:** Operations Zone (Level 3) — EWS/provisioning host `172.23.0.4`
+*   **Source Zone:** Operations Zone (Level 3) — EWS `172.23.0.4`
 *   **Destination Zone:** Control Zone (Level 1)
 *   **Protocol:** OpenPLC runtime API (Port 8443, HTTPS)
-*   **Requirement:** The engineering workstation may push compiled logic to the
-  controllers, but is denied Modbus (502) access. Deployment only.
+*   **Requirement:** Source-restricted to the EWS `172.23.0.4`: it may push
+  compiled logic to the controllers, but is denied Modbus (502) access.
 
 ### C6: DNP3 Polling (Operations → Control)
-*   **Source Zone:** Operations Zone (Level 3) — EWS `172.23.0.4` / compromised
-  workstation `172.23.0.20`
+*   **Source Zone:** Operations Zone (Level 3) — insider `172.23.0.20`
 *   **Destination Zone:** Control Zone (Level 1) — DNP3 outstation `172.21.0.50`
 *   **Protocol:** DNP3/TCP (Port 20000)
-*   **Requirement:** RTU polling and control. The DNP3 application security
-  rule authorizes specific master link addresses; the IDS flags others.
+*   **Requirement:** Source-restricted to `172.23.0.20`. The DNP3 application
+  security rule authorizes specific master link addresses; the IDS flags others.
 
 ### C7: OPC UA Client Access (Operations → Control)
-*   **Source Zone:** Operations Zone (Level 3)
+*   **Source Zone:** Operations Zone (Level 3) — insider `172.23.0.20`
 *   **Destination Zone:** Control Zone (Level 1) — OPC UA server `172.21.0.51`
 *   **Protocol:** OPC UA/TCP (Port 4840)
-*   **Requirement:** Engineering read/write and method calls over OPC UA.
-  Plaintext (`None`) policy in the lab so the service layer is observable.
+*   **Requirement:** Source-restricted to `172.23.0.20`. Plaintext (`None`)
+  policy in the lab so the service layer is observable.
 
 ### C8: S7comm Engineering Access (Operations → Control)
-*   **Source Zone:** Operations Zone (Level 3)
+*   **Source Zone:** Operations Zone (Level 3) — insider `172.23.0.20`
 *   **Destination Zone:** Control Zone (Level 1) — S7comm server `172.21.0.52`
 *   **Protocol:** S7comm/TCP (Port 102)
-*   **Requirement:** Siemens engineering access (read/write, program
-  download/upload, PLC control). The most sensitive controller conduit; the C8
-  rules are precisely the path a compromised EWS abuses.
+*   **Requirement:** Source-restricted to `172.23.0.20`. Siemens engineering
+  access (read/write, program download/upload, PLC control).
+
+### Single chokepoint (no bypass)
+Every OT service is single-homed on its zone network and routes other zones'
+traffic through the gateway; the gateway is the only multi-homed container. The
+HMI, collector, EWS, insider and the controllers (via route sidecars) all use
+static routes via the gateway, so inter-zone traffic is enforced and observed at
+the chokepoint. `tests/test_zone_isolation.py` asserts these invariants (only
+the gateway is multi-homed; OT zones are internal; the firewall is default-deny).
+
 
 ### Host access to OT services
 The OT networks (`ops_network`, `supervisory_network`, `control_network`) are

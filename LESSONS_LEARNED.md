@@ -359,3 +359,60 @@ unprogrammed. Closing the path exposed three more environment realities.
 - **The Lesson:** Application APIs lie in small ways. Trust the observed effect
   (recorded history), not the read-back field, and encode the quirks in the
   provisioner with comments so the next person does not rediscover them.
+
+---
+
+## 11. Deploying Real OpenPLC Logic Without the Desktop Editor
+
+The lab claimed OpenPLC ran real process logic, but no program bundles were
+committed (the editor is a desktop app), so the controllers ran `EMPTY` and the
+flagship physics detection was verified with a spoofed stimulus. Making the claim
+true turned out to be tractable by reusing the compiler the editor itself uses.
+
+### 11.1 STruC++ Is the Bundle Generator
+- **Finding:** A `program.zip` is a small set of STruC++ codegen outputs:
+  `generated.hpp` + `generated.cpp`, the STruC++ runtime headers, `defines.h`
+  (`PROGRAM_MD5`), `generated_debug.cpp`, and protocol config under `conf/`.
+  The desktop editor orchestrates this, but the codegen is STruC++ itself.
+- **Solution:** `plc/build.sh` runs the release STruC++ binary on `plc/*.st`,
+  ships the headers from the same release, writes `defines.h` and a minimal
+  `generated_debug.cpp`, and adds `conf/modbus_slave.json`. The CLI's single
+  `generated.cpp` is exactly the "one POU TU + configuration.cpp" the runtime's
+  `Makefile.strucpp` wildcards, so no editor is needed.
+- **The Lesson:** "GUI-only" build steps are often wrappers over a CLI/library.
+  Find the underlying compiler and the artifact contract, and the GUI becomes
+  optional.
+
+### 11.2 The Modbus Plugin Config Schema Changed
+- **Problem:** The first bundle compiled and ran, but the Modbus server never
+  bound: it used port 5020 on the host IP.
+- **Root Cause:** The plugin reads its listener from a `network_configuration`
+  object; a legacy top-level `host`/`port` is ignored, so it fell back to
+  defaults.
+- **Solution:** `{"network_configuration": {"host": "0.0.0.0", "port": 502},
+  "buffer_mapping": {...}}`.
+- **The Lesson:** When a config "loads" but the component uses defaults, read the
+  parser, not the example.
+
+### 11.3 The Same Three Infrastructure Traps, Again
+- **Asymmetric routing:** the controllers' replies bypassed the gateway and the
+  sessions stalled — fixed with a route sidecar per PLC (default route for the
+  Supervisory/Operations subnets via the gateway), mirroring the endpoint fix.
+- **Cross-network DNS:** the deployer runs in Operations and cannot resolve the
+  Control-zone service names; it must use the controllers' IPs (via conduit C5).
+- **Status strings:** the runtime reports `STATUS:RUNNING`, not `RUNNING`; the
+  deployer now matches on substring.
+
+### 11.4 A Real Process Needs a Realistic Timescale
+- **Problem:** With a 50 ms task the tank crossed the 90% safety envelope in
+  ~0.25 s — faster than the 1 s HMI shadow poll, so a single unsafe write almost
+  always missed the window and the detection looked broken.
+- **Solution:** Slow the controller task to a realistic 500 ms (2%/s tank fill),
+  and make the adversary stimulus persistent (repeated FC6 writes across the
+  fill cycle).
+- **The Lesson:** Detection-to-process timing is part of the engineering. A
+  detection that is "correct" but faster than its data source is silent.
+
+**Outcome:** `process_safety_violation` now fires on the live OpenPLC process
+(alert `source_ip` is the real attacker, `tank_level_pct` an observed value),
+and the controller claim in the README is literally true.
