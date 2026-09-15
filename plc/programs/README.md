@@ -26,6 +26,10 @@ plc/
 plc/build.sh      # downloads STruC++ v0.6.6, compiles each plc/*.st, zips the bundle
 ```
 
+The STruC++ release asset is pinned by SHA-256 in `build.sh` (GitHub release
+assets are mutable); the build fails loudly if the downloaded archive no longer
+matches, instead of silently producing different generated code.
+
 `build.sh` runs the same STruC++ codegen the editor uses and assembles the
 layout the runtime expects:
 

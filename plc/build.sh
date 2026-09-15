@@ -18,6 +18,10 @@ ARCH="${OT_STRUCPP_ARCH:-x64}"
 VERSION="${OT_STRUCPP_VERSION:-v0.6.6}"
 CACHE="$ROOT/.toolchain"
 STRUCPP="${OT_STRUCPP:-$CACHE/strucpp/strucpp}"
+# SHA-256 of the strucpp-linux-x64.tar.gz asset for VERSION. The release asset is
+# mutable upstream, so pinning it keeps the generated code stable; a mismatch
+# fails loudly instead of silently drifting.
+STRUCPP_SHA256="${OT_STRUCPP_SHA256:-24e0a8108ebbdf43385635e562465050fef8370e12ed8279f28206e21f6030d1}"
 # Fixed timestamp so the committed bundles' metadata is stable.
 FIXED_TS="202601010000.00"
 
@@ -27,6 +31,7 @@ ensure_toolchain() {
     url="https://github.com/Autonomy-Logic/STruCpp/releases/download/${VERSION}/strucpp-linux-${ARCH}.tar.gz"
     echo "[plc-build] fetching STruC++ ${VERSION} (${ARCH})"
     curl -fsSL -o "$CACHE/strucpp.tar.gz" "$url"
+    echo "$STRUCPP_SHA256  $CACHE/strucpp.tar.gz" | sha256sum -c - >/dev/null
     tar -xzf "$CACHE/strucpp.tar.gz" -C "$CACHE"
     if [ ! -x "$STRUCPP" ]; then
         echo "[plc-build] ERROR: strucpp binary not found at $STRUCPP" >&2
