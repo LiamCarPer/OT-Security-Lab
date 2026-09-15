@@ -17,12 +17,22 @@ remediation playbooks.
 
 ```
 Gateway IDS ──NDJSON──▶ Promtail ──▶ Loki (alerting rules) ──▶ Alertmanager
-                                                                    │
-                                                     webhook (9095)▼
-                                              webhook_receiver.py
-                                                                    │
-                                                     playbooks (auto-block, enrichment)
+     │                                                              │
+     │ responder.py (gateway-side)                    webhook (9095)▼
+     │ watches alerts.json and DROPs                  webhook_receiver.py
+     ▼ repeat offenders                                (persists siem_alerts.json)
+  iptables FORWARD DROP                                         │
+                                                      playbooks (auto-block, enrichment)
 ```
+
+Containment is enforced **inside the gateway** by `detection/rules/responder.py`
+(it already holds `NET_ADMIN`; no Docker socket), which watches `alerts.json` and
+DROPs a source after 3 unauthorized-write alerts in 5 minutes. It is **dry-run by
+default** (`OT_RESPONDER_ENFORCE=1` to arm) and reversible with
+`python3 detection/rules/responder.py --unblock <ip>` or a gateway restart.
+`playbooks/auto_block_ip.py` is the host-side equivalent for running against a
+local lab.
+
 
 ## Usage
 

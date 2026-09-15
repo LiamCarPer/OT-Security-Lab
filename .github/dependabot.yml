@@ -12,6 +12,7 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
 
+  # Every Dockerfile in the lab (image base + pinned dependencies)
   - package-ecosystem: docker
     directory: /lab-environment/gateway
     schedule:
@@ -20,6 +21,66 @@ updates:
 
   - package-ecosystem: docker
     directory: /lab-environment/attacker
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /lab-environment/plc-bootstrap
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /lab-environment/hmi
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /lab-environment/scada
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /lab-environment/dnp3-outstation
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /lab-environment/opcua-server
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /lab-environment/s7-plc
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /lab-environment/insider
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /lab-environment/modbus-sim
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /lab-environment/historian-poller
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /lab-environment/route-sidecar
     schedule:
       interval: weekly
     open-pull-requests-limit: 5

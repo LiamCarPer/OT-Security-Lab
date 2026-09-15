@@ -225,7 +225,7 @@ No local Docker required — the whole lab runs in your browser:
 
 ## 8.1 CI/CD & Supply Chain
 
-*   **CI (`ci.yml`):** 10 gates — lint & SAST (ruff/bandit), unit tests (pytest), shellcheck, gitleaks, pip-audit, checkov, Trivy, OPA policy enforcement on the compose stack, pre-commit hooks, and SBOM generation with keyless cosign attestation (Sigstore).
+*   **CI (`ci.yml`):** 10 gates — lint & SAST (ruff/bandit), unit tests (pytest), shellcheck, gitleaks, pip-audit, checkov, Trivy, OPA policy enforcement on the compose stack, pre-commit hooks, and SBOM generation with keyless Sigstore signing and a provenance attestation.
 *   **Compliance Gate (`compliance-gate.yml`):** boots the full lab, replays all attack simulations, asserts detection, and **commits the fresh alert evidence back to `detection/logs/alerts.json`** — the repository always shows current, machine-generated evidence.
 *   **Release (`release.yml`):** tagged releases (v*) with a git-cliff changelog and evidence screenshots attached.
 *   **Dependabot:** weekly dependency updates for pip, GitHub Actions, and the lab Dockerfiles.
@@ -241,7 +241,7 @@ No local Docker required — the whole lab runs in your browser:
 ### Future Roadmap:
 *   **EDR Integration:** Wazuh agent on the Engineering Workstation, correlated with network alerts in the SIEM.
 *   **Suricata:** Deploy gateway-side Suricata (config and rules exist in `siem/suricata/`) with the ET ICS ruleset alongside the custom Scapy rules.
-*   **Automation:** Full SOAR loop from SIEM alert to automatic containment (playbooks and webhook receiver exist in `automation/`; the loop is currently demonstrated, not enforced).
+*   **Automation:** SOAR containment is implemented gateway-side (`detection/rules/responder.py` drops repeat unauthorized-write sources; dry-run by default, armed with `OT_RESPONDER_ENFORCE=1`), with the Alertmanager webhook receiver and host-side playbook in `automation/`.
 
 ---
 

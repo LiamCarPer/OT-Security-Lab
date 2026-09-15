@@ -17,6 +17,7 @@ are launched automatically on gateway startup by `lab-environment/scripts/start_
 | `dnp3_dpi.py` | Manipulation of Control / Inhibit Response / Discovery | **T1692.001, T0816, T0878** | Live DNP3 decoder (link/transport/application). Ships the `ot_ndr`/`dnp3` contract to Loki and writes unauthorized-control, cold/warm-restart and disable-unsolicited alerts. |
 | `opcua_dpi.py` | Discovery / Manipulation of Control / Execution | **T0888, T1692.001, T0871** | Live OPC UA decoder (message header + service NodeId). Ships the `ot_ndr`/`opcua` contract and writes browse, write and method-call alerts. Only plaintext (None/Sign) channels expose the service. |
 | `s7comm_dpi.py` | Collection / Manipulation of Control / Inhibit Response | **T0843, T0845, T0858** | Live S7comm decoder (TPKT/COTP/S7). Ships the `ot_ndr`/`s7comm` contract and writes program download, program upload and PLC control/stop alerts. |
+| `responder.py` | (containment) | **T0831** | Gateway-side SOAR responder: DROPs a source that repeatedly issues unauthorized writes (3 / 5 min). Dry-run by default; `OT_RESPONDER_ENFORCE=1` arms it. |
 
 ### 1.1 Live telemetry producers
 

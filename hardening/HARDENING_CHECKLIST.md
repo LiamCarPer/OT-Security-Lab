@@ -20,9 +20,9 @@ This document details the specific security configurations and compensating cont
 ## 3. HMI/SCADA Hardening (Applied to `ot_hmi`)
 | Control ID | Control Description | Implementation Status | Justification |
 | :--- | :--- | :--- | :--- |
-| **HMI-3.1** | **Interface Isolation:** Multi-homed setup separates L2 management from L1 control. | **Implemented** | Ensures management traffic does not spill into the control zone. |
+| **HMI-3.1** | **Interface Isolation:** The HMI is single-homed in the Supervisory zone and reaches the PLCs only through the gateway chokepoint. | **Implemented** | Prevents the HMI from having a direct foot in the control zone (no multi-homing). |
 | **HMI-3.2** | **Default Credentials:** Remove or change the default `admin/admin` credentials. | **Required** | Prevents trivial unauthorized access to the SCADA interface. |
-| **HMI-3.3** | **Login Attempt Thresholds:** Integrated with `ot_brute_force.py` for monitoring. | **Implemented** | Detects and logs credential stuffing or service scanning. |
+| **HMI-3.3** | **Login Attempt Thresholds:** Failed Scada-LTS logins raise an alert. | **Planned** | Currently no network-visible login-failure detection; `ot_brute_force.py` covers Modbus exceptions, not logins. |
 
 ## 4. Historian Hardening (Applied to `ot_historian`)
 | Control ID | Control Description | Implementation Status | Justification |

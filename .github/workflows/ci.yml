@@ -151,6 +151,21 @@ jobs:
             --certificate-identity "https://github.com/LiamCarPer/OT-Security-Lab/.github/workflows/ci.yml@${{ github.ref }}" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
             ot-security-lab.sbom.spdx.json
+      - name: Generate SBOM provenance
+        run: |
+          printf '%s' '{"buildType":"https://github.com/LiamCarPer/OT-Security-Lab/ci","repository":"${{ github.repository }}","commit":"${{ github.sha }}","workflow":"${{ github.workflow }}"}' > provenance.json
+      - name: Keyless attest SBOM provenance (Sigstore)
+        run: |
+          cosign attest-blob --yes --predicate provenance.json --type slsaprovenance \
+            --bundle sbom.att.bundle ot-security-lab.sbom.spdx.json
+      - name: Verify provenance attestation (identity pinned)
+        run: |
+          cosign verify-blob-attestation \
+            --bundle sbom.att.bundle \
+            --type slsaprovenance \
+            --certificate-identity "https://github.com/LiamCarPer/OT-Security-Lab/.github/workflows/ci.yml@${{ github.ref }}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            ot-security-lab.sbom.spdx.json
       - name: Upload SBOM artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -159,3 +174,5 @@ jobs:
             ot-security-lab.sbom.spdx.json
             gateway-base.sbom.spdx.json
             sbom.bundle
+            sbom.att.bundle
+            provenance.json
