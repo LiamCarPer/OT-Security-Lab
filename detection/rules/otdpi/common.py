@@ -82,4 +82,3 @@ def capture_interfaces() -> list:
     from scapy.all import get_if_list
 
     return [name for name in get_if_list() if name != "lo"]
-

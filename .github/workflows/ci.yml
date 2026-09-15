@@ -188,4 +188,3 @@ jobs:
         run: |
           git diff --exit-code -- plc/programs \
             || { echo "::error::plc/programs is stale - run plc/build.sh and commit"; exit 1; }
-
