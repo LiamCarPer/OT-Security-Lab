@@ -3,7 +3,7 @@
 # checkov:skip=CKV_DOCKER_3:Port 102 is privileged and the Control-zone default
 #   route needs CAP_NET_ADMIN, so the server runs as root. Only NET_BIND_SERVICE
 #   and NET_ADMIN are retained; no-new-privileges is enforced.
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends iproute2 \
