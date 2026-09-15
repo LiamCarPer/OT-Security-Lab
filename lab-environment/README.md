@@ -17,21 +17,31 @@ cd lab-environment
 sudo docker compose up -d
 ```
 
-This starts: 3 OpenPLC runtimes (L1), Scada-LTS HMI (L2), InfluxDB historian (L3),
-the zone gateway (firewall + persistent IDS), the Kali attacker (L4), and the
-Grafana/Loki/Promtail SIEM stack.
+This starts: 3 OpenPLC runtimes (L1), Scada-LTS HMI + MySQL config store (L2),
+InfluxDB historian (L3), the EWS/plc-bootstrap deployer (L3), the zone gateway
+(firewall + persistent IDS), the Kali attacker (L4), and the Grafana/Loki/Promtail
+SIEM stack.
 
 ### What happens on boot
 
-1. The gateway and attacker images are **pre-baked** (Dockerfiles in
-   `gateway/` and `attacker/`) — no runtime package installs; containers are
-   ready in seconds.
+1. The gateway, attacker, bootstrap, and provisioner images are **pre-baked**
+   (Dockerfiles in `gateway/`, `attacker/`, `plc-bootstrap/`, `scada/`), ready in
+   seconds.
 2. `ot_gateway` applies `firewall-rules.sh`: it **auto-detects** its interfaces
    by subnet (never assume `ethX` ordering — see `LESSONS_LEARNED.md` §2.1) and
-   applies default-DROP zone/conduit rules (IEC 62443-3-2).
+   applies default-DROP zone/conduit rules (IEC 62443-3-2), including conduit C5
+   (EWS → PLC runtime API 8443).
 3. `start_ids.sh` launches all `detection/rules/*.py` as persistent background
    services, writing alerts to `/detection/logs/alerts.json`.
-4. `ot_attacker` adds its pivot routes to the OT zones via the gateway.
+4. `ot_plc_bootstrap` deploys the committed `plc/programs/*/program.zip` bundles
+   to each runtime over the OpenPLC REST API (create-user → login → upload →
+   compile → start) and asserts `RUNNING`. Bundles that are not committed are
+   skipped so the lab still boots (see `plc/programs/README.md`).
+5. `ot_scada_provisioner` waits for Scada-LTS and creates the Modbus/TCP
+   datasources + datapoints (HR 0,1,2,5,6 per PLC) via its REST API, so the HMI
+   is a genuine Modbus master, not a simulation.
+6. `ot_attacker` adds its pivot routes to the OT zones via the gateway.
+
 
 ## 3. Network Topology Verification
 
@@ -56,7 +66,8 @@ The attacker container includes automated simulation scripts:
 | :--- | :--- |
 | `simulate_attack.py` | `CROSS_ZONE_VIOLATION`, `UNAUTHORIZED_MODBUS_WRITE`, `OT_BRUTE_FORCE_SCAN` |
 | `simulate_lateral_movement.py` | Sequential `CROSS_ZONE_VIOLATION` (Intake → Treatment → Distribution) |
-| `simulate_process_violation.py` | `PROCESS_SAFETY_VIOLATION` (spoofed high tank level + unsafe valve command) |
+| `simulate_process_violation.py` | `PROCESS_SAFETY_VIOLATION` (real Modbus FC6 open-valve write against the live, HMI-shadowed process) |
+| `simulate_process_violation_spoof.py` | `PROCESS_SAFETY_VIOLATION` (legacy simulated stimulus, used only when no bundles are committed) |
 
 ```bash
 sudo docker exec ot_attacker python3 /attacker/simulate_attack.py

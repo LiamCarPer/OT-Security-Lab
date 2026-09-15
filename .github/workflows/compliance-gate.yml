@@ -20,7 +20,7 @@ jobs:
         working-directory: lab-environment
         run: |
           set +e
-          docker compose up -d --build --wait --wait-timeout 300 2>&1 | tee /tmp/boot.log
+          docker compose up -d --build --wait --wait-timeout 480 2>&1 | tee /tmp/boot.log
           code=${PIPESTATUS[0]}
           echo "BOOT_EXIT=$code" | tee -a /tmp/boot.log
           exit $code
@@ -84,6 +84,12 @@ jobs:
             docker logs ot_attacker --tail 40
             echo "### webhook logs"
             docker logs ot_webhook --tail 40
+            echo "### plc-bootstrap logs"
+            docker logs ot_plc_bootstrap --tail 80
+            echo "### scada provisioner logs"
+            docker logs ot_scada_provisioner --tail 40
+            echo "### scada hmi logs"
+            docker logs ot_hmi --tail 40
           } > ci-diagnostics.txt 2>&1
           cat ci-diagnostics.txt
           git config user.name "ot-security-lab-ci"

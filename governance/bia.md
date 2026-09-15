@@ -45,7 +45,7 @@ The facility processes raw water through three sequential stages controlled by t
 
 ## 5. Dependencies and Single Points of Failure
 
-- **OT_HMI depends on all three PLCs** over Modbus/TCP (HMI 172.21.0.20 to 172.21.0.10-12); loss of the gateway conduit breaks supervisory control.
+- **OT_HMI depends on all three PLCs** over Modbus/TCP (HMI 172.22.0.10, single-homed in Supervisory, reaching the PLCs 172.21.0.10-12 through the gateway conduit); loss of the gateway conduit breaks supervisory control.
 - **OT_Historian collects from the PLCs** (and indirectly the HMI); historian loss does not affect control, but control loss halts data collection, creating an RPO gap on the historian during outages.
 - **All inter-zone traffic transits the Industrial Gateway (172.24.0.2).** The gateway is the single point of failure for the entire architecture and is therefore the highest-priority recovery asset.
 - **EWS (172.23.0.4) is the recovery asset:** master logic hashes, golden logic files and the change/restore toolchain all reside there; its loss delays every PLC recovery.

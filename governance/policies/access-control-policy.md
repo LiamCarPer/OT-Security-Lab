@@ -28,7 +28,7 @@ This policy defines how identities are established, authorized, and controlled f
 ### 2.3 Access Paths
 
 9. All access to the control zone must traverse the gateway (172.24.0.2) or the defined conduit; direct access from the Enterprise zone (172.24.0.0/24) to the control zone (172.21.0.0/24) is prohibited and is monitored by the CROSS_ZONE_VIOLATION rule.
-10. Modbus/TCP access to the PLCs is permitted only from the HMI (172.21.0.20) and the EWS conduit; the gateway firewall allow-list is the enforcement point.
+10. Modbus/TCP access to the PLCs is permitted only from the HMI (172.22.0.10, single-homed in the Supervisory zone and routed through the gateway chokepoint) and the EWS conduit; the gateway firewall allow-list is the enforcement point.
 11. Session inactivity timeout must terminate idle sessions within 15 minutes (SR_2.6).
 
 ### 2.4 Account Lifecycle

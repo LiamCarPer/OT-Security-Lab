@@ -34,7 +34,9 @@ services:
 
   # 2. Intake Process PLC (Level 1 - Control)
   plc_intake:
-    image: ghcr.io/autonomy-logic/openplc-runtime:latest
+    # Pinned by digest: the runtime version must match the editor/STruC++
+    # version that produced the committed program bundles (plc/programs/).
+    image: ghcr.io/autonomy-logic/openplc-runtime@sha256:83fd5099cf2d100faf9a23ab3131f7200f3fdd0a007c07a870563af3705fc15f
     container_name: plc_intake
     restart: unless-stopped
     mem_limit: 256m
@@ -49,7 +51,7 @@ services:
 
   # 3. Treatment Process PLC (Level 1 - Control)
   plc_treatment:
-    image: ghcr.io/autonomy-logic/openplc-runtime:latest
+    image: ghcr.io/autonomy-logic/openplc-runtime@sha256:83fd5099cf2d100faf9a23ab3131f7200f3fdd0a007c07a870563af3705fc15f
     container_name: plc_treatment
     restart: unless-stopped
     mem_limit: 256m
@@ -64,7 +66,7 @@ services:
 
   # 4. Distribution Process PLC (Level 1 - Control)
   plc_distribution:
-    image: ghcr.io/autonomy-logic/openplc-runtime:latest
+    image: ghcr.io/autonomy-logic/openplc-runtime@sha256:83fd5099cf2d100faf9a23ab3131f7200f3fdd0a007c07a870563af3705fc15f
     container_name: plc_distribution
     restart: unless-stopped
     mem_limit: 256m
@@ -78,18 +80,78 @@ services:
         ipv4_address: 172.21.0.12
 
   # 5. Human Machine Interface (Level 2 - Supervisory)
+  # Real Scada-LTS: polls the PLCs over Modbus/TCP and writes commands. Its
+  # configuration lives in MySQL and is created by the scada-provisioner.
+  # Supervisory-only: Control-zone traffic is routed through the gateway so the
+  # zone firewall (C1) applies and the IDS observes the real Modbus traffic.
   hmi:
-    image: scadalts/scadalts:latest
+    build: ./hmi
     container_name: ot_hmi
     restart: unless-stopped
     mem_limit: 1g
+    security_opt:
+      - no-new-privileges:true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - CATALINA_OPTS=-Xmx768M -Xms256M
     ports:
       - "8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
     networks:
       supervisory_network:
         ipv4_address: 172.22.0.10
-      control_network:
-        ipv4_address: 172.21.0.20
+
+  # 5a. Scada-LTS configuration store (Level 2 - Supervisory)
+  # The Scada-LTS image connects to a host named "database" on 3306 with
+  # root/root (baked into its context.xml); the name must resolve on a shared
+  # network, so it lives on the supervisory network alongside the HMI.
+  database:
+    image: mysql/mysql-server:8.0.32
+    container_name: ot_scada_db
+    restart: unless-stopped
+    mem_limit: 512m
+    command: --log_bin_trust_function_creators=1 --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_DATABASE=scadalts
+    volumes:
+      - scada_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -proot --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    networks:
+      supervisory_network:
+        ipv4_address: 172.22.0.11
+
+  # 5b. Scada-LTS provisioner (Level 2) - one-shot REST bootstrap
+  # Creates Modbus/TCP datasources + datapoints for all three PLCs. Idempotent
+  # (existing XIDs are skipped). Kept resident so its healthcheck is meaningful.
+  scada-provisioner:
+    build: ./scada
+    container_name: ot_scada_provisioner
+    restart: unless-stopped
+    mem_limit: 64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      - OT_SCADA_URL=http://hmi:8080/Scada-LTS
+    depends_on:
+      - hmi
+    command: >
+      /bin/sh -c "sh /usr/local/bin/provision.sh && touch /tmp/scada-provisioned && tail -f /dev/null"
+    networks:
+      supervisory_network:
+        ipv4_address: 172.22.0.12
 
   # 6. Process Historian (Level 3 - Operations)
   historian:
@@ -102,6 +164,37 @@ services:
     networks:
       ops_network:
         ipv4_address: 172.23.0.10
+
+  # 6a. Engineering workstation / PLC provisioning host (Level 3 - Operations)
+  # The EWS documented in asset-inventory/assets.csv now actually exists: it
+  # deploys the committed OpenPLC program bundles over the runtime REST API
+  # (TCP 8443) via a dedicated OPS->CONTROL conduit in the zone firewall.
+  plc-bootstrap:
+    build: ./plc-bootstrap
+    container_name: ot_plc_bootstrap
+    restart: unless-stopped
+    mem_limit: 128m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    depends_on:
+      plc_intake:
+        condition: service_healthy
+      plc_treatment:
+        condition: service_healthy
+      plc_distribution:
+        condition: service_healthy
+    command: >
+      /bin/sh -c "until ip route replace 172.21.0.0/24 via 172.23.0.2 2>/dev/null; do sleep 2; done;
+      python3 -u /app/deploy.py && exec tail -f /dev/null"
+    volumes:
+      - ../plc/programs:/programs:ro
+    networks:
+      ops_network:
+        ipv4_address: 172.23.0.4
 
   # 7. Attacker (Level 4/5 - Enterprise/Internet)
   attacker:
@@ -249,3 +342,8 @@ networks:
     ipam:
       config:
         - subnet: 172.21.0.0/24
+
+volumes:
+  # Scada-LTS configuration (datasources/datapoints) persists across restarts;
+  # `docker compose down -v` resets it and the provisioner re-seeds on next boot.
+  scada_db_data:

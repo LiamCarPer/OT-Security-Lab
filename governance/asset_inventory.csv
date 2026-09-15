@@ -6,3 +6,5 @@ A.04,OT_HMI,Supervisory (L2),172.22.0.10,Modbus/HTTP,Medium,Operator Interface,P
 A.05,OT_Historian,Operations (L3),172.23.0.10,InfluxDB/TCP,Medium,Data Logging,IT/Engineering
 A.06,Industrial_Gateway,Boundary (L3.5),172.24.0.2,Multi-Zone,Critical,Firewall/IDS,Security
 A.07,SOC_Dashboard,Enterprise (L4),172.24.0.22,HTTP,Low,Visibility,Security
+A.08,EWS_Provisioning,Operations (L3),172.23.0.4,HTTPS,High,Deploys OpenPLC program bundles,Engineering
+A.09,Scada_DB,Supervisory (L2),172.22.0.11,MySQL/TCP,Medium,Scada-LTS configuration store,Operations

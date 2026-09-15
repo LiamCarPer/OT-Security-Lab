@@ -174,6 +174,12 @@ The gateway container applies the IEC 62443 zone firewall on boot and launches
 all custom detection rules as persistent services (`make up` is sufficient; no
 manual `docker cp`/`docker exec` steps are required).
 
+The OpenPLC runtimes are headless: they run the compiled bundles committed under
+`plc/programs/` (built once with OpenPLC Editor v4, then uploaded automatically
+at boot by the EWS bootstrap service). See `plc/programs/README.md`. If a bundle
+is not committed, that PLC stays `EMPTY` and the physics-aware compliance test
+falls back to a simulated stimulus.
+
 ### Run in Codespaces (one click)
 
 No local Docker required — the whole lab runs in your browser:
@@ -196,7 +202,9 @@ No local Docker required — the whole lab runs in your browser:
 
 ## 8. Technologies Used
 *   **Virtualization:** Docker, Docker Compose V2 (pinned images, resource limits, `restart` policies)
-*   **Industrial:** OpenPLC Runtime (v4), Scada-LTS (HMI), InfluxDB 1.8.10 (Historian)
+*   **Industrial:** OpenPLC Runtime (v4.2.2, pinned by digest) running committed
+    editor-built `program.zip` bundles, Scada-LTS v2.8 HMI as a real Modbus/TCP
+    master, MySQL 8.0 config store, InfluxDB 1.8.10 (Historian)
 *   **Security Infrastructure:** `iptables` (Zone Firewall), Scapy (Custom IDS), `iputils-ping`, `nmap`
 *   **Frameworks:** IEC 62443-3-2 (Zones/Conduits), MITRE ATT&CK for ICS, ISA-95 Purdue Model
 *   **Monitoring:** Grafana 11 + Loki 3 (SIEM), Promtail (log shipping), centralized JSON logging

@@ -10,6 +10,8 @@ Usage:
 """
 import argparse
 import json
+import os
+import re
 import subprocess
 import sys
 import time
@@ -17,6 +19,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ALERT_LOG = REPO_ROOT / "detection" / "logs" / "alerts.json"
+SCADA_BASE = os.getenv("OT_SCADA_URL", "http://localhost:8080/Scada-LTS")
+INTAKE_LEVEL_XID = os.getenv("OT_SCADA_LEVEL_XID", "DP_DS_PLC1_HR5")
+LEVEL_THRESHOLD = int(os.getenv("OT_LEVEL_THRESHOLD", "90"))
 
 TESTS = [
     {
@@ -42,9 +47,66 @@ TESTS = [
     {
         "name": "Physics-Aware Safety Violation",
         "cmd": "docker exec ot_attacker python3 /attacker/simulate_process_violation.py",
+        "fallback_cmd": "docker exec ot_attacker python3 /attacker/simulate_process_violation_spoof.py",
+        "precondition": "real_process",
         "expected": ["PROCESS_SAFETY_VIOLATION"],
     },
 ]
+
+
+def scada_get_value(xid, timeout=5):
+    """Authenticate to Scada-LTS and read a live point value.
+
+    The session id is captured from the auth response and passed explicitly as a
+    Cookie header (curl's cookie jar is not reliably replayed in every image).
+    """
+    auth = subprocess.run(
+        ["curl", "-s", "-D", "-", "-o", "/dev/null",
+         f"{SCADA_BASE}/api/auth/admin/admin"],
+        capture_output=True,
+        text=True,
+    )
+    session = re.search(r"JSESSIONID=([^;]+)", auth.stdout)
+    if not session:
+        return None
+    result = subprocess.run(
+        ["curl", "-s", "--max-time", str(timeout),
+         "-H", f"Cookie: JSESSIONID={session.group(1)}",
+         f"{SCADA_BASE}/api/point_value/getValue/{xid}"],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        return None
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return None
+    value = payload.get("value") if isinstance(payload, dict) else None
+    try:
+        return float(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def real_process_ready(timeout=90):
+    """Wait until the live tank level (via Scada-LTS) exceeds the safety envelope.
+
+    This is only possible when the OpenPLC program bundles are committed and the
+    HMI is genuinely polling. If it never happens, the test falls back to the
+    simulated stimulus so the detection pipeline is still exercised.
+    """
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        level = scada_get_value(INTAKE_LEVEL_XID)
+        if level is not None and level > LEVEL_THRESHOLD:
+            print(f"[READY] Live tank level {level:.0f}% > {LEVEL_THRESHOLD}% (Scada-LTS)")
+            return True
+        time.sleep(2)
+    return False
+
+
+PRECONDITIONS = {"real_process": real_process_ready}
 
 def alert_counts():
     counts = {}
@@ -130,8 +192,19 @@ def main():
 
     for test in TESTS:
         print(f"\n[TEST] {test['name']}")
+        cmd = test["cmd"]
+        precondition = PRECONDITIONS.get(test.get("precondition"))
+        if precondition and not precondition():
+            fallback = test.get("fallback_cmd")
+            if not fallback:
+                print("[FAIL] Real-process precondition not met and no fallback is defined.")
+                results.append((test["name"], "FAIL"))
+                all_passed = False
+                continue
+            print("[FALLBACK] Real process unavailable; using simulated stimulus.")
+            cmd = fallback
         baseline = alert_counts()
-        result = run_command(test["cmd"])
+        result = run_command(cmd)
         if result.returncode != 0:
             print(f"[FAIL] Simulation command error: {result.stderr.strip()}")
             results.append((test["name"], "FAIL"))

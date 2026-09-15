@@ -24,6 +24,13 @@ scrape_configs:
         source_ip: source_ip
         mitre_id: mitre_id
         description: description
+        event_type: event_type
+        asset: asset
+        register: register
+        value: value
+        tank_level_pct: tank_level_pct
+        actor: actor
+        response: response
   - timestamp:
       source: timestamp
       format: RFC3339

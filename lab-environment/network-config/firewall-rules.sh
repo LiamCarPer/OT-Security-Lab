@@ -63,6 +63,11 @@ iptables -A FORWARD -i "$IF_SUPERVISORY" -o "$IF_OPS" -p tcp --dport 8086 -j ACC
 # Conduit C4: IT (L4) -> Historian (L3): InfluxDB 8086 (read-only reporting)
 iptables -A FORWARD -i "$IF_IT" -o "$IF_OPS" -p tcp --dport 8086 -j ACCEPT
 
+# Conduit C5: EWS/provisioning (L3) -> PLCs (L1): OpenPLC runtime API 8443
+# The engineering workstation pushes compiled logic to the controllers. Only
+# the controllers' API port is opened (not Modbus), keeping it a deploy-only path.
+iptables -A FORWARD -i "$IF_OPS" -o "$IF_CONTROL" -p tcp --dport 8443 -j ACCEPT
+
 # --- 6. Denied-traffic logging (rate-limited, consumed by the SIEM) ---
 iptables -A FORWARD -m limit --limit 5/min --limit-burst 10 -j LOG --log-prefix "FW_DROP: " --log-level 4
 

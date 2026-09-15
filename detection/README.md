@@ -10,7 +10,7 @@ are launched automatically on gateway startup by `lab-environment/scripts/start_
 | Script | Tactic | Technique | Description |
 | :--- | :--- | :--- | :--- |
 | `modbus_anomaly.py` | Manipulation of Control | **T0831** | Detects unauthorized Modbus Write commands (FC 6/16) from sources outside the authorized set (HMI `172.22.0.10`, EWS `172.23.0.4`). |
-| `process_safety_violation.py` | Inhibit Response / Impair Process Control | **T0836** | Stateful process shadowing: alerts when a safety interlock would be violated (e.g., opening the inlet valve while tank level > 90%). |
+| `process_safety_violation.py` | Inhibit Response / Impair Process Control | **T0836** | Stateful process shadowing: alerts when a safety interlock would be violated (e.g., opening the inlet valve while tank level > 90%). Shadows the **live** level from real PLC→HMI Modbus responses (register map in `plc/register-map.md`). |
 | `cross_zone_traffic.py` | Lateral Movement | **T0886** | Detects direct IP communication between Level 4 (IT `172.24.0.0/24`) and Level 1 (Control `172.21.0.0/24`). |
 | `ot_brute_force.py` | Reconnaissance | **T0846** | Sliding-window detection of high-frequency Modbus Exception codes (FC > 128), indicating scanning/brute-force. |
 | `firewall_events.py` | (telemetry) | — | Ships a normalized `ot_firewall` event to Loki for each new cross-zone flow the conduit policy denies, so the generated detection bundle in `siem/rules/` can evaluate firewall drops. |
@@ -27,9 +27,10 @@ The scripts use the `Scapy` library for passive network sniffing.
 - **Sliding Window:** `ot_brute_force.py` uses a 60-second sliding window
   (threshold: 5 exceptions) before alerting; state is reset after each alert.
 - **Stateful Shadowing:** `process_safety_violation.py` maintains a shadow copy of
-  the PLC register state, learned passively from PLC-to-HMI read responses, and
-  evaluates safety logic against it — protocol-valid commands can still trigger a
-  cyber-safety alert.
+  the PLC register state, learned passively from real PLC-to-HMI read (FC 3)
+  responses, and evaluates safety logic against it — protocol-valid commands can
+  still trigger a cyber-safety alert. FC 6/16 writes are decoded from the real
+  PDU (holding-register map documented in `plc/register-map.md`).
 - **Configurability:** All thresholds and network definitions can be overridden
   with environment variables (`OT_*`), enabling tuning without code changes.
 

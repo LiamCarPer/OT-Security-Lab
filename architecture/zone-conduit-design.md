@@ -9,33 +9,45 @@ Each zone is a grouping of logical or physical assets that share common security
 | :--- | :--- | :--- | :--- | :--- |
 | **Enterprise Zone** | 4/5 | Corporate IT infrastructure and external access. | SL-1 | Attacker Simulator, VPN Gateway. |
 | **Operations Zone** | 3 | Data aggregation and engineering workstations. | SL-2 | Historian (InfluxDB), EWS. |
-| **Supervisory Zone** | 2 | Real-time monitoring and operator interface. | SL-2 | HMI (ScadaBR). |
+| **Supervisory Zone** | 2 | Real-time monitoring and operator interface. | SL-2 | HMI (Scada-LTS). |
 | **Control Zone** | 1 | Real-time logic execution and control. | SL-3 | OpenPLC. |
 | **Field Zone** | 0 | Physical sensors and actuators. | SL-1 | Simulated Valve, Flow Meter. |
 
----
+The conduits below are the single source of truth and map 1:1 to the rules
+applied by `lab-environment/network-config/firewall-rules.sh` on the gateway.
 
 ## 2. Conduits
-Conduits are the communication paths between zones. These are the "chokepoints" where security controls are applied.
 
-### C1: HMI-to-PLC Communication (Supervisory → Control)
-*   **Source Zone:** Supervisory Zone (Level 2)
+### C1: HMI-to-PLC (Supervisory → Control)
+*   **Source Zone:** Supervisory Zone (Level 2) — Scada-LTS `172.22.0.10`
+*   **Destination Zone:** Control Zone (Level 1) — PLCs `172.21.0.10-12`
+*   **Protocol:** Modbus/TCP (Port 502)
+*   **Requirement:** Operator read/write access to controller holding registers.
+
+### C2: Historian Data Collection (Operations → Control)
+*   **Source Zone:** Operations Zone (Level 3) — Historian `172.23.0.10`
 *   **Destination Zone:** Control Zone (Level 1)
 *   **Protocol:** Modbus/TCP (Port 502)
-*   **Requirement:** Inbound Modbus traffic is only permitted from the HMI IP.
-*   **Target SL:** SL-3
+*   **Requirement:** Read-only process data collection.
 
-### C2: Historian Data Collection (Control → Operations)
-*   **Source Zone:** Control Zone (Level 1)
+### C3: HMI-to-Historian (Supervisory → Operations)
+*   **Source Zone:** Supervisory Zone (Level 2)
 *   **Destination Zone:** Operations Zone (Level 3)
-*   **Protocol:** Modbus/TCP (Read-only) / HTTP
-*   **Requirement:** Level 3 assets must not have direct "Write" access to Level 1.
+*   **Protocol:** InfluxDB (Port 8086)
+*   **Requirement:** Process telemetry written to the historian.
 
-### C3: Corporate Monitoring (Operations → Enterprise)
-*   **Source Zone:** Operations Zone (Level 3)
-*   **Destination Zone:** Enterprise Zone (Level 4)
-*   **Protocol:** HTTPS / MQTT
-*   **Requirement:** Data must pass through a DMZ. No direct access from IT to OT.
+### C4: Corporate Reporting (Enterprise → Operations)
+*   **Source Zone:** Enterprise Zone (Level 4)
+*   **Destination Zone:** Operations Zone (Level 3)
+*   **Protocol:** InfluxDB (Port 8086)
+*   **Requirement:** Read-only reporting; no path from IT to the Control Zone.
+
+### C5: Engineering Deployment (Operations → Control)
+*   **Source Zone:** Operations Zone (Level 3) — EWS/provisioning host `172.23.0.4`
+*   **Destination Zone:** Control Zone (Level 1)
+*   **Protocol:** OpenPLC runtime API (Port 8443, HTTPS)
+*   **Requirement:** The engineering workstation may push compiled logic to the
+  controllers, but is denied Modbus (502) access. Deployment only.
 
 ---
 

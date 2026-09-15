@@ -163,3 +163,63 @@ Adding a machine-verified pipeline (10 CI gates + a live Compliance Gate that bo
 - **Problem:** The Compliance Gate commits fresh evidence back to `main` on every green run; unguarded, that push would re-trigger the workflows forever.
 - **Solution:** `[skip ci]` in the evidence commit message (Actions honors the convention for push events), plus a rebase-and-retry loop so the evidence push survives races with other writers (e.g., the release workflow's CHANGELOG commit).
 - **The Lesson:** Self-modifying pipelines need an explicit loop breaker, and every push to `main` from a workflow must account for concurrent writers.
+
+---
+
+## 8. Making the Process Real: OpenPLC v4 & Scada-LTS
+
+The first iteration of this lab "demonstrated" the physics-aware rule by injecting
+spoofed Modbus packets. That was a detection-engineering demo, not an OT lab: the
+PLCs ran no logic and the HMI polled nothing. Replacing the simulation with real
+infrastructure exposed three hard truths about modern OpenPLC and Scada-LTS.
+
+### 8.1 The Headless Runtime (v4 Is Not v3)
+- **Problem:** We assumed we could bind-mount the `.st` files (or the compiled C)
+  into the runtime, as many OpenPLC v3 tutorials do.
+- **Root Cause:** OpenPLC Runtime v4 is a **dual-process, headless service** (a
+  Flask REST API on 8443 that supervises a C/C++ real-time core). There is no web
+  UI, no always-on Modbus server, and no hot-folder: programs arrive as an
+  authenticated `program.zip`, are compiled on-device to `libplc_*.so`, and
+  loaded via `dlopen`.
+- **Solution:** A dedicated one-shot deployer (`plc-bootstrap`) drives the full
+  lifecycle over the API — `create-user → login → upload-file → poll
+  compilation-status → start-plc` — and asserts `RUNNING`.
+- **The Lesson:** "OpenPLC" is not one thing. v3 and v4 have incompatible
+  deployment models; porting a lab means re-reading the API, not the old guide.
+
+### 8.2 The program.zip Packaging Wall
+- **Problem:** `program.zip` is not a folder of `.st` files. The runtime rejects
+  MatIEC-era artifacts (`Config0.c`, `glueVars.c`) outright and requires
+  STruC++-generated sources (`generated.hpp`, `defines.h`, `configuration.cpp`,
+  `pou_*.cpp`) plus the bundled `strucpp_runtime/include/` headers.
+- **Root Cause:** The bundle is assembled by the **OpenPLC Editor** (a desktop
+  app), not the STruC++ CLI. The CLI compiles ST→C++ but does not emit the
+  project configuration, `defines.h` MD5, debug map, or protocol JSON.
+- **Solution:** Treat the bundle as an **editor-built, committed artifact** (like
+  a compiled firmware image). The `.st` remain the canonical source; the zips are
+  produced once by the Editor, committed, and deployed automatically. The runtime
+  image is pinned by digest so bundle and runtime versions cannot drift.
+- **The Lesson:** Not everything can be generated headlessly. When a vendor's
+  build happens in a GUI, version-control the *output* and document the
+  regeneration procedure rather than reverse-engineering the codegen.
+
+### 8.3 Scada-LTS Is Not IaC-Friendly (Configuration Lives in a Blob)
+- **Problem:** We wanted the HMI to be a *real* Modbus master, provisioned like
+  code. Direct SQL seeding looked like the obvious answer.
+- **Root Cause:** Scada-LTS stores datasources/datapoints as **Java-serialized
+  BLOBs** (`longblob`), and only `id/xid/name` are plain columns. SQL inserts are
+  version-fragile and effectively impossible to author by hand.
+- **Solution:** Use the session-authenticated **REST API** (datasource type `3` =
+  Modbus/IP) from an idempotent provisioner container, and persist the MySQL
+  volume. This is the only reproducible path.
+- **The Lesson:** "Configuration as code" often means calling an application API,
+  not writing to its database. Inspect the storage model before committing to SQL.
+
+### 8.4 Detection Threshold vs. Safety Interlock (Defense in Depth)
+- **Design choice:** The SIS-style hard interlock in `intake.st` trips at 95%,
+  while the network-side IDS envelope is 90%. The IDS flags a forced valve write
+  in the 90–95% band *before* the controller's own interlock has to act.
+- **The Lesson:** Two independent controls at different thresholds turn a single
+  failure into a detectable, survivable event — the core idea of ICS defense in
+  depth.
+
