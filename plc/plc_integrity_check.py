@@ -3,9 +3,9 @@
 
 Computes the SHA-256 of each deployed PLC logic file and compares it against
 the golden manifest. A mismatch indicates unauthorized logic modification
-(MITRE ATT&CK for ICS T0853 - Program Upload / T0872 - Modification of
-Controller Logic), which is the trigger scenario of the incident-response
-playbook (incident-response/ir-playbook-unauthorised-plc-change.md).
+(MITRE ATT&CK for ICS T0843 - Program Download), which is the trigger scenario
+of the incident-response playbook
+(incident-response/ir-playbook-unauthorised-plc-change.md).
 
 In production, the golden baseline would be the read-back of the program
 from the PLC (OpenPLC exposes the running program via its web API); in this
@@ -78,7 +78,7 @@ def main():
                         "alert_type": "PLC_LOGIC_TAMPERED",
                         "plc": plc,
                         "status": status,
-                        "mitre_id": "T0853",
+                        "mitre_id": "T0843",
                         "description": "PLC logic integrity verification failed.",
                     }
                     f.write(json.dumps(entry) + "\n")

@@ -30,7 +30,7 @@ Industrial control systems tolerate no unplanned change: an untested logic modif
 
 ## 4. Security-Specific Requirements
 
-- **PLC logic changes** are distributed only from the EWS (172.23.0.4) and must update the master logic hash; the PLC_LOGIC_TAMPERED detection rule (T0853) is the verification control.
+- **PLC logic changes** are distributed only from the EWS (172.23.0.4) and must update the master logic hash; the PLC_LOGIC_TAMPERED detection rule (T0843) is the verification control.
 - **Gateway changes** (firewall rules at 172.24.0.2) are reviewed by Security; a misconfiguration must not open a new conduit between zones.
 - **Detection rule changes** (e.g., `detection/rules/*.py`) are treated as security-critical and are tested against the alert log to confirm expected alert types (UNAUTHORIZED_MODBUS_WRITE, OT_BRUTE_FORCE_SCAN, CROSS_ZONE_VIOLATION, PROCESS_SAFETY_VIOLATION, DNP3_WRITE_UNAUTHORIZED, PLC_LOGIC_TAMPERED).
 - **Software/firmware updates** (e.g., Scada-LTS, InfluxDB, OpenPLC) require vendor security advisory review and validation in the test environment before production deployment.
@@ -43,7 +43,7 @@ Industrial control systems tolerate no unplanned change: an untested logic modif
 
 ## 6. Exceptions and Non-Compliance
 
-- Unauthorized changes are investigated per the incident response process; PLC logic tampering is treated as a security incident (T0853) and escalated per `IR_PLAYBOOK_PLC_TAMPERING.md`.
+- Unauthorized changes are investigated per the incident response process; PLC logic tampering is treated as a security incident (T0843) and escalated per `IR_PLAYBOOK_PLC_TAMPERING.md`.
 - Repeat violations result in suspension of change privileges.
 
 ---

@@ -35,7 +35,7 @@ This document defines the engagement methodology used to assess the security pos
 
 | Evidence Artifact | Used For |
 | :--- | :--- |
-| `detection/logs/alerts.json` | Detection effectiveness; alert types UNAUTHORIZED_MODBUS_WRITE (T0831), PROCESS_SAFETY_VIOLATION (T0836), CROSS_ZONE_VIOLATION (T0886), OT_BRUTE_FORCE_SCAN (T0846), DNP3_WRITE_UNAUTHORIZED (T0831), PLC_LOGIC_TAMPERED (T0853) |
+| `detection/logs/alerts.json` | Detection effectiveness; alert types UNAUTHORIZED_MODBUS_WRITE (T0831), PROCESS_SAFETY_VIOLATION (T0836), CROSS_ZONE_VIOLATION (T0886), OT_BRUTE_FORCE_SCAN (T0846), DNP3_WRITE_UNAUTHORIZED (T0831), PLC_LOGIC_TAMPERED (T0843) |
 | `detection/rules/` (modbus_anomaly.py, process_safety_violation.py, cross_zone_traffic.py, ot_brute_force.py, dnp3_anomaly.py) | Detection coverage validation |
 | `lab-environment/docker-compose.yml` | Architecture and zone/IP verification |
 | `governance/testing/CYBERSECURITY_TEST_PLAN.md` | Test case execution (TC-01, TC-02, TC-03) |

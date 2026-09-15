@@ -24,7 +24,7 @@ The Business Impact Analysis defines maximum tolerable downtime (RTO) and data l
 
 ## 3. Backup Policy Statements
 
-1. **PLC logic:** every logic change performed under the Change Management Policy (MOC) must produce a golden logic file stored on the EWS (172.23.0.4) and mirrored to offline storage; the master logic hash is updated at the same time and is used to verify restores and to detect tampering (T0853).
+1. **PLC logic:** every logic change performed under the Change Management Policy (MOC) must produce a golden logic file stored on the EWS (172.23.0.4) and mirrored to offline storage; the master logic hash is updated at the same time and is used to verify restores and to detect tampering (T0843).
 2. **Historian data:** InfluxDB (172.23.0.10) data must be backed up daily (incremental) and weekly (full), stored on offline media isolated from the OT network so that a ransomware event cannot encrypt backups.
 3. **Gateway and security configuration:** firewall rules (`firewall-rules.sh`), IDS rules (`detection/rules/`), and SIEM provisioning configuration are version-controlled; each change is tagged and deployable in under 30 minutes.
 4. **Backup integrity:** all backups must be encrypted (AES-256 or equivalent) and verified for readability after creation (checksum/hash verification).

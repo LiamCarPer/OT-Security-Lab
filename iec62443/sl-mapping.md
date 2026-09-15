@@ -18,9 +18,9 @@ This document explains the Security Level (SL) targets and achieved levels for e
 ## 3. Lab Zone Mapping
 | Zone | Target (SL-T) | Achieved (SL-A) | Justification |
 | :--- | :--- | :--- | :--- |
-| **Control (L1)** | SL-3 | **SL-2** | Achieved via network isolation and firewalling. Gap to SL-3: Lack of host-based integrity protection on PLCs. |
-| **Supervisory (L2)** | SL-2 | **SL-2** | Achieved via multi-homed isolation and user authentication (Scada-LTS). |
-| **Operations (L3)** | SL-2 | **SL-2** | Achieved via iDMZ chokepoint and Historian isolation. |
+| **Control (L1)** | SL-3 | **SL-2** | Achieved via network isolation, a source-restricted default-deny conduit, and real controller logic. Gap to SL-3: lack of host-based integrity protection on PLCs. |
+| **Supervisory (L2)** | SL-2 | **SL-2** | Achieved via a single-homed HMI routed through the gateway chokepoint and Scada-LTS login. Gap: default credentials must be changed (see `hardening/HARDENING_CHECKLIST.md` HMI-3.2). |
+| **Operations (L3)** | SL-2 | **SL-2** | Achieved via the gateway chokepoint and historian isolation (the historian host has no L1 path). |
 | **Enterprise (L4/5)** | SL-1 | **SL-1** | Standard corporate security posture assumed. |
 
 ## 4. Path to SL-3
