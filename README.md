@@ -206,7 +206,7 @@ observes the live process. See `plc/programs/README.md`.
 No local Docker required — the whole lab runs in your browser:
 
 1. Open the repository → **Code → Codespaces → Create codespace on main**.
-2. Pick the **4-core / 8GB** machine type (the stack commits ~4.3GB RAM).
+2. Pick the **4-core / 8GB** machine type (the stack consumes ~4.3GB RAM).
 3. Wait for the automatic build and boot (first time ~5-10 min; progress is
    visible in the terminal). The devcontainer forwards:
    Grafana `:3000` · SCADA HMI `:8080` (via the DMZ reverse proxy) ·
@@ -233,8 +233,9 @@ No local Docker required — the whole lab runs in your browser:
 *   **Historian Data Path (L1→L2→L3):** an L2 collector (`historian-poller`,
     `pymodbus`) reads the controllers over conduit C1 and writes InfluxDB in L3
     northbound over C3, with a 30-day retention policy; Grafana (L4) visualizes
-    it through C4. OpenPLC is preferred and a documented Modbus **process
-    stand-in** is used until the editor-built program bundles are committed.
+    it through C4. The collector prefers the OpenPLC controllers and falls back
+    to a documented Modbus **process stand-in** only when a controller is
+    unprogrammed or unreachable.
 *   **Security Infrastructure:** `iptables` (Zone Firewall), Scapy (Custom IDS), `iputils-ping`, `nmap`
 *   **Frameworks:** IEC 62443-3-2 (Zones/Conduits), MITRE ATT&CK for ICS, ISA-95 Purdue Model
 *   **Monitoring:** Grafana 11 + Loki 3 (SIEM), Promtail (log shipping), centralized JSON logging
@@ -242,7 +243,7 @@ No local Docker required — the whole lab runs in your browser:
 
 ## 8.1 CI/CD & Supply Chain
 
-*   **CI (`ci.yml`):** 10 gates — lint & SAST (ruff/bandit), unit tests (pytest), shellcheck, gitleaks, pip-audit, checkov, Trivy, OPA policy enforcement on the compose stack, pre-commit hooks, and SBOM generation with keyless Sigstore signing and a provenance attestation.
+*   **CI (`ci.yml`):** 11 gates — lint & SAST (ruff/bandit), unit tests (pytest), shellcheck, gitleaks, pip-audit, checkov, Trivy, OPA policy enforcement on the compose stack, pre-commit hooks, PLC bundle reproducibility (`plc/check_bundles.py`), and SBOM generation with keyless Sigstore signing and a provenance attestation.
 *   **Compliance Gate (`compliance-gate.yml`):** boots the full lab, replays all attack simulations, asserts detection, and **commits the fresh alert evidence back to `detection/logs/alerts.json`** — the repository always shows current, machine-generated evidence.
 *   **Release (`release.yml`):** tagged releases (v*) with a git-cliff changelog and evidence screenshots attached.
 *   **Dependabot:** weekly dependency updates for pip, GitHub Actions, and the lab Dockerfiles.

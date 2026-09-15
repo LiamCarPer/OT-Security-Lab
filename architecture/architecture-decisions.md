@@ -55,10 +55,9 @@ data latency marginally but is operationally acceptable.
 
 **Status:** Implemented. The Level 2 historian collector (`historian-poller`)
 reads the controllers over conduit C1 and writes the Level 3 InfluxDB northbound
-over conduit C3; Grafana at Level 4 queries it over conduit C4. Until the
-OpenPLC program bundles are committed, a Modbus process stand-in provides the
-data source; the collector switches to the controllers automatically when they
-answer on 502.
+over conduit C3; Grafana at Level 4 queries it over conduit C4. The collector
+prefers the OpenPLC controllers and falls back to a documented Modbus process
+stand-in only when a controller is unprogrammed or unreachable.
 
 ---
 
@@ -101,9 +100,9 @@ business network and the industrial network. All connections must
 terminate in the iDMZ and initiate a new session into the target
 zone. This enforces **Zero Trust** at the network boundary:
 "Never trust, always verify." The Jump Host provides controlled,
-auditable access for engineers. The Reverse Proxy allows
-Grafana/dashboard visibility to corporate users without exposing
-Level 3 directly.
+auditable access for engineers. The Reverse Proxy fronts the
+Scada-LTS operator UI for corporate users without exposing the Supervisory zone
+directly (Grafana is published from the Enterprise zone).
 
 **Consequences:** All remote access now has a mandatory
 iDMZ chokepoint — this is a feature, not a limitation. Requires
@@ -194,7 +193,7 @@ tools (Claroty, Nozomi Networks, Dragos Platform).
 network that receives mirrored traffic from all OT segments.
 Suricata rules must be OT-specific — standard IT IDS rules
 will generate excessive false positives on industrial protocol
-traffic. Custom rules are maintained in `detection/suricata-rules/`.
+traffic. Custom rules are maintained in `siem/suricata/ot-security.rules`.
 
 **Status:** Accepted.
 

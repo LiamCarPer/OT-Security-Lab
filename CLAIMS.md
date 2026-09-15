@@ -27,7 +27,7 @@ tested), `Partial`, `Planned`.
 | Failed HMI logins are detected | Implemented | `lab-environment/hmi-login-monitor` → `HMI_LOGIN_FAILURE` | `tests/test_login_monitor.py`; `run_security_tests.py` scenario |
 | SBOMs are signed **and** attested with keyless Sigstore | Implemented | `ci.yml` (cosign sign-blob + attest-blob + verify) | CI job (needs network/oidc) |
 | Every lab Dockerfile is covered by Dependabot | Implemented | `.github/dependabot.yml` | static review |
-| 10 CI gates + Compliance Gate | Verified | `.github/workflows/` | GitHub Actions |
+| 11 CI gates + Compliance Gate | Verified | `.github/workflows/` | GitHub Actions |
 
 ## Known gaps (claimed nowhere, tracked here)
 | Item | Status | Notes |
