@@ -135,7 +135,7 @@ graph TD
 To bridge the gap between technical implementation and industrial standards (Exceltic/ISA-62443 requirements), this lab includes formal documentation:
 
 *   **[Asset Inventory (LDR Style)](./governance/asset_inventory.csv):** A complete map of the lab's hardware and network footprints.
-*   **[Incident Response Playbook](./governance/incident_response/IR_PLAYBOOK_PLC_TAMPERING.md):** "Safety-First" response procedures for industrial security events.
+*   **[Incident Response Playbook](./incident-response/ir-playbook-unauthorised-plc-change.md):** "Safety-First" response procedures for industrial security events.
 *   **[Hardening Guide (STIG)](./governance/hardening/LINUX_OT_GATEWAY_STIG.md):** Mandatory security baselines for both Gateway and PLCs.
 *   **[Verification Test Plan](./governance/testing/CYBERSECURITY_TEST_PLAN.md):** Formal mapping of simulations to security requirements (V&V).
 *   **[Risk Register](./governance/risk_register.csv) & [BIA](./governance/bia.md):** Full risk register (12 scenarios) and business impact analysis with RTO/RPO.
