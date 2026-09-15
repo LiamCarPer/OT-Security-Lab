@@ -48,6 +48,11 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # dnp3-python==0.3.0b2 publishes cp38/cp39/cp310 wheels only (no sdist), so
+    # the base image cannot move past 3.10 until that binding ships a newer wheel.
+    ignore:
+      - dependency-name: python
+        versions: [">=3.11"]
 
   - package-ecosystem: docker
     directory: /lab-environment/opcua-server
@@ -66,6 +71,10 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Same dnp3-python==0.3.0b2 constraint as dnp3-outstation (no wheel >3.10).
+    ignore:
+      - dependency-name: python
+        versions: [">=3.11"]
 
   - package-ecosystem: docker
     directory: /lab-environment/modbus-sim
