@@ -10,7 +10,7 @@ tested), `Partial`, `Planned`.
 
 | Claim | Status | Evidence | Automated check |
 | :--- | :--- | :--- | :--- |
-| OpenPLC runs real IEC 61131-3 logic in all three controllers | Verified | `plc/*.st` → `plc/build.sh` → `plc/programs/*/program.zip`; bootstrap logs `RUNNING` | `plc/plc_integrity_check.py`; bundle reproducibility (CI rebuild + diff) |
+| OpenPLC runs real IEC 61131-3 logic in all three controllers | Verified | `plc/*.st` → `plc/build.sh` → `plc/programs/*/program.zip`; bootstrap logs `RUNNING` | `plc/plc_integrity_check.py`; bundle content check (CI rebuild + `plc/check_bundles.py`) |
 | The physics-aware monitor observes a **real** process (not spoofed packets) | Verified | `PROCESS_SAFETY_VIOLATION` with real attacker source and observed tank level in `detection/logs/alerts.json` | `run_security_tests.py` "Physics-Aware Safety Violation" (real precondition) |
 | Real DNP3 / OPC UA / S7comm endpoints exist | Verified | `lab-environment/{dnp3-outstation,opcua-server,s7-plc}` | `run_security_tests.py` protocol scenarios |
 | All protocol detections fire on live lab traffic | Verified | `detection/rules/*_dpi.py` → Loki ruler rules | `run_security_tests.py` asserts alerts **and** Loki rule state |

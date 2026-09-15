@@ -18,7 +18,7 @@ ARCH="${OT_STRUCPP_ARCH:-x64}"
 VERSION="${OT_STRUCPP_VERSION:-v0.6.6}"
 CACHE="$ROOT/.toolchain"
 STRUCPP="${OT_STRUCPP:-$CACHE/strucpp/strucpp}"
-# Fixed timestamp so the committed zips are byte-reproducible.
+# Fixed timestamp so the committed bundles' metadata is stable.
 FIXED_TS="202601010000.00"
 
 ensure_toolchain() {

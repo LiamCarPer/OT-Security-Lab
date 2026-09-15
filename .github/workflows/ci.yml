@@ -185,6 +185,4 @@ jobs:
       - name: Rebuild program bundles from source
         run: ./plc/build.sh
       - name: Fail if the committed bundles have drifted
-        run: |
-          git diff --exit-code -- plc/programs \
-            || { echo "::error::plc/programs is stale - run plc/build.sh and commit"; exit 1; }
+        run: python3 plc/check_bundles.py

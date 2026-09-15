@@ -37,8 +37,9 @@ layout the runtime expects:
 | `generated_debug.cpp` | minimal debug table (debugger metadata only) |
 | `conf/modbus_slave.json` | Modbus/TCP server on `0.0.0.0:502` |
 
-The bundles are committed and **byte-reproducible** (fixed timestamps); CI
-rebuilds them and diffs `plc/programs/` to catch drift.
+The bundles are committed. CI rebuilds them and compares the bundle *contents*
+(entry names + per-file SHA-256 via `plc/check_bundles.py`) to catch drift — the
+`.zip` container itself is not asserted byte-identical across `zip` builds.
 
 ## Deploying
 
