@@ -1,7 +1,7 @@
 # Deployment & Validation Guide
 
 This document explains how to deploy the `ot-security-lab` and verify its
-security configurations. The environment is fully automated: **firewall rules
+security configurations. The environment is automated: **firewall rules
 and IDS rules are applied automatically when the gateway container boots** — no
 manual `docker cp` / `docker exec` steps are required.
 

@@ -22,7 +22,7 @@ deliberately out of scope for a lab, the rating reflects the pattern demonstrate
 | 7 | Continuity of Operations (COOP) | MIL-1 | Backups simulated only; no recovery drills |
 | 8 | Supply Chain and External Dependencies (SC) | MIL-1 | Pinned/provenance-controlled images; no vendor program |
 | 9 | Workforce Management (WFM) | MIL-1 | Documented culture/lessons learned; no training program |
-| 10 | Cybersecurity Architecture (ARCH) | MIL-3 | Purdue zones, iptables chokepoint, defense in depth fully enforced |
+| 10 | Cybersecurity Architecture (ARCH) | MIL-3 | Purdue zones, iptables chokepoint, defense in depth enforced |
 
 ---
 
