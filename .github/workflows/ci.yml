@@ -186,3 +186,16 @@ jobs:
         run: ./plc/build.sh
       - name: Fail if the committed bundles have drifted
         run: python3 plc/check_bundles.py
+
+  image-build:
+    name: Lab Image Build
+    # The Compliance Gate only runs on main, so Dockerfile/base-image and pinned
+    # dependency changes need a build check on the PR. This catches resolver
+    # failures (e.g. a library with no wheel for the new base) before merge.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build every lab image
+        working-directory: lab-environment
+        run: docker compose build
