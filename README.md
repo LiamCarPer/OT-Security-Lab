@@ -13,8 +13,8 @@
 | :--- | :--- |
 | **Industry** | Water Treatment & Filtration |
 | **Frameworks** | IEC 62443, MITRE ATT&CK for ICS, ISA-95 Purdue Model |
-| **Environment** | 5-Zone Segmented Docker Lab with L3/L4 Firewall |
-| **Monitoring** | Protocol-Aware (Modbus/TCP) Anomaly detection |
+| **Environment** | 4-Zone Segmented Docker Lab (L1–L4) + simulated L0 |
+| **Monitoring** | Protocol-aware anomaly detection (Modbus/TCP, DNP3, OPC UA, S7comm) |
 | **Evidence** | [Verified Attack Simulation Logs](./detection/logs/alerts.json) |
 
 ## Project Overview
@@ -76,6 +76,11 @@ graph TD
 ```
 
 ### Purdue Levels Mapping:
+> **Note:** the Industrial DMZ components shown above (Jump Host/Bastion,
+> Reverse Proxy, Corporate Workstation) are **target-state** — see the gaps table
+> in [`CLAIMS.md`](./CLAIMS.md). The implemented environment comprises the four
+> zones below; L0 field devices are simulated by the controllers.
+
 *   **Level 4/5 (Enterprise):** Corporate LAN, Attacker Simulation, External Monitoring.
 *   **Industrial DMZ:** Broker for remote access (Jump Host) and data visualization (Proxy).
 *   **Level 3 (Operations):** Historian (InfluxDB) and the segregated Engineering Workstation (EWS).
@@ -143,10 +148,15 @@ To bridge the gap between technical implementation and industrial standards (Exc
 ---
 
 ## 5. Scalability & Protocol Realities
-This lab currently utilizes **Modbus TCP** as a representative industrial protocol. In a production rollout (e.g., Railway/Transportation):
-*   **Protocols:** The detection logic would be expanded to support **PROFINET, Ethernet/IP, and OPC-UA** using modular dissectors.
-*   **Asset Discovery:** Manual inventory would be replaced by continuous passive monitoring (e.g., Zeek/Nozomi) linked to the `asset_inventory.csv`.
-*   **Scale:** The architecture is designed to handle thousands of tags across hundreds of distributed PLCs.
+The lab implements **Modbus/TCP**, **DNP3**, **OPC UA** and **S7comm** with
+protocol-aware detection on real endpoints. In a production rollout (e.g.,
+Railway/Transportation):
+*   **Protocols:** Additional protocols (PROFINET, EtherNet/IP) would be added as
+    modular dissectors alongside the existing ones.
+*   **Asset Discovery:** Manual inventory would be replaced by continuous passive
+    monitoring (e.g., Zeek/Nozomi) linked to the `asset_inventory.csv`.
+*   **Scale:** The normalization/SIEM pipeline is protocol-agnostic and would be
+    extended to large tag counts across distributed controllers.
 
 ---
 
