@@ -42,8 +42,6 @@ services:
     container_name: plc_intake
     restart: unless-stopped
     mem_limit: 256m
-    ports:
-      - "8443:8443"
     cap_add:
       - SYS_NICE
       - SYS_RESOURCE
@@ -57,8 +55,6 @@ services:
     container_name: plc_treatment
     restart: unless-stopped
     mem_limit: 256m
-    ports:
-      - "8444:8443"
     cap_add:
       - SYS_NICE
       - SYS_RESOURCE
@@ -72,8 +68,6 @@ services:
     container_name: plc_distribution
     restart: unless-stopped
     mem_limit: 256m
-    ports:
-      - "8445:8443"
     cap_add:
       - SYS_NICE
       - SYS_RESOURCE

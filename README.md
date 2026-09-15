@@ -210,7 +210,8 @@ No local Docker required — the whole lab runs in your browser:
 3. Wait for the automatic build and boot (first time ~5-10 min; progress is
    visible in the terminal). The devcontainer forwards:
    Grafana `:3000` · SCADA HMI `:8080` (via the DMZ reverse proxy) ·
-   OpenPLC `:8443/:8444/:8445` · Bastion SSH `:2222` · Alertmanager `:9093`.
+   Bastion SSH `:2222` · Alertmanager `:9093`. (The PLC runtime API is internal
+   to the Control zone and reached by the EWS, so it is not host-published.)
 4. Validate the environment:
    ```bash
    make compliance
