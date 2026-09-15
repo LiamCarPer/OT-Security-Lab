@@ -21,12 +21,19 @@ SID=""
 # logs go to stderr: stdout is reserved for command substitution return values
 log() { echo "[SCADA-PROV] $*" >&2; }
 
-# Capture the JSESSIONID for a username/password pair. curl's cookie jar is not
-# reliably replayed across invocations, so the session id is used explicitly.
+# Capture the JSESSIONID for a username/password pair, but only if the session
+# is actually authenticated. Scada-LTS returns HTTP 200 and sets a JSESSIONID
+# even for *failed* logins, so the cookie alone is not proof of authentication:
+# an authenticated call to /api/users/ returns 200, an unauthenticated one is
+# redirected to the login page (302).
 session_for() {
-    curl -s -D - -o /dev/null "$BASE/api/auth/$USER/$1" \
+    sid=$(curl -s -D - -o /dev/null "$BASE/api/auth/$USER/$1" \
         | tr -d '\r' \
-        | sed -n 's/^Set-Cookie: JSESSIONID=\([^;]*\).*/\1/p'
+        | sed -n 's/^Set-Cookie: JSESSIONID=\([^;]*\).*/\1/p')
+    [ -n "$sid" ] || return 1
+    code=$(curl -s -o /dev/null -w '%{http_code}' -H "Cookie: JSESSIONID=$sid" "$BASE/api/users/")
+    [ "$code" = "200" ] || return 1
+    printf '%s' "$sid"
 }
 
 # Authenticate, rotating the factory-default password to the hardened one on the
