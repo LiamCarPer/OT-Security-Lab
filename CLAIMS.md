@@ -35,3 +35,6 @@ tested), `Partial`, `Planned`.
 | Hardware data diode | Planned | Unidirectional flow is `iptables`-enforced; optical diode is future work. |
 | PLC host-level integrity / secure boot | Planned | Control zone is SL-2; host hardening is the path to SL-3 (`iec62443/sl-mapping.md`). |
 | EDR on EWS/HMI | Planned | Sysmon sample telemetry exists for the dashboard; no live agent. |
+| SIS / BPCS separation (ADR-06) | Planned | PLC-03 runs on the shared control network; a dedicated SIS segment with a one-way feed is not built. |
+| Suricata sensor (ADR-07) | Planned | Passive monitoring is implemented via the gateway Scapy producers; the `tcpdump`->Suricata sensor is staged in `siem/suricata/` but not deployed. |
+| Simulated internet / C2 channel (ADR-08) | Planned | The attacker is Enterprise-local with pivot routes; no egress or C2 callback is implemented. |
