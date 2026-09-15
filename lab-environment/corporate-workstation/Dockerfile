@@ -4,7 +4,7 @@
 #   gateway (CAP_NET_ADMIN); the container runs no service.
 FROM alpine:3.24
 
-RUN apk add --no-cache curl iproute2
+RUN apk add --no-cache curl iproute2 openssh-client
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh

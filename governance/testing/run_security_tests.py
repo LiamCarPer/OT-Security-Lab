@@ -355,6 +355,19 @@ def main():
         results.append(("Historian Ingestion", "FAIL"))
         all_passed = False
 
+    print("\n[TEST] Remote Engineering Hop (bastion -> EWS, C11 key-only)")
+    check = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "governance" / "testing" / "check_remote_access.py")],
+        capture_output=True,
+        text=True,
+    )
+    print(check.stdout.strip() or check.stderr.strip())
+    if check.returncode == 0:
+        results.append(("Remote Engineering Hop", "PASS"))
+    else:
+        results.append(("Remote Engineering Hop", "FAIL"))
+        all_passed = False
+
     print("\n" + "=" * 60)
     print("FINAL SECURITY COMPLIANCE REPORT")
     print("=" * 60)

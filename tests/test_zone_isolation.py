@@ -55,7 +55,14 @@ def test_firewall_is_default_deny():
 
 
 def test_sensitive_conduits_are_source_restricted():
-    """The deployment API and the protocol endpoints allow only their host."""
+    """The deployment API, protocol endpoints and engineering hop allow only
+    their source host."""
     rules = FIREWALL.read_text(encoding="utf-8")
-    for source, port in (("172.23.0.4", "8443"), ("172.23.0.20", "20000")):
-        assert f"-s {source} -p tcp --dport {port}" in rules, f"C{port} not source-restricted"
+    for source, port in (
+        ("172.23.0.4", "8443"),    # C5  EWS -> PLC runtime API
+        ("172.23.0.20", "20000"),  # C6  insider -> DNP3
+        ("172.23.0.20", "4840"),   # C7  insider -> OPC UA
+        ("172.23.0.20", "102"),    # C8  insider -> S7comm
+        ("172.25.0.11", "22"),     # C11 bastion -> EWS
+    ):
+        assert f"-s {source} -p tcp --dport {port}" in rules, f"{source}:{port} not source-restricted"

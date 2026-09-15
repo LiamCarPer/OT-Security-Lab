@@ -87,6 +87,16 @@ applied by `lab-environment/network-config/firewall-rules.sh` on the gateway.
 *   **Requirement:** The proxy fronts the operator interface; the HMI itself is
   never exposed to the Enterprise zone.
 
+### C11: Bastion to EWS remote engineering (DMZ → Operations)
+*   **Source Zone:** Industrial DMZ (Level 3.5) — bastion `172.25.0.11`
+*   **Destination Zone:** Operations Zone (Level 3) — EWS `172.23.0.4`
+*   **Protocol:** SSH (Port 22)
+*   **Requirement:** Source-restricted to the bastion. Remote engineering
+  terminates at the jump host and re-initiates into Operations
+  (break-in-communication, ADR-04); authentication is key-only, with the keypair
+  generated at boot into the `ews_keys` volume and never committed. Verified by
+  `governance/testing/check_remote_access.py` (part of `make compliance`).
+
 ### Single chokepoint (no bypass)
 Every OT service is single-homed on its zone network and routes other zones'
 traffic through the gateway; the gateway is the only multi-homed container. The

@@ -89,6 +89,11 @@ iptables -A FORWARD -i "$IF_IT" -o "$IF_DMZ" -p tcp --dport 22 -j ACCEPT
 # Conduit C10: DMZ -> Supervisory (L2): reverse proxy to the HMI 8080
 iptables -A FORWARD -i "$IF_DMZ" -o "$IF_SUPERVISORY" -p tcp --dport 8080 -j ACCEPT
 
+# Conduit C11: bastion (DMZ 172.25.0.11) -> EWS (Ops 172.23.0.4): SSH 22.
+# Source-restricted to the jump host: remote engineering terminates in the DMZ
+# and re-initiates into Operations (break-in-communication, ADR-04).
+iptables -A FORWARD -i "$IF_DMZ" -o "$IF_OPS" -s 172.25.0.11 -p tcp --dport 22 -j ACCEPT
+
 # --- 6. Denied-traffic logging (rate-limited, consumed by the SIEM) ---
 iptables -A FORWARD -m limit --limit 5/min --limit-burst 10 -j LOG --log-prefix "FW_DROP: " --log-level 4
 

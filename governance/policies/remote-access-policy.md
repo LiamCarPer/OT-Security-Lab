@@ -57,6 +57,22 @@ Suspected remote access compromise follows the incident response process (`IR_PL
 - Non-compliance is reported to the OT Security Director; repeat violations result in revocation of remote access privileges.
 - Exceptions require documented risk acceptance with compensating controls and a review date, recorded in the risk register.
 
+## 6. Lab Implementation Status
+
+This policy describes the **target** state. In the lab, only the access path and
+authentication are implemented; the operational controls are roadmap items.
+
+| Policy clause | Lab status |
+| :--- | :--- |
+| 2.1 Access path: terminate at the DMZ jump host, then re-initiate (e.g. EWS) | **Implemented** — conduit C9 (Enterprise -> bastion), C11 (bastion -> EWS, source-restricted to `172.25.0.11`), verified by `governance/testing/check_remote_access.py` |
+| 2.2 Authentication: MFA, unique accounts | **Target** — the lab uses a single `engineer` account and a keypair generated at boot (no MFA) |
+| 2.3 Session controls: 15-min idle timeout, session recording, single session | **Target** — not enforced |
+| 2.4 Confidentiality: encrypted remote traffic | **Implemented for the hop** — SSH (C11); the lab credentials/keys are documented lab-only values |
+| 2.5 Approval/expiry/quarterly review | **Target** — not applicable to a lab |
+
+The gaps above are tracked as planned work; they are not claimed as implemented,
+consistent with `CLAIMS.md`.
+
 ---
 
 **Approved By:** OT Security Director

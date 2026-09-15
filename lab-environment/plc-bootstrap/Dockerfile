@@ -7,10 +7,21 @@ FROM python:3.12-slim
 
 # iproute2 provides `ip`: the EWS routes Control-zone traffic through the zone
 # gateway so conduit C5 is enforced (a direct path would bypass the firewall).
+# openssh-server exposes the DMZ->EWS engineering endpoint (conduit C11).
+# checkov:skip=CKV_DOCKER_1:the EWS sshd is the endpoint of the source-restricted
+#   DMZ conduit C11 and is key-only; exposing 22 is intentional.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends iproute2 \
+    && apt-get install -y --no-install-recommends iproute2 openssh-server \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir requests==2.32.3
+    && pip install --no-cache-dir requests==2.32.3 \
+    && ssh-keygen -A \
+    && useradd -m -s /bin/bash -p '*' engineer
+
+COPY sshd_config /etc/ssh/sshd_config
+COPY start-sshd.sh /usr/local/bin/start-sshd.sh
+RUN chmod +x /usr/local/bin/start-sshd.sh
+
+EXPOSE 22
 
 WORKDIR /app
 COPY deploy.py /app/deploy.py

@@ -112,8 +112,10 @@ that the Jump Host itself be hardened and monitored (it becomes
 a high-value target). Session recording on the Jump Host is
 listed as a future enhancement.
 
-**Status:** Partial. The reverse proxy and bastion are deployed (C9/C10), but the
-onward bastion -> EWS engineering hop is not yet a conduit.
+**Status:** Implemented. The reverse proxy and bastion are deployed (C9/C10), and
+the onward bastion -> EWS engineering hop is conduit C11 (key-only SSH,
+source-restricted to the jump host, verified by
+`governance/testing/check_remote_access.py`).
 
 ---
 

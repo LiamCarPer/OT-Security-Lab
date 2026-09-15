@@ -50,15 +50,16 @@ Grafana/Loki/Promtail SIEM stack.
 8. `ot_insider` (a compromised EWS) starts in the Operations zone, routes
    Control-zone traffic via the gateway, and carries the real protocol clients
    used by `simulate_{dnp3,opcua,s7comm}_attack.py`.
-9. The Modbus **process stand-in** (`modbus-sim-*`, Control zone) serves the
-   canonical register map with the ST-level controller logic, so the historian
-   path has a real source until the OpenPLC program bundles are committed.
+9. The Modbus **process stand-in** (`modbus-sim-*`, Control zone) serves the same
+   canonical register map as a fallback source when a controller is unprogrammed
+   or unreachable.
 10. `ot_historian_poller` (Supervisory) reads the controllers over C1 and writes
     InfluxDB northbound over C3; `ot_grafana_route` puts Grafana's L3 route in
     its network namespace so the historian dashboard traverses C4.
 11. The **DMZ** reverse proxy publishes the HMI on host `:8080`; `ot_bastion` is
-    the SSH jump host; `ot_hmi_login_monitor` raises `HMI_LOGIN_FAILURE` for
-    repeated failed logins.
+    the SSH jump host and reaches the EWS over conduit **C11** (key-only SSH; the
+    keypair is generated at boot into the `ews_keys` volume); `ot_hmi_login_monitor`
+    raises `HMI_LOGIN_FAILURE` for repeated failed logins.
 12. `ot_scada_provisioner` rotates the Scada-LTS factory password to
     `OT_SCADA_PASS` (default `ot-lab-scada`) on first login.
 

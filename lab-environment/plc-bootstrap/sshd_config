@@ -1,0 +1,11 @@
+# EWS sshd configuration (endpoint of conduit C11: bastion -> EWS).
+# Key-only, single named user; the private key never leaves the bastion volume.
+Port 22
+Protocol 2
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AllowUsers engineer
+X11Forwarding no
+PrintMotd no
