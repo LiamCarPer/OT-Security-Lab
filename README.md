@@ -129,6 +129,12 @@ graph TD
 ### Forensic Log Analysis (MITRE ATT&CK Mapping)
 ![Loki Raw Logs](evidence/Loki_Raw_Logs.png)
 
+> The images above are illustrative UI snapshots. The authoritative runtime
+> evidence is **[`evidence/runtime_evidence.json`](./evidence/runtime_evidence.json)** —
+> machine-generated from the running lab (Loki alert counts by type, ruler rule
+> states, Grafana datasources, historian last values) by
+> `governance/testing/capture_evidence.py`. Regenerate it after `make up`.
+
 ---
 
 ## 4. Governance, Risk & Compliance (GRC)
