@@ -8,6 +8,7 @@ Grafana -> InfluxDB path traverses the gateway (conduit C4).
 """
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -21,6 +22,7 @@ FRESHNESS_SECONDS = 60
 HISTORY_XID = "DP_DS_PLC1_HR5"
 INFLUX_CONTAINER = "ot_historian"
 SCADA_CONTAINER = "ot_scada_provisioner"
+SCADA_PASS = os.getenv("OT_SCADA_PASS", "ot-lab-scada")
 
 
 def docker_exec(container: str, command: str) -> str:
@@ -122,7 +124,7 @@ def check_scada_history() -> list:
     start = end - 180_000
     command = (
         "B=http://hmi:8080/Scada-LTS; "
-        'sid=$(curl -s -D - -o /dev/null "$B/api/auth/admin/admin" | tr -d "\\r" '
+        f'sid=$(curl -s -D - -o /dev/null "$B/api/auth/admin/{SCADA_PASS}" | tr -d "\\r" '
         "| sed -n 's/^Set-Cookie: JSESSIONID=\\([^;]*\\).*/\\1/p'); "
         f'curl -s -H "Cookie: JSESSIONID=$sid" "$B/api/point_value/getValuesFromTimePeriod/xid/{HISTORY_XID}/{start}/{end}"'
     )

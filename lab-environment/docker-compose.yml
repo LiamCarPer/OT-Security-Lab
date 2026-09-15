@@ -504,6 +504,7 @@ services:
       - SETUID
     volumes:
       - ./reverse-proxy/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - proxy_logs:/var/log/otproxy
     ports:
       - "8080:80"
     networks:
@@ -559,6 +560,26 @@ services:
     networks:
       it_network:
         ipv4_address: 172.24.0.30
+
+  # DMZ login monitor: detects failed Scada-LTS logins in the proxy access log
+  # (HMI-3.3) and raises HMI_LOGIN_FAILURE alerts.
+  hmi-login-monitor:
+    build: ./hmi-login-monitor
+    container_name: ot_hmi_login_monitor
+    restart: unless-stopped
+    mem_limit: 64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - DAC_OVERRIDE
+    volumes:
+      - proxy_logs:/var/log/otproxy:ro
+      - ../detection/logs:/logs
+    networks:
+      dmz_network:
+        ipv4_address: 172.25.0.12
 
   # --- SIEM STACK (Level 3 & Level 4 Integration) ---
 
@@ -714,3 +735,5 @@ volumes:
   # Scada-LTS configuration (datasources/datapoints) persists across restarts;
   # `docker compose down -v` resets it and the provisioner re-seeds on next boot.
   scada_db_data:
+  # DMZ reverse-proxy access log, shared with the login monitor.
+  proxy_logs:

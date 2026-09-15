@@ -56,6 +56,11 @@ Grafana/Loki/Promtail SIEM stack.
 10. `ot_historian_poller` (Supervisory) reads the controllers over C1 and writes
     InfluxDB northbound over C3; `ot_grafana_route` puts Grafana's L3 route in
     its network namespace so the historian dashboard traverses C4.
+11. The **DMZ** reverse proxy publishes the HMI on host `:8080`; `ot_bastion` is
+    the SSH jump host; `ot_hmi_login_monitor` raises `HMI_LOGIN_FAILURE` for
+    repeated failed logins.
+12. `ot_scada_provisioner` rotates the Scada-LTS factory password to
+    `OT_SCADA_PASS` (default `ot-lab-scada`) on first login.
 
 ### Historian data path
 

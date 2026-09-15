@@ -34,6 +34,10 @@ and the sinks. All rules capture every non-loopback gateway interface
 (`otdpi.common.capture_interfaces()`), because the gateway is a multi-homed
 chokepoint and `sniff(iface=None)` would only bind the default route.
 
+Endpoint login-failure detection is performed at the DMZ reverse proxy by
+`lab-environment/hmi-login-monitor`, which raises `HMI_LOGIN_FAILURE` when a
+source exceeds failed-login attempts in nginx's structured access log.
+
 
 ## 2. Logic Implementation
 

@@ -19,7 +19,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ALERT_LOG = REPO_ROOT / "detection" / "logs" / "alerts.json"
-SCADA_BASE = os.getenv("OT_SCADA_URL", "http://localhost:8080/Scada-LTS")
+SCADA_BASE = os.getenv("OT_SCADA_URL", "http://hmi:8080/Scada-LTS")
+SCADA_PASS = os.getenv("OT_SCADA_PASS", "ot-lab-scada")
 INTAKE_LEVEL_XID = os.getenv("OT_SCADA_LEVEL_XID", "DP_DS_PLC1_HR5")
 LEVEL_THRESHOLD = int(os.getenv("OT_LEVEL_THRESHOLD", "90"))
 LOKI_BASE = os.getenv("OT_LOKI_URL", "http://localhost:3100")
@@ -44,6 +45,15 @@ TESTS = [
         "name": "Lateral Movement",
         "cmd": "docker exec ot_attacker python3 /attacker/simulate_lateral_movement.py",
         "expected": ["CROSS_ZONE_VIOLATION"],
+    },
+    {
+        "name": "HMI Login Brute Force",
+        "cmd": (
+            "docker exec ot_corp_ws sh -c 'for i in 1 2 3 4 5; do "
+            'curl -s -o /dev/null -d "username=admin&password=wrong&submit=Login" '
+            "http://172.25.0.10/Scada-LTS/login.htm; sleep 0.3; done'"
+        ),
+        "expected": ["HMI_LOGIN_FAILURE"],
     },
     {
         "name": "Physics-Aware Safety Violation",
@@ -105,7 +115,7 @@ def scada_get_value(xid, timeout=5):
     """
     command = (
         "B=http://hmi:8080/Scada-LTS; "
-        'sid=$(curl -s -D - -o /dev/null "$B/api/auth/admin/admin" | tr -d "\\r" '
+        f'sid=$(curl -s -D - -o /dev/null "$B/api/auth/admin/{SCADA_PASS}" | tr -d "\\r" '
         "| sed -n 's/^Set-Cookie: JSESSIONID=\\([^;]*\\).*/\\1/p'); "
         f'curl -s -H "Cookie: JSESSIONID=$sid" "$B/api/point_value/getValue/{xid}"'
     )

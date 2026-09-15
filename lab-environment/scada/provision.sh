@@ -8,7 +8,9 @@ set -eu
 
 BASE="${OT_SCADA_URL:-http://hmi:8080/Scada-LTS}"
 USER="${OT_SCADA_USER:-admin}"
-PASS="${OT_SCADA_PASS:-admin}"
+PASS="${OT_SCADA_PASS:-ot-lab-scada}"
+# Factory default; rotated to PASS on first login (HMI-3.2).
+DEFAULT_PASS="${OT_SCADA_DEFAULT_PASS:-admin}"
 # TARGETS format: "<plc name> <stage> <datasource xid> <host> <registers...>" per PLC
 # The real OpenPLC controllers (programmed by plc-bootstrap). Reachable from the
 # Supervisory zone through the gateway (conduit C1).
@@ -19,13 +21,31 @@ SID=""
 # logs go to stderr: stdout is reserved for command substitution return values
 log() { echo "[SCADA-PROV] $*" >&2; }
 
-# Authenticate and capture the JSESSIONID. curl's cookie jar is not reliably
-# replayed across invocations in this image, so the session id is passed
-# explicitly as a Cookie header.
-auth() {
-    SID=$(curl -s -D - -o /dev/null "$BASE/api/auth/$USER/$PASS" \
+# Capture the JSESSIONID for a username/password pair. curl's cookie jar is not
+# reliably replayed across invocations, so the session id is used explicitly.
+session_for() {
+    curl -s -D - -o /dev/null "$BASE/api/auth/$USER/$1" \
         | tr -d '\r' \
-        | sed -n 's/^Set-Cookie: JSESSIONID=\([^;]*\).*/\1/p')
+        | sed -n 's/^Set-Cookie: JSESSIONID=\([^;]*\).*/\1/p'
+}
+
+# Authenticate, rotating the factory-default password to the hardened one on the
+# first successful login (HMI-3.2: no default credentials in the running system).
+auth() {
+    SID=$(session_for "$PASS")
+    if [ -z "$SID" ] && [ "$PASS" != "$DEFAULT_PASS" ]; then
+        SID=$(session_for "$DEFAULT_PASS")
+        if [ -n "$SID" ]; then
+            uid=$(curl -s -H "Cookie: JSESSIONID=$SID" "$BASE/api/users/" \
+                | jq -r --arg u "$USER" 'if type=="array" then (.[]? | select(.username==$u) | .id) else .id end' \
+                | head -1)
+            [ -n "$uid" ] || uid=1
+            curl -s -o /dev/null -X PUT -H "Cookie: JSESSIONID=$SID" -H 'Content-Type: application/json' \
+                "$BASE/api/users/password" -d "{\"userId\":$uid,\"password\":\"$PASS\"}"
+            log "rotated $USER off the factory default password"
+            SID=$(session_for "$PASS")
+        fi
+    fi
     [ -n "$SID" ]
 }
 
