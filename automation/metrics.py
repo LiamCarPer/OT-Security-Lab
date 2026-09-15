@@ -3,8 +3,8 @@
 
 Produces per-rule volumes, unique offender counts, mean-time-to-detect
 estimates, and a naive false-positive proxy (single-event bursts that never
-recur within the same source). Output is both console and JSON (ingestible by
-the SIEM dashboard).
+recur within the same source). Output is both console and JSON, consumed by the
+executive summary and the KPI baseline in `governance/remediation_roadmap.md`.
 """
 import argparse
 import json

@@ -8,7 +8,7 @@ remediation playbooks.
 
 | Module | Purpose |
 | :--- | :--- |
-| `metrics.py` | Computes detection KPIs from `detection/logs/alerts.json` (per-rule volumes, unique sources, MTTD estimates). Writes `detection/logs/metrics.json` for SIEM dashboards. |
+| `metrics.py` | Computes detection KPIs from `detection/logs/alerts.json` (per-rule volumes, unique sources, MTTD estimates). Writes `detection/logs/metrics.json`, consumed by the executive summary and the KPI baseline in `governance/remediation_roadmap.md`. |
 | `enrichment.py` | OSINT enrichment of alert source IPs (ASN/owner via Team Cymru, country via reverse DNS). No API keys required. |
 | `playbooks/auto_block_ip.py` | Containment playbook: automatically blocks repeat unauthorized-Modbus-write offenders (threshold: 3 writes / 5 min) with an iptables DROP on the zone gateway. Dry-run and unblock modes included. |
 | `playbooks/webhook_receiver.py` | Alertmanager webhook receiver: persists SIEM alerts to `detection/logs/siem_alerts.json`, bridging Loki alerting and downstream playbooks. |

@@ -54,7 +54,7 @@ P3 is the architecture and assurance tier. **RD-11** and **RD-12** are the forma
 | Backup restore success | 100% of quarterly restore exercises pass within RTO | Restore test record per `bia.md` Section 6 |
 | Detection coverage | 100% of risk register scenarios have a detection or compensating control | Mapping audit: risk_register vs detection/rules |
 | Alert quality | False-positive proxy (single-event bursts, per `automation/metrics.py`) below 10% of total alerts | `detection/logs/metrics.json` |
-| MTTD proxy | Mean time to detect (per-rule, `metrics.py`) trending downward quarter over quarter | `metrics.json` / Grafana dashboard |
+| MTTD proxy | Mean time to detect (per-rule, `metrics.py`) trending downward quarter over quarter | `detection/logs/metrics.json` |
 | Incident readiness | At least 1 tabletop exercise and 1 IR drill per year | `governance/tabletop/tabletop-exercise-kit.md` after-action reports |
 | Remediation velocity | 80% of P1 findings closed within 3 months of acceptance | This roadmap, status column updated monthly |
 
