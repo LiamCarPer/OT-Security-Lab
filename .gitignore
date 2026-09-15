@@ -27,8 +27,11 @@ data/
 db/
 
 # Project Specific
-# detection/logs/*.json  # Commented out to allow committing Live Detection Evidence for portfolio proof
-detection/logs/*.out
+# Only the curated evidence JSON is tracked; all other detection/logs output is ignored.
+detection/logs/*
+!detection/logs/alerts.json
+!detection/logs/siem_alerts.json
+!detection/logs/edr_sysmon_sample.json
 rule-alerts.json/
 .DS_Store
 .vscode/
