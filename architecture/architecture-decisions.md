@@ -9,7 +9,7 @@ Each ADR follows the format:
 - **Decision** — what was chosen
 - **Rationale** — why it was chosen
 - **Consequences** — what tradeoffs or constraints this introduces
-- **Status** — Accepted / Superseded / Deprecated
+- **Status** — Implemented / Partial / Proposed / Superseded / Deprecated
 
 ---
 
@@ -31,7 +31,7 @@ explicitly in the zone/conduit design. PLC-to-PLC traffic must be
 treated as a conduit and monitored, not implicitly trusted. Adds
 complexity to the Docker Compose topology.
 
-**Status:** Accepted.
+**Status:** Implemented.
 
 ---
 
@@ -83,7 +83,9 @@ routed through the DMZ Jump Host → Operations zone → EWS enclave
 in the Remote Access policy. Direct connections from any zone
 other than the EWS enclave to PLCs are blocked by default.
 
-**Status:** Accepted.
+**Status:** Partial. The EWS sits in the Operations zone and its PLC deployment
+path is source-restricted (C5), but the dedicated sub-zone / PAM enclave is not
+built — the EWS shares `ops_network` with the historian and the insider.
 
 ---
 
@@ -110,7 +112,8 @@ that the Jump Host itself be hardened and monitored (it becomes
 a high-value target). Session recording on the Jump Host is
 listed as a future enhancement.
 
-**Status:** Accepted.
+**Status:** Partial. The reverse proxy and bastion are deployed (C9/C10), but the
+onward bastion -> EWS engineering hop is not yet a conduit.
 
 ---
 
@@ -138,7 +141,7 @@ but is precisely what a production OT environment requires.
 Any new conduit requires an explicit rule change — this is
 intentional and auditable.
 
-**Status:** Accepted.
+**Status:** Implemented.
 
 ---
 
@@ -167,7 +170,9 @@ historian data for the safety PLC, which is realistic.
 Process values from the SIS are only readable via a dedicated
 one-way data feed, not a bidirectional Modbus connection.
 
-**Status:** Accepted.
+**Status:** Proposed. PLC-03 runs on the shared control network and is polled like
+the other controllers; a real SIS/BPCS separation (its own segment and a one-way
+feed) is future work, not built.
 
 ---
 
@@ -195,7 +200,9 @@ Suricata rules must be OT-specific — standard IT IDS rules
 will generate excessive false positives on industrial protocol
 traffic. Custom rules are maintained in `siem/suricata/ot-security.rules`.
 
-**Status:** Accepted.
+**Status:** Partial. The passive-monitoring principle is implemented by the
+gateway Scapy producers; the separate `tcpdump` -> Suricata sensor is not
+deployed (its config and rules are staged in `siem/suricata/`).
 
 ---
 
@@ -222,4 +229,6 @@ Any path from the Attacker container to Level 3/2/1 must
 traverse the iDMZ and gateway container, which is the point:
 the detection rules validate that this traversal is caught.
 
-**Status:** Accepted.
+**Status:** Partial. The attacker runs at Level 4 with pivot routes through the
+gateway; the simulated internet egress and C2 callback channel are not
+implemented (the C2 behaviours are scripted locally).
