@@ -8,3 +8,14 @@ datasources:
     isDefault: true
     jsonData:
       maxLines: 1000
+
+  # Level 3 historian. Grafana (L4) reaches it through the zone gateway via the
+  # grafana-route sidecar (conduit C4, IT -> Ops 8086).
+  - name: InfluxDB-Historian
+    type: influxdb
+    access: proxy
+    uid: influxdb-historian
+    url: http://172.23.0.10:8086
+    database: ot_data
+    jsonData:
+      httpMode: GET

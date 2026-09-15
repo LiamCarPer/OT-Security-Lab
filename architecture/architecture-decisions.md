@@ -53,7 +53,12 @@ from Level 2 to Level 3 for data push. Read access from Level 4 to
 Level 3 must be scoped to specific ports and authenticated. Increases
 data latency marginally but is operationally acceptable.
 
-**Status:** Accepted.
+**Status:** Implemented. The Level 2 historian collector (`historian-poller`)
+reads the controllers over conduit C1 and writes the Level 3 InfluxDB northbound
+over conduit C3; Grafana at Level 4 queries it over conduit C4. Until the
+OpenPLC program bundles are committed, a Modbus process stand-in provides the
+data source; the collector switches to the controllers automatically when they
+answer on 502.
 
 ---
 

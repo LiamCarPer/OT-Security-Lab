@@ -10,6 +10,7 @@ import os
 from datetime import datetime
 
 import scapy.all as scapy
+from otdpi import common
 
 HMI_IP = os.getenv("OT_HMI_IP", "172.22.0.10")
 EWS_IP = os.getenv("OT_EWS_IP", "172.23.0.4")
@@ -66,7 +67,7 @@ def process_packet(packet):
 def main():
     print("Starting DNP3 Anomaly Detection (Logging to JSON)...")
     print(f"Authorized operator sources: {[str(ip) for ip in AUTHORIZED_OPERATORS]}")
-    scapy.sniff(iface=None, filter=f"tcp port {DNP3_PORT}", prn=process_packet, store=0)
+    scapy.sniff(iface=common.capture_interfaces(), filter=f"tcp port {DNP3_PORT}", prn=process_packet, store=0)
 
 if __name__ == "__main__":
     main()

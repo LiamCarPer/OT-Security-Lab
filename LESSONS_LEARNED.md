@@ -223,3 +223,139 @@ infrastructure exposed three hard truths about modern OpenPLC and Scada-LTS.
   failure into a detectable, survivable event — the core idea of ICS defense in
   depth.
 
+
+---
+
+## 9. Multi-Protocol Integration: Four Bugs Real Traffic Exposed
+
+Adding real DNP3, OPC UA and S7comm endpoints (and a compromised-EWS emulation)
+took the lab from "detections fire on raw packets" to "detections fire on real
+protocol sessions". Getting there surfaced bugs that no synthetic fixture could
+have caught — the kind that only appear when traffic must actually traverse a
+router, complete a handshake, and be written to disk by a sniffing process.
+
+### 9.1 The Firewall That Only Ever Denied
+- **Symptom:** Real protocol clients from the Operations zone timed out against
+  controllers in the Control zone, yet the Windows-style scenario "looked"
+  secure: the firewall was dropping everything.
+- **Root Cause:** `get_iface()` parsed `ip addr` output and captured `$2`, which
+  inside a container is `eth3@if194:` (the veth peer index is part of the name).
+  Stripping only the trailing colon left `eth3@if194`, so **every conduit rule
+  bound a non-existent interface and never matched**. The gateway had never
+  forwarded a single legitimate packet; it was a deny-only wall.
+- **Solution:** Strip the `@peer` suffix too (`sub(/@.*/, "", iface)`). The
+  conduit counters finally moved.
+- **The Lesson:** An "allow-list firewall" with zero accepted packets is not a
+  control, it is an outage waiting to be labelled a security feature. Counter
+  checks (or a positive test) belong in every firewall change.
+
+### 9.2 The Sniffer That Watched One Interface
+- **Symptom:** The firewall now forwarded traffic and the endpoints answered,
+  but the gateway IDS produced no protocol alerts.
+- **Root Cause:** Every rule used `scapy.sniff(iface=None)`, which binds only the
+  **default-route interface**, not all interfaces. It happened to work before
+  because the attacker's traffic arrived on the default (Enterprise) interface;
+  Operations→Control traffic arrives on a different interface and was invisible.
+- **Solution:** A shared `capture_interfaces()` helper returns every non-loopback
+  interface and all rules sniff that list.
+- **The Lesson:** "It detected the attacker" can hide a scoping bug. Multi-homed
+  choke points need explicit, deliberate capture scope.
+
+### 9.3 Asymmetric Routing: Replies That Bypass the Choke Point
+- **Symptom:** TCP handshakes stalled even with correct conduits: the SYN
+  traversed the gateway, but the SYN-ACK took the destination's default route
+  straight to the Docker host.
+- **Root Cause:** Docker sets each container's default route to its bridge
+  gateway and silently drops inter-network forwarding on the host. A request
+  routed through the gateway got a reply that never came back.
+- **Solution:** Give the control-zone endpoints a default route via the gateway,
+  so the return path is symmetric and traverses the same stateful chokepoint.
+- **The Lesson:** A stateful firewall only works when **both** directions cross
+  it. Verify return-path symmetry, not just the outbound rule.
+
+### 9.4 `dnp3-python` Master: A pybind11 Callback/GIL Crash
+- **Symptom:** The opendnp3 master executed one Direct Operate, printed the
+  command result, then aborted with
+  `PyThreadState_Get: the function must be called with the GIL held`.
+- **Root Cause:** The master's command callbacks are invoked from C++ worker
+  threads; in a headless script this races the Python interpreter and dies.
+- **Solution:** Keep the real opendnp3 **outstation** as the endpoint, but drive
+  the attack with a minimal raw DNP3 master that builds CRC-16/DNP-correct link
+  frames. The outstation accepts them and responds; the detection is unchanged.
+- **The Lesson:** A library that works in an interactive REPL is not necessarily
+  usable headless. When a binding is unstable, a protocol-correct raw client is a
+  legitimate, documented fallback — and it keeps the test deterministic.
+
+### 9.5 The Warnings That Were Really Exceptions
+- **Symptom:** The new DPI producers logged
+  `Socket ... failed with 'No such file or directory: /detection/rules/logs/alerts.json'`
+  and produced no alerts.
+- **Root Cause:** `otdpi/common.py` sits one directory deeper than the rule
+  modules, so its two-`dirname` default log path resolved to
+  `detection/rules/logs/` instead of `detection/logs/`. Scapy surfaces an
+  exception raised inside `prn` as a "socket failure", which disguised a plain
+  `FileNotFoundError` as a capture problem.
+- **Solution:** Go up three levels from `otdpi/common.py`; the alert log is now
+  correct and the same for every producer.
+- **The Lesson:** A sniffer that "fails to capture" may simply be throwing in its
+  packet handler. Read the exception, not the word "Socket".
+
+### 9.6 One Contract, Many Protocols
+- **Design:** DNP3, OPC UA and S7comm each get a real endpoint, a real client
+  emulation from a compromised EWS, and a live Scapy decoder that emits the same
+  normalized telemetry contract (`ot_ndr`) the generated Loki ruler rules
+  consume. The compliance suite asserts both the raw `alert_type` evidence and
+  that the generated rules reach `state=firing`.
+- **The Takeaway:** Protocol breadth is only credible when each protocol has a
+  live producer, a live consumer, and a test that proves the rule actually fired
+  — not a curated capture replayed for the camera.
+
+---
+
+## 10. Wiring the L2/L3 Historian Path
+
+The historian was a stock InfluxDB with zero measurements: no collector existed,
+and the HMI's datasources had nothing to read because the OpenPLC runtimes were
+unprogrammed. Closing the path exposed three more environment realities.
+
+### 10.1 `internal: true` Networks Do Not Publish Ports
+- **Symptom:** After adding the historian, `localhost:8086` (InfluxDB) and
+  `localhost:8080` (Scada-LTS) refused connections, while `localhost:3000`
+  (Grafana) worked.
+- **Root Cause:** `ops_network`, `supervisory_network` and `control_network` are
+  Docker `internal` networks. Docker skips host port publishing for services
+  attached only to internal networks (`NetworkSettings.Ports` was empty), so the
+  L2/L3 services are unreachable from the host by design.
+- **Solution:** Verify the historian with `docker exec` (the `influx` CLI) and
+  Scada-LTS through its container, and reach the data visually through Grafana
+  (Enterprise zone, not internal) via conduit C4.
+- **The Lesson:** Segmentation has a usability cost. "Publish a port" and "make
+  the zone internal" are mutually exclusive; decide which control wins and test
+  the access path, don't assume the README's `:8080` still works.
+
+### 10.2 A Labelled Data-Source Stand-In Beats a Dead Pipeline
+- **Problem:** The requested path is `OpenPLC → poller → InfluxDB`, but OpenPLC
+  v4 only starts its Modbus server after a program with a Modbus server is
+  uploaded, and the editor-built `program.zip` bundles are not committed — so
+  port 502 was dark and the historian could never fill.
+- **Solution:** A documented **Modbus process stand-in** serves the canonical
+  register map on 502 and runs the same `plc/intake.st` level controller. The
+  collector probes the real controllers first and uses the stand-in only when
+  they do not answer, so it upgrades itself the moment the bundles are deployed
+  — no code change.
+- **The Lesson:** A stand-in used to keep a pipeline *live and testable* is not
+  the same as spoofing a detection. Label it, scope it to the missing dependency,
+  and make the switch automatic and observable.
+
+### 10.3 Scada-LTS Provisioning Quirks (History and Views)
+- **Findings:** Point history is set through `/point_properties/updateProperties`,
+  but the handler must be addressed by numeric **id** (the `xid` route returns
+  400) and requires `purgeStrategy` in the body (a missing value NPEs into a 400
+  with an empty body). `GET /point_properties/getProperties` reports
+  `loggingType` as `0` even after a successful save, yet history *is* recorded —
+  so verify history with `point_value/getValuesFromTimePeriod`, not the
+  properties echo. A view is created with `POST /view/createView` only if
+  `imagePath` is the sentinel `"null.png"`.
+- **The Lesson:** Application APIs lie in small ways. Trust the observed effect
+  (recorded history), not the read-back field, and encode the quirks in the
+  provisioner with comments so the next person does not rediscover them.

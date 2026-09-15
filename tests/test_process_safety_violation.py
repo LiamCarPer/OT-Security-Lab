@@ -1,7 +1,14 @@
 import json
 
 import process_safety_violation as rule
+import pytest
 from conftest import modbus_multiple_write, modbus_request, modbus_response
+from otdpi import common
+
+
+@pytest.fixture(autouse=True)
+def _no_loki(monkeypatch):
+    monkeypatch.setattr(common, "push_to_loki", lambda *args, **kwargs: True)
 
 HMI = "172.22.0.10"
 PLC = "172.21.0.10"

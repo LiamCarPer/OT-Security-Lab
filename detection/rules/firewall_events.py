@@ -23,6 +23,7 @@ import json
 import time
 import urllib.request
 
+from otdpi import common
 from scapy.all import ICMP, IP, TCP, UDP, sniff
 
 LOKI_URL = "http://172.24.0.20:3100/loki/api/v1/push"
@@ -43,6 +44,10 @@ CONDUITS = (
     ("ops", "control", "TCP", 502),
     ("supervisory", "ops", "TCP", 8086),
     ("it", "ops", "TCP", 8086),
+    ("ops", "control", "TCP", 8443),
+    ("ops", "control", "TCP", 20000),
+    ("ops", "control", "TCP", 4840),
+    ("ops", "control", "TCP", 102),
 )
 
 
@@ -120,4 +125,4 @@ def handle(packet) -> None:
 
 if __name__ == "__main__":
     print("[firewall] shipping normalized gateway drops to Loki", flush=True)
-    sniff(iface=None, filter="ip", prn=handle, store=0)
+    sniff(iface=common.capture_interfaces(), filter="ip", prn=handle, store=0)

@@ -9,3 +9,11 @@ ASSET-07,ews-01,172.23.0.4,Operations,L3,Engineering Workstation,Debian,ot-plc-b
 ASSET-08,flow-sensor-01,172.21.0.100,Control,L0,Sensor,Endress+Hauser,Proline-500,v2.1,Modbus,2026-04-22,Intake Flow Rate
 ASSET-09,valve-actuator-01,172.21.0.101,Control,L0,Actuator,Rotork,IQ3,v4.0,Modbus,2026-04-22,Main Intake Valve
 ASSET-10,scada-db,172.22.0.11,Supervisory,L2,Database,Oracle,MySQL-8.0,8.0.32,3306/tcp,2026-04-23,Scada-LTS configuration store
+ASSET-11,rtu-dnp3,172.21.0.50,Control,L1,RTU/Outstation,Autonomy Logic,opendnp3,3.1.2,20000/tcp,2026-04-23,DNP3 outstation endpoint
+ASSET-12,opcua-server,172.21.0.51,Control,L1,OPC UA Server,FreeOpcUa,asyncua,2.0.1,4840/tcp,2026-04-23,OPC UA server endpoint (None policy)
+ASSET-13,s7-plc,172.21.0.52,Control,L1,PLC (S7),Siemens-compatible,python-snap7,3.1.2,102/tcp,2026-04-23,S7comm server endpoint
+ASSET-14,ews-compromised,172.23.0.20,Operations,L3,Compromised EWS,Debian,ot-insider,v1.0,None,2026-04-23,Adversary pivot running real protocol clients
+ASSET-15,historian-poller,172.22.0.20,Supervisory,L2,Historian Collector,Open Source,pymodbus,3.6.9,None,2026-04-23,L2 collector: Modbus C1 -> InfluxDB C3
+ASSET-16,modbus-sim-intake,172.21.0.60,Control,L1,Process Simulator,Open Source,pymodbus,3.6.9,502/tcp,2026-04-23,Intake process stand-in (until OpenPLC bundles)
+ASSET-17,modbus-sim-treatment,172.21.0.61,Control,L1,Process Simulator,Open Source,pymodbus,3.6.9,502/tcp,2026-04-23,Treatment process stand-in
+ASSET-18,modbus-sim-distribution,172.21.0.62,Control,L1,Process Simulator,Open Source,pymodbus,3.6.9,502/tcp,2026-04-23,Distribution process stand-in

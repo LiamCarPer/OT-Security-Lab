@@ -20,6 +20,17 @@ and copied from its `deploy/loki/rules/` output.
   all rules sit flat here and no other files may be present.
   `configs/loki-config.yaml` enables the ruler.
 
-The generated rules match normalized events shipped by
-`detection/rules/firewall_events.py` (`job="ot_firewall"`, logfmt). Do not edit
-the generated rule files by hand.
+The generated rules match normalized events shipped by the lab's telemetry
+producers: `detection/rules/firewall_events.py` emits `ot_firewall` events, and
+`detection/rules/{dnp3,opcua,s7comm}_dpi.py` emit the `ot_ndr` DNP3/OPC UA/S7comm
+contracts (plus `process_safety_violation.py` emitting `ot_process`). All of them
+push `logfmt` lines to Loki, so the generated ruler rules fire on live lab
+traffic. Do not edit the generated rule files by hand.
+
+## Historian
+
+Grafana also has an **InfluxDB-Historian** datasource (`influxdb` type) pointing
+at `http://172.23.0.10:8086` (database `ot_data`). The `grafana-route` sidecar
+installs the Level 3 route in Grafana's network namespace so this datasource
+traverses conduit C4; the `Process Historian (InfluxDB)` dashboard
+(`dashboards/historian_process.json`) plots the `process_state` measurement.

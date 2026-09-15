@@ -7,8 +7,10 @@
 
 get_iface() {
     # $1 = expected inet (e.g. 172.24.0.2/24)
+    # Inside Docker, `ip addr` prints veth names with a peer suffix
+    # (e.g. "eth3@if194:"), so strip both the trailing colon and the @peer.
     ip addr show 2>/dev/null | awk -v want="$1" '
-        /^[0-9]+: / { iface = $2; sub(/:$/, "", iface) }
+        /^[0-9]+: / { iface = $2; sub(/:$/, "", iface); sub(/@.*/, "", iface) }
         /inet / && $2 == want { print iface; exit }
     '
 }
@@ -67,6 +69,20 @@ iptables -A FORWARD -i "$IF_IT" -o "$IF_OPS" -p tcp --dport 8086 -j ACCEPT
 # The engineering workstation pushes compiled logic to the controllers. Only
 # the controllers' API port is opened (not Modbus), keeping it a deploy-only path.
 iptables -A FORWARD -i "$IF_OPS" -o "$IF_CONTROL" -p tcp --dport 8443 -j ACCEPT
+
+# --- 5b. Multi-protocol conduits (EWS -> controllers) ---
+# The engineering workstation also speaks the controllers' native protocols:
+# DNP3 to the RTU (20000), OPC UA to the server (4840) and S7comm to the PLC
+# (102). These are the legitimate paths the compromised-EWS scenario abuses.
+
+# Conduit C6: EWS (L3) -> DNP3 outstation (L1): DNP3/TCP 20000
+iptables -A FORWARD -i "$IF_OPS" -o "$IF_CONTROL" -p tcp --dport 20000 -j ACCEPT
+
+# Conduit C7: EWS (L3) -> OPC UA server (L1): OPC UA/TCP 4840
+iptables -A FORWARD -i "$IF_OPS" -o "$IF_CONTROL" -p tcp --dport 4840 -j ACCEPT
+
+# Conduit C8: EWS (L3) -> S7comm server (L1): S7comm/TCP 102
+iptables -A FORWARD -i "$IF_OPS" -o "$IF_CONTROL" -p tcp --dport 102 -j ACCEPT
 
 # --- 6. Denied-traffic logging (rate-limited, consumed by the SIEM) ---
 iptables -A FORWARD -m limit --limit 5/min --limit-burst 10 -j LOG --log-prefix "FW_DROP: " --log-level 4

@@ -153,17 +153,65 @@ services:
       supervisory_network:
         ipv4_address: 172.22.0.12
 
+  # 5c. Historian collector (Level 2 - Supervisory)
+  # Reads controllers over C1 (Supervisory -> Control 502) and writes the L3
+  # InfluxDB northbound over C3 (Supervisory -> Ops 8086). Prefers the OpenPLC
+  # controllers and falls back to the process stand-in when they are unprogrammed.
+  historian-poller:
+    build: ./historian-poller
+    container_name: ot_historian_poller
+    restart: unless-stopped
+    mem_limit: 128m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - OT_INFLUX_URL=http://172.23.0.10:8086
+      - OT_POLL_INTERVAL=5
+    command: >
+      /bin/sh -c "for net in 172.21.0.0/24 172.23.0.0/24; do
+      until ip route replace $$net via 172.22.0.2 2>/dev/null; do sleep 2; done; done;
+      exec python3 -u /app/poller.py"
+    networks:
+      supervisory_network:
+        ipv4_address: 172.22.0.20
+
   # 6. Process Historian (Level 3 - Operations)
   historian:
     image: influxdb:1.8.10
     container_name: ot_historian
     restart: unless-stopped
     mem_limit: 256m
+    ports:
+      - "127.0.0.1:8086:8086"
     environment:
       - INFLUXDB_DB=ot_data
     networks:
       ops_network:
         ipv4_address: 172.23.0.10
+
+  # 6.1 Historian route sidecar - shares the historian's netns so its replies to
+  # the L2 collector (C3) and L4 Grafana (C4) return through the gateway.
+  historian-route:
+    build: ./route-sidecar
+    container_name: ot_historian_route
+    restart: unless-stopped
+    mem_limit: 32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    network_mode: "service:historian"
+    command: >
+      /bin/sh -c "until ip route replace default via 172.23.0.2 2>/dev/null; do sleep 2; done;
+      exec tail -f /dev/null"
+    depends_on:
+      - historian
 
   # 6a. Engineering workstation / PLC provisioning host (Level 3 - Operations)
   # The EWS documented in asset-inventory/assets.csv now actually exists: it
@@ -196,6 +244,136 @@ services:
       ops_network:
         ipv4_address: 172.23.0.4
 
+  # --- Multi-protocol endpoints (Level 1 - Control) ---
+
+  # 6b. DNP3 outstation (real opendnp3 via dnp3-python)
+  dnp3-outstation:
+    build: ./dnp3-outstation
+    container_name: ot_dnp3_outstation
+    restart: unless-stopped
+    mem_limit: 256m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    # Default route via the gateway keeps the return path symmetric through the
+    # chokepoint (otherwise replies bypass it via the host and sessions stall).
+    command: >
+      /bin/sh -c "until ip route replace default via 172.21.0.2 2>/dev/null; do sleep 2; done;
+      exec python3 -u /app/outstation.py"
+    networks:
+      control_network:
+        ipv4_address: 172.21.0.50
+
+  # 6c. OPC UA server (real asyncua server, plaintext None policy)
+  opcua-server:
+    build: ./opcua-server
+    container_name: ot_opcua_server
+    restart: unless-stopped
+    mem_limit: 256m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    command: >
+      /bin/sh -c "until ip route replace default via 172.21.0.2 2>/dev/null; do sleep 2; done;
+      exec python3 -u /app/server.py"
+    networks:
+      control_network:
+        ipv4_address: 172.21.0.51
+
+  # 6d. S7comm server (pure-Python S7 server on privileged port 102)
+  s7-plc:
+    build: ./s7-plc
+    container_name: ot_s7_plc
+    restart: unless-stopped
+    mem_limit: 256m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - NET_ADMIN
+    command: >
+      /bin/sh -c "until ip route replace default via 172.21.0.2 2>/dev/null; do sleep 2; done;
+      exec python3 -u /app/server.py"
+    networks:
+      control_network:
+        ipv4_address: 172.21.0.52
+
+  # --- Process stand-in (Level 1 - Control) ---
+  # Serves the canonical register map on 502 with the ST-level controller logic,
+  # so the historian path has a real Modbus source until the OpenPLC program
+  # bundles are committed. Each one routes replies back through the gateway.
+
+  modbus-sim-intake:
+    build: ./modbus-sim
+    container_name: ot_modbus_sim_intake
+    restart: unless-stopped
+    mem_limit: 128m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - NET_ADMIN
+    environment:
+      - OT_SIM_ASSET=intake
+    command: >
+      /bin/sh -c "until ip route replace default via 172.21.0.2 2>/dev/null; do sleep 2; done;
+      exec python3 -u /app/server.py"
+    networks:
+      control_network:
+        ipv4_address: 172.21.0.60
+
+  modbus-sim-treatment:
+    build: ./modbus-sim
+    container_name: ot_modbus_sim_treatment
+    restart: unless-stopped
+    mem_limit: 128m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - NET_ADMIN
+    environment:
+      - OT_SIM_ASSET=treatment
+    command: >
+      /bin/sh -c "until ip route replace default via 172.21.0.2 2>/dev/null; do sleep 2; done;
+      exec python3 -u /app/server.py"
+    networks:
+      control_network:
+        ipv4_address: 172.21.0.61
+
+  modbus-sim-distribution:
+    build: ./modbus-sim
+    container_name: ot_modbus_sim_distribution
+    restart: unless-stopped
+    mem_limit: 128m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - NET_ADMIN
+    environment:
+      - OT_SIM_ASSET=distribution
+    command: >
+      /bin/sh -c "until ip route replace default via 172.21.0.2 2>/dev/null; do sleep 2; done;
+      exec python3 -u /app/server.py"
+    networks:
+      control_network:
+        ipv4_address: 172.21.0.62
+
   # 7. Attacker (Level 4/5 - Enterprise/Internet)
   attacker:
     build: ./attacker
@@ -219,6 +397,30 @@ services:
     networks:
       it_network:
         ipv4_address: 172.24.0.10
+
+  # 7a. Compromised engineering workstation (Level 3 - Operations)
+  # The adversary pivot: uses the EWS's legitimate conduits to drive the real
+  # protocol clients (DNP3 / OPC UA / S7comm) against the control-zone endpoints.
+  insider:
+    build: ./insider
+    container_name: ot_insider
+    restart: unless-stopped
+    mem_limit: 256m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    depends_on:
+      - dnp3-outstation
+      - opcua-server
+      - s7-plc
+    volumes:
+      - ./attacker:/attacker:ro
+    networks:
+      ops_network:
+        ipv4_address: 172.23.0.20
 
   # --- SIEM STACK (Level 3 & Level 4 Integration) ---
 
@@ -284,6 +486,26 @@ services:
     networks:
       it_network:
         ipv4_address: 172.24.0.22
+
+  # 10a. Grafana route sidecar - shares Grafana's netns and installs the L3
+  # route so the historian datasource traverses conduit C4 (IT -> Ops 8086).
+  grafana-route:
+    build: ./route-sidecar
+    container_name: ot_grafana_route
+    restart: unless-stopped
+    mem_limit: 32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    network_mode: "service:grafana"
+    command: >
+      /bin/sh -c "until ip route replace 172.23.0.0/24 via 172.24.0.2 2>/dev/null; do sleep 2; done;
+      exec tail -f /dev/null"
+    depends_on:
+      - grafana
 
   # 11. Alert Manager - Level 4 Enterprise
   alertmanager:

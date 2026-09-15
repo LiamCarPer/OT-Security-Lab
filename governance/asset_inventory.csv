@@ -8,3 +8,9 @@ A.06,Industrial_Gateway,Boundary (L3.5),172.24.0.2,Multi-Zone,Critical,Firewall/
 A.07,SOC_Dashboard,Enterprise (L4),172.24.0.22,HTTP,Low,Visibility,Security
 A.08,EWS_Provisioning,Operations (L3),172.23.0.4,HTTPS,High,Deploys OpenPLC program bundles,Engineering
 A.09,Scada_DB,Supervisory (L2),172.22.0.11,MySQL/TCP,Medium,Scada-LTS configuration store,Operations
+A.10,RTU_DNP3,Control (L1),172.21.0.50,DNP3/TCP,High,DNP3 outstation endpoint,Operations
+A.11,OPCUA_Server,Control (L1),172.21.0.51,OPC UA/TCP,Medium,OPC UA server endpoint,Engineering
+A.12,S7_PLC,Control (L1),172.21.0.52,S7comm/TCP,High,S7comm server endpoint,Engineering
+A.13,EWS_Compromised,Operations (L3),172.23.0.20,Multi-Protocol,High,Adversary pivot (protocol clients),Security
+A.14,Historian_Poller,Supervisory (L2),172.22.0.20,Multi-Zone,High,Historian collector (Modbus->InfluxDB),Operations
+A.15,Process_Standin,Control (L1),172.21.0.60-62,Modbus TCP,Medium,Modbus process stand-in (x3),Operations

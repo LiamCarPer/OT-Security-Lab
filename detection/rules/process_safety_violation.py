@@ -11,6 +11,7 @@ import os
 from datetime import datetime
 
 import scapy.all as scapy
+from otdpi import common
 
 # 1. Configuration
 PLC_IP = os.getenv("OT_PLC_IP", "172.21.0.10")
@@ -52,6 +53,21 @@ def log_alert(alert_type, src_ip, details, mitre_id, description, tank_level):
 
     with open(LOG_FILE, "a") as f:
         f.write(json.dumps(alert_data) + "\n")
+
+    # Normalized telemetry for the generated ruler rule (job=ot_process).
+    common.push_to_loki(
+        "safety_monitor",
+        {
+            "event_type": "process_safety_violation",
+            "asset": PLC_ASSET,
+            "register": INLET_VALVE_REG,
+            "value": 1,
+            "tank_level_pct": tank_level,
+            "actor": src_ip,
+            "response": "none",
+        },
+        job="ot_process",
+    )
 
     print(f"\n[CRITICAL ALERT] {alert_type}")
     print(f"Description: {description}")
@@ -136,7 +152,7 @@ def process_packet(packet):
 def main():
     print("--- Starting Physics-Aware Process Monitor ---")
     print(f"Monitoring PLC {PLC_IP} for Tank Overflow conditions (Threshold: {LEVEL_THRESHOLD}%)...")
-    scapy.sniff(iface=None, filter="tcp port 502", prn=process_packet, store=0)
+    scapy.sniff(iface=common.capture_interfaces(), filter="tcp port 502", prn=process_packet, store=0)
 
 if __name__ == "__main__":
     main()

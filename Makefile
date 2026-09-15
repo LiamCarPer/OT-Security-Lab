@@ -1,6 +1,6 @@
 LAB = lab-environment
 
-.PHONY: up down ps simulate simulate-lateral simulate-process ids-log compliance test lint scan
+.PHONY: up down ps simulate simulate-lateral simulate-process ids-log compliance historian test lint scan
 
 up:
 	cd $(LAB) && docker compose up -d
@@ -25,6 +25,9 @@ ids-log:
 
 compliance:
 	python3 governance/testing/run_security_tests.py --reset
+
+historian:
+	python3 governance/testing/check_historian.py
 
 test:
 	python3 -m pytest tests -q

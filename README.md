@@ -106,6 +106,9 @@ graph TD
     * [**Physics-Aware Safety Monitor**](./detection/rules/process_safety_violation.py)
     * [Cross-Zone Traffic Alerter](./detection/rules/cross_zone_traffic.py)
     *   [Brute Force Detection](./detection/rules/ot_brute_force.py)
+    *   [DNP3 Telemetry & Detections](./detection/rules/dnp3_dpi.py) — real opendnp3 outstation
+    *   [OPC UA Telemetry & Detections](./detection/rules/opcua_dpi.py) — real asyncua server
+    *   [S7comm Telemetry & Detections](./detection/rules/s7comm_dpi.py) — real S7 server
     *   [**Live Detection Evidence (JSON Logs)**](./detection/logs/alerts.json) — refreshed automatically by the Compliance Gate on every green run
 6.  [Hardening & Compliance](./hardening/)
     *   [Security Hardening Checklist](./hardening/HARDENING_CHECKLIST.md)
@@ -205,6 +208,14 @@ No local Docker required — the whole lab runs in your browser:
 *   **Industrial:** OpenPLC Runtime (v4.2.2, pinned by digest) running committed
     editor-built `program.zip` bundles, Scada-LTS v2.8 HMI as a real Modbus/TCP
     master, MySQL 8.0 config store, InfluxDB 1.8.10 (Historian)
+*   **Multi-Protocol Endpoints:** real DNP3 outstation (opendnp3 via `dnp3-python`),
+    OPC UA server (`asyncua`), S7comm server (`python-snap7`), each exercised by
+    real client emulation from a compromised EWS
+*   **Historian Data Path (L1→L2→L3):** an L2 collector (`historian-poller`,
+    `pymodbus`) reads the controllers over conduit C1 and writes InfluxDB in L3
+    northbound over C3, with a 30-day retention policy; Grafana (L4) visualizes
+    it through C4. OpenPLC is preferred and a documented Modbus **process
+    stand-in** is used until the editor-built program bundles are committed.
 *   **Security Infrastructure:** `iptables` (Zone Firewall), Scapy (Custom IDS), `iputils-ping`, `nmap`
 *   **Frameworks:** IEC 62443-3-2 (Zones/Conduits), MITRE ATT&CK for ICS, ISA-95 Purdue Model
 *   **Monitoring:** Grafana 11 + Loki 3 (SIEM), Promtail (log shipping), centralized JSON logging
@@ -222,7 +233,7 @@ No local Docker required — the whole lab runs in your browser:
 ## 9. Known Limitations & Future Work
 ### Current Limitations:
 *   **Logical vs. Physical Data Diode:** Unidirectional flow is enforced via `iptables`. High-consequence sites require hardware-based optical data diodes.
-*   **Protocol Scope:** Detection is currently implemented for **Modbus/TCP** and **DNP3** (see `detection/rules/dnp3_anomaly.py`).
+*   **Protocol Scope:** Detection is implemented for **Modbus/TCP**, **DNP3**, **OPC UA** and **S7comm** (see `detection/rules/*_dpi.py` and the generated `siem/rules/ot_*.yaml`). The DNP3 emulation drives the real outstation with a raw master because the `dnp3-python` master aborts headless (see `LESSONS_LEARNED.md` §9.4).
 *   **Simulation vs. Emulation:** PLCs are software-simulated (OpenPLC) rather than hardware-emulated.
 
 ### Future Roadmap:

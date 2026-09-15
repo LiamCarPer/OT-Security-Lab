@@ -10,7 +10,9 @@ BASE="${OT_SCADA_URL:-http://hmi:8080/Scada-LTS}"
 USER="${OT_SCADA_USER:-admin}"
 PASS="${OT_SCADA_PASS:-admin}"
 # TARGETS format: "<plc name> <stage> <datasource xid> <host> <registers...>" per PLC
-TARGETS="${OT_SCADA_TARGETS:-PLC-01 Intake DS_PLC1 172.21.0.10 0 1 5 6;PLC-02 Treatment DS_PLC2 172.21.0.11 0 1 2 5 6;PLC-03 Distribution DS_PLC3 172.21.0.12 0 1 2 5 6}"
+# Points at the Modbus process stand-in until the OpenPLC bundles are committed;
+# switch the hosts to the controllers (172.21.0.10/11/12) once they serve 502.
+TARGETS="${OT_SCADA_TARGETS:-PLC-01 Intake DS_PLC1 172.21.0.60 0 1 5 6;PLC-02 Treatment DS_PLC2 172.21.0.61 0 1 2 5 6;PLC-03 Distribution DS_PLC3 172.21.0.62 0 1 2 5 6}"
 
 SID=""
 
@@ -47,30 +49,33 @@ ensure_datasource() {
     existing=$(curl -s -H "Cookie: JSESSIONID=$SID" "$BASE/api/datasource/getAll" \
         | jq -r --arg x "$xid" 'if type=="array" then (.[]? | select(.xid==$x) | .id) else empty end' \
         | head -1)
+    payload=$(jq -nc --arg xid "$xid" --arg name "$name" --arg host "$host" '{
+        xid:$xid, name:$name, type:3, enabled:true,
+        connectionDescription:"common.default",
+        updatePeriodType:1, updatePeriods:1,
+        quantize:false, timeout:500, retries:2,
+        contiguousBatches:false, createSlaveMonitorPoints:false,
+        maxReadBitCount:2000, maxReadRegisterCount:125,
+        maxWriteRegisterCount:120,
+        transportType:"TCP", host:$host, port:502,
+        encapsulated:false, createSocketMonitorPort:false
+    }')
     if [ -n "$existing" ]; then
-        log "datasource $xid exists (id=$existing)"
+        # Update in place so a changed target host (OpenPLC <-> stand-in) applies.
+        curl -s -o /dev/null -X PUT -H "Cookie: JSESSIONID=$SID" -H 'Content-Type: application/json' \
+            "$BASE/api/datasource" -d "$(printf '%s' "$payload" | jq -c --argjson id "$existing" '. + {id:$id}')"
+        log "datasource $xid updated (id=$existing, host=$host)"
         printf '%s' "$existing"
         return
     fi
     created=$(curl -s -H "Cookie: JSESSIONID=$SID" -H 'Content-Type: application/json' \
-        -X POST "$BASE/api/datasource" -d "$(jq -nc \
-            --arg xid "$xid" --arg name "$name" --arg host "$host" '{
-                xid:$xid, name:$name, type:3, enabled:true,
-                connectionDescription:"common.default",
-                updatePeriodType:1, updatePeriods:1,
-                quantize:false, timeout:500, retries:2,
-                contiguousBatches:false, createSlaveMonitorPoints:false,
-                maxReadBitCount:2000, maxReadRegisterCount:125,
-                maxWriteRegisterCount:120,
-                transportType:"TCP", host:$host, port:502,
-                encapsulated:false, createSocketMonitorPort:false
-            }')")
+        -X POST "$BASE/api/datasource" -d "$payload")
     id=$(printf '%s' "$created" | jq -r '.id // empty')
     if [ -z "$id" ]; then
         log "ERROR creating datasource $xid: $created"
         exit 1
     fi
-    log "created datasource $xid (id=$id)"
+    log "created datasource $xid (id=$id, host=$host)"
     printf '%s' "$id"
 }
 
@@ -106,6 +111,40 @@ ensure_datapoint() {
     log "created datapoint $xid (HR $offset)"
 }
 
+# Enable point history (ON_CHANGE) so Scada-LTS records values for the mimic.
+# The handler is addressed by numeric id: the xid route rejects the payload.
+set_history() {
+    xid=$1
+    id=$(curl -s -H "Cookie: JSESSIONID=$SID" "$BASE/api/datapoint?xid=$xid" \
+        | jq -r 'if type=="array" then (.[0].id // empty) else (.id // empty) end')
+    if [ -z "$id" ]; then
+        log "WARN could not resolve datapoint id for $xid"
+        return
+    fi
+    curl -s -o /dev/null -X PUT -H "Cookie: JSESSIONID=$SID" -H 'Content-Type: application/json' \
+        "$BASE/api/point_properties/updateProperties?id=$id" \
+        -d '{"loggingType":1,"intervalLoggingPeriodType":1,"intervalLoggingPeriod":1,"intervalLoggingType":1,"purgeType":4,"purgePeriod":30,"purgeStrategy":1}'
+    log "enabled history for $xid (id=$id)"
+}
+
+# Create the process mimic view scaffold. Graphical component placement is not
+# exposed by the REST API, so the functional process mimic is the Grafana
+# dashboard; this records the operator view in Scada-LTS.
+ensure_view() {
+    xid=$1
+    name=$2
+    existing=$(curl -s -H "Cookie: JSESSIONID=$SID" "$BASE/api/view/getByXid/$xid" \
+        | jq -r '.xid // empty' 2>/dev/null)
+    if [ -n "$existing" ]; then
+        log "view $xid exists"
+        return
+    fi
+    curl -s -o /dev/null -X POST -H "Cookie: JSESSIONID=$SID" -H 'Content-Type: application/json' \
+        "$BASE/api/view/createView" \
+        -d "{\"name\":\"$name\",\"xid\":\"$xid\",\"imagePath\":\"null.png\",\"size\":1}"
+    log "created view $xid ($name)"
+}
+
 wait_for_api
 
 echo "$TARGETS" | tr ';' '\n' | while read -r line; do
@@ -120,8 +159,11 @@ echo "$TARGETS" | tr ';' '\n' | while read -r line; do
     ds_id=$(ensure_datasource "$ds_xid" "$plc_name $short_name" "$host")
     for offset in "$@"; do
         ensure_datapoint "$ds_id" "$ds_xid" "$plc_name" "$offset"
+        set_history "DP_${ds_xid}_HR${offset}"
     done
 done
+
+ensure_view "VIEW_WATER" "Water Treatment"
 
 touch /tmp/scada-provisioned
 log "provisioning complete"

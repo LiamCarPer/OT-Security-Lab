@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 
 import scapy.all as scapy
+from otdpi import common
 
 # 1. Configuration
 IT_ZONE_SUBNET = ipaddress.ip_network(os.getenv("OT_IT_ZONE", "172.24.0.0/24"))
@@ -52,7 +53,7 @@ def process_packet(packet):
 def main():
     print("Starting Cross-Zone Traffic Monitor (Logging to JSON)...")
     print(f"Monitoring {IT_ZONE_SUBNET} -> {CONTROL_ZONE_SUBNET} traffic...")
-    scapy.sniff(iface=None, filter="ip", prn=process_packet, store=0)
+    scapy.sniff(iface=common.capture_interfaces(), filter="ip", prn=process_packet, store=0)
 
 if __name__ == "__main__":
     main()

@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 
 import scapy.all as scapy
+from otdpi import common
 
 # 1. Configuration
 HMI_IP = os.getenv("OT_HMI_IP", "172.22.0.10")
@@ -57,7 +58,7 @@ def process_packet(packet):
 def main():
     print("Starting Modbus Anomaly Detection (Logging to JSON)...")
     print(f"Authorized write sources: {[str(ip) for ip in AUTHORIZED_WRITERS]}")
-    scapy.sniff(iface=None, filter="tcp port 502", prn=process_packet, store=0)
+    scapy.sniff(iface=common.capture_interfaces(), filter="tcp port 502", prn=process_packet, store=0)
 
 if __name__ == "__main__":
     main()

@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import datetime
 
 import scapy.all as scapy
+from otdpi import common
 
 # 1. Configuration
 ERROR_THRESHOLD = int(os.getenv("OT_BRUTE_FORCE_THRESHOLD", "5"))
@@ -60,7 +61,7 @@ def process_packet(packet):
 def main():
     print("Starting OT Brute-Force Detection (Logging to JSON)...")
     print(f"Threshold: {ERROR_THRESHOLD} exceptions in {WINDOW_SECONDS}s...")
-    scapy.sniff(iface=None, filter="tcp port 502", prn=process_packet, store=0)
+    scapy.sniff(iface=common.capture_interfaces(), filter="tcp port 502", prn=process_packet, store=0)
 
 if __name__ == "__main__":
     main()

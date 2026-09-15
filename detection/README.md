@@ -14,6 +14,25 @@ are launched automatically on gateway startup by `lab-environment/scripts/start_
 | `cross_zone_traffic.py` | Lateral Movement | **T0886** | Detects direct IP communication between Level 4 (IT `172.24.0.0/24`) and Level 1 (Control `172.21.0.0/24`). |
 | `ot_brute_force.py` | Reconnaissance | **T0846** | Sliding-window detection of high-frequency Modbus Exception codes (FC > 128), indicating scanning/brute-force. |
 | `firewall_events.py` | (telemetry) | — | Ships a normalized `ot_firewall` event to Loki for each new cross-zone flow the conduit policy denies, so the generated detection bundle in `siem/rules/` can evaluate firewall drops. |
+| `dnp3_dpi.py` | Manipulation of Control / Inhibit Response / Discovery | **T1692.001, T0816, T0878** | Live DNP3 decoder (link/transport/application). Ships the `ot_ndr`/`dnp3` contract to Loki and writes unauthorized-control, cold/warm-restart and disable-unsolicited alerts. |
+| `opcua_dpi.py` | Discovery / Manipulation of Control / Execution | **T0888, T1692.001, T0871** | Live OPC UA decoder (message header + service NodeId). Ships the `ot_ndr`/`opcua` contract and writes browse, write and method-call alerts. Only plaintext (None/Sign) channels expose the service. |
+| `s7comm_dpi.py` | Collection / Manipulation of Control / Inhibit Response | **T0843, T0845, T0858** | Live S7comm decoder (TPKT/COTP/S7). Ships the `ot_ndr`/`s7comm` contract and writes program download, program upload and PLC control/stop alerts. |
+
+### 1.1 Live telemetry producers
+
+The `*_dpi.py` rules are **normalized telemetry producers**, not just detectors.
+Each decoded message is pushed to Loki as a `logfmt` line (`job="ot_ndr"`, one
+`service` per protocol) using the exact field names of the detection telemetry
+contract, so the generated ruler rules in `siem/rules/ot_*.yaml` evaluate live
+lab traffic rather than replayed captures. The same rules append `alert_type`
+NDJSON to `detection/logs/alerts.json` for evidence and the compliance gate.
+
+The decoders live in `detection/rules/otdpi/` (one pure function per protocol,
+unit tested without a sniffer); the top-level `*_dpi.py` modules own the capture
+and the sinks. All rules capture every non-loopback gateway interface
+(`otdpi.common.capture_interfaces()`), because the gateway is a multi-homed
+chokepoint and `sniff(iface=None)` would only bind the default route.
+
 
 ## 2. Logic Implementation
 

@@ -1,0 +1,78 @@
+{
+  "uid": "historian-process",
+  "title": "Process Historian (InfluxDB)",
+  "tags": ["ot", "historian", "process"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Intake tank level (%)",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "influxdb-historian" },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "influxdb-historian" },
+          "rawQuery": true,
+          "query": "SELECT mean(\"level\") FROM \"process_state\" WHERE (\"asset\" = 'plc_intake') AND $timeFilter GROUP BY time($__interval) fill(previous)",
+          "resultFormat": "time_series"
+        },
+        {
+          "refId": "B",
+          "hide": false,
+          "datasource": { "type": "influxdb", "uid": "influxdb-historian" },
+          "rawQuery": true,
+          "query": "SELECT mean(\"chlorine\") FROM \"process_state\" WHERE (\"asset\" = 'plc_treatment') AND $timeFilter GROUP BY time($__interval) fill(previous)",
+          "resultFormat": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Control commands and alarms",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "influxdb-historian" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "influxdb-historian" },
+          "rawQuery": true,
+          "query": "SELECT mean(\"valve\") FROM \"process_state\" WHERE (\"asset\" = 'plc_intake') AND $timeFilter GROUP BY time($__interval) fill(previous)",
+          "resultFormat": "time_series"
+        },
+        {
+          "refId": "B",
+          "hide": false,
+          "datasource": { "type": "influxdb", "uid": "influxdb-historian" },
+          "rawQuery": true,
+          "query": "SELECT mean(\"alarm\") FROM \"process_state\" WHERE (\"asset\" = 'plc_intake') AND $timeFilter GROUP BY time($__interval) fill(previous)",
+          "resultFormat": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Historian ingestion (points last cycle)",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 9 },
+      "datasource": { "type": "influxdb", "uid": "influxdb-historian" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "influxdb-historian" },
+          "rawQuery": true,
+          "query": "SELECT last(\"points\") FROM \"poller_health\" WHERE $timeFilter",
+          "resultFormat": "time_series"
+        }
+      ]
+    }
+  ]
+}

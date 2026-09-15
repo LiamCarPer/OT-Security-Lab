@@ -15,6 +15,7 @@ import re
 import subprocess
 import sys
 import time
+import urllib.request
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -22,6 +23,7 @@ ALERT_LOG = REPO_ROOT / "detection" / "logs" / "alerts.json"
 SCADA_BASE = os.getenv("OT_SCADA_URL", "http://localhost:8080/Scada-LTS")
 INTAKE_LEVEL_XID = os.getenv("OT_SCADA_LEVEL_XID", "DP_DS_PLC1_HR5")
 LEVEL_THRESHOLD = int(os.getenv("OT_LEVEL_THRESHOLD", "90"))
+LOKI_BASE = os.getenv("OT_LOKI_URL", "http://localhost:3100")
 
 TESTS = [
     {
@@ -50,6 +52,48 @@ TESTS = [
         "fallback_cmd": "docker exec ot_attacker python3 /attacker/simulate_process_violation_spoof.py",
         "precondition": "real_process",
         "expected": ["PROCESS_SAFETY_VIOLATION"],
+    },
+    {
+        "name": "DNP3 Adversary Emulation",
+        "cmd": "docker exec ot_insider python3 /attacker/simulate_dnp3_attack.py",
+        "expected": [
+            "DNP3_UNAUTHORIZED_CONTROL",
+            "DNP3_RESTART_COMMAND",
+            "DNP3_UNSOLICITED_DISABLED",
+        ],
+        "loki_rules": [
+            "DNP3_Control_Operation_From_Unauthorized_Master",
+            "DNP3_Cold_Or_Warm_Restart_Command",
+            "DNP3_Unsolicited_Responses_Disabled",
+        ],
+    },
+    {
+        "name": "OPC UA Adversary Emulation",
+        "cmd": "docker exec ot_insider python3 /attacker/simulate_opcua_attack.py",
+        "expected": [
+            "OPCUA_BROWSE_REQUEST",
+            "OPCUA_WRITE_REQUEST",
+            "OPCUA_METHOD_CALL",
+        ],
+        "loki_rules": [
+            "OPC_UA_Address_Space_Browse",
+            "OPC_UA_Write_Request",
+            "OPC_UA_Method_Call_Request",
+        ],
+    },
+    {
+        "name": "S7comm Adversary Emulation",
+        "cmd": "docker exec ot_insider python3 /attacker/simulate_s7comm_attack.py",
+        "expected": [
+            "S7COMM_PROGRAM_DOWNLOAD",
+            "S7COMM_PROGRAM_UPLOAD",
+            "S7COMM_CHANGE_OPERATING_MODE",
+        ],
+        "loki_rules": [
+            "S7comm_Program_Download",
+            "S7comm_Program_Upload",
+            "S7comm_PLC_Control_Or_Stop",
+        ],
     },
 ]
 
@@ -151,6 +195,51 @@ def wait_for_attacker_ready(retries=36, delay=5):
         time.sleep(delay)
     return False
 
+def wait_for_insider_ready(retries=36, delay=5):
+    """Wait until the compromised-EWS container has the client libs and route."""
+    checks = [
+        "docker exec ot_insider python3 -c 'import asyncua, snap7'",
+        "docker exec ot_insider sh -c 'ip route | grep -q 172.21.0.0/24'",
+    ]
+    for attempt in range(1, retries + 1):
+        if all(
+            subprocess.run(check, shell=True, capture_output=True, text=True).returncode == 0
+            for check in checks
+        ):
+            print("[READY] Insider container initialized (clients + route).")
+            return True
+        if attempt % 6 == 0:
+            print(f"[WAIT] Insider not ready yet (attempt {attempt}/{retries})...")
+        time.sleep(delay)
+    return False
+
+
+def loki_rule_states():
+    """Return ``{rule_name: (state, health)}`` from the Loki ruler."""
+    try:
+        with urllib.request.urlopen(f"{LOKI_BASE}/prometheus/api/v1/rules", timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except OSError:
+        return {}
+    states = {}
+    for group in payload.get("data", {}).get("groups", []):
+        for rule in group.get("rules", []):
+            states[rule.get("name")] = (rule.get("state"), rule.get("health"))
+    return states
+
+
+def wait_for_loki_rules(names, timeout=120):
+    """Wait until the named generated rules report firing/ok, then return states."""
+    deadline = time.time() + timeout
+    states = {}
+    while time.time() < deadline:
+        states = loki_rule_states()
+        if all(states.get(name) == ("firing", "ok") for name in names):
+            return True, states
+        time.sleep(10)
+    return False, states
+
+
 def dump_diagnostics():
     """Print container and IDS state to help debug failed detections."""
     print("\n===== DIAGNOSTICS =====")
@@ -159,6 +248,10 @@ def dump_diagnostics():
         "docker exec ot_gateway sh -c 'pgrep -af python3 || echo NO_IDS_RUNNING'",
         "docker exec ot_gateway sh -c 'for f in /detection/logs/*.out; do echo --- $f; tail -10 $f; done'",
         "docker exec ot_attacker sh -c 'ip route'",
+        "docker logs ot_insider --tail 30",
+        "docker logs ot_dnp3_outstation --tail 15",
+        "docker logs ot_opcua_server --tail 15",
+        "docker logs ot_s7_plc --tail 15",
     ]:
         print(f"$ {cmd}")
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
@@ -185,6 +278,10 @@ def main():
 
     if not wait_for_attacker_ready():
         print("[FATAL] Attacker container not ready after timeout.")
+        return 1
+
+    if not wait_for_insider_ready():
+        print("[FATAL] Insider container not ready after timeout.")
         return 1
 
     results = []
@@ -222,13 +319,37 @@ def main():
                 missing.append(expected_type)
 
         if not missing:
-            print(f"[PASS] Detected: {', '.join(test['expected'])}")
+            print(f"[PASS] Detected alerts: {', '.join(test['expected'])}")
+            loki_rules = test.get("loki_rules")
+            if loki_rules:
+                ok, states = wait_for_loki_rules(loki_rules)
+                if not ok:
+                    print("[FAIL] Generated Loki rules did not fire:")
+                    for name in loki_rules:
+                        print(f"        {name}: {states.get(name, 'absent')}")
+                    results.append((test["name"], "FAIL"))
+                    all_passed = False
+                    continue
+                print(f"[PASS] Loki rules firing: {', '.join(loki_rules)}")
             results.append((test["name"], "PASS"))
         else:
             print(f"[FAIL] Expected alerts NOT produced: {', '.join(missing)}")
             results.append((test["name"], "FAIL"))
             all_passed = False
             dump_diagnostics()
+
+    print("\n[TEST] Historian Ingestion (L1 -> L2 poller -> L3 InfluxDB -> Grafana)")
+    check = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "governance" / "testing" / "check_historian.py")],
+        capture_output=True,
+        text=True,
+    )
+    print(check.stdout.strip() or check.stderr.strip())
+    if check.returncode == 0:
+        results.append(("Historian Ingestion", "PASS"))
+    else:
+        results.append(("Historian Ingestion", "FAIL"))
+        all_passed = False
 
     print("\n" + "=" * 60)
     print("FINAL SECURITY COMPLIANCE REPORT")

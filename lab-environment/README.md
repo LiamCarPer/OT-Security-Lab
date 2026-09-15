@@ -17,10 +17,11 @@ cd lab-environment
 sudo docker compose up -d
 ```
 
-This starts: 3 OpenPLC runtimes (L1), Scada-LTS HMI + MySQL config store (L2),
-InfluxDB historian (L3), the EWS/plc-bootstrap deployer (L3), the zone gateway
-(firewall + persistent IDS), the Kali attacker (L4), and the Grafana/Loki/Promtail
-SIEM stack.
+This starts: 3 OpenPLC runtimes (L1), real DNP3/OPC UA/S7comm endpoints (L1),
+Scada-LTS HMI + MySQL config store (L2),
+InfluxDB historian (L3), the EWS/plc-bootstrap deployer (L3), a compromised-EWS
+insider (L3), the zone gateway (firewall + persistent IDS), the Kali attacker
+(L4), and the Grafana/Loki/Promtail SIEM stack.
 
 ### What happens on boot
 
@@ -41,6 +42,32 @@ SIEM stack.
    datasources + datapoints (HR 0,1,2,5,6 per PLC) via its REST API, so the HMI
    is a genuine Modbus master, not a simulation.
 6. `ot_attacker` adds its pivot routes to the OT zones via the gateway.
+7. The DNP3/OPC UA/S7comm endpoints (`dnp3-outstation/`, `opcua-server/`,
+   `s7-plc/`) start on the Control network and route their replies back through
+   the gateway, so the circuit is symmetric across the chokepoint (see
+   `LESSONS_LEARNED.md` §9.3).
+8. `ot_insider` (a compromised EWS) starts in the Operations zone, routes
+   Control-zone traffic via the gateway, and carries the real protocol clients
+   used by `simulate_{dnp3,opcua,s7comm}_attack.py`.
+9. The Modbus **process stand-in** (`modbus-sim-*`, Control zone) serves the
+   canonical register map with the ST-level controller logic, so the historian
+   path has a real source until the OpenPLC program bundles are committed.
+10. `ot_historian_poller` (Supervisory) reads the controllers over C1 and writes
+    InfluxDB northbound over C3; `ot_grafana_route` puts Grafana's L3 route in
+    its network namespace so the historian dashboard traverses C4.
+
+### Historian data path
+
+`(OpenPLC | stand-in) -C1-> historian-poller -C3-> InfluxDB -C4-> Grafana`
+
+- Verify it: `python3 governance/testing/check_historian.py` (also run as the
+  final step of `make compliance`).
+- The collector prefers the OpenPLC controllers `172.21.0.10/11/12` and falls
+  back to the stand-in `172.21.0.60/61/62`; both serve the same register map.
+- Point history is enabled on the Scada-LTS datapoints and a `VIEW_WATER` view
+  scaffold is created. Note the OT zones are Docker `internal` networks, so
+  Scada-LTS/InfluxDB are not published on the host; query them with
+  `docker exec` or through the gateway (Grafana is host-accessible on `:3000`).
 
 
 ## 3. Network Topology Verification
@@ -68,6 +95,9 @@ The attacker container includes automated simulation scripts:
 | `simulate_lateral_movement.py` | Sequential `CROSS_ZONE_VIOLATION` (Intake → Treatment → Distribution) |
 | `simulate_process_violation.py` | `PROCESS_SAFETY_VIOLATION` (real Modbus FC6 open-valve write against the live, HMI-shadowed process) |
 | `simulate_process_violation_spoof.py` | `PROCESS_SAFETY_VIOLATION` (legacy simulated stimulus, used only when no bundles are committed) |
+| `simulate_dnp3_attack.py` | `DNP3_UNAUTHORIZED_CONTROL`, `DNP3_RESTART_COMMAND`, `DNP3_UNSOLICITED_DISABLED` (run from `ot_insider`) |
+| `simulate_opcua_attack.py` | `OPCUA_BROWSE_REQUEST`, `OPCUA_WRITE_REQUEST`, `OPCUA_METHOD_CALL` (run from `ot_insider`) |
+| `simulate_s7comm_attack.py` | `S7COMM_PROGRAM_DOWNLOAD`, `S7COMM_PROGRAM_UPLOAD`, `S7COMM_CHANGE_OPERATING_MODE` (run from `ot_insider`) |
 
 ```bash
 sudo docker exec ot_attacker python3 /attacker/simulate_attack.py
