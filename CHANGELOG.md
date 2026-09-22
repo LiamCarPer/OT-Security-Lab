@@ -26,39 +26,16 @@
 
 ### Chores
 
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
 - Refresh the generated rules with a single trailing newline
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
 
 - **plc:** Print a unified diff when a bundle entry changes
 
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
 - **repo:** Ignore all detection/logs output except the evidence JSON
 
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
+- **release:** Clean up changelog grouping
 
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+### Dependencies
 
 - **deps:** Stop python base bumps for the dnp3 images
 
@@ -72,8 +49,6 @@
 
 - **deps:** Bump python in /lab-environment/s7-plc (#40)
 
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
 - **deps-dev:** Update bandit requirement from >=1.7.0 to >=1.9.4 (#16)
 
 - **deps-dev:** Update pre-commit requirement from >=4.6.1 to >=4.6.2 (#21)
@@ -86,14 +61,8 @@
 
 - **deps-dev:** Update ruff requirement from >=0.16.0 to >=0.16.7 (#38)
 
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
 
 ### Documentation
-
-- Update CHANGELOG for v1.0.1 [skip ci]
 
 - Add security policy, contributing guide, and GitHub Pages site
 
@@ -169,15 +138,7 @@
 - Make release CHANGELOG push resilient to concurrent pushes
 
 
-### Chores
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
+### Dependencies
 
 - **deps:** Bump python in /automation/playbooks (#4)
 
@@ -191,15 +152,11 @@
 
 - **deps:** Bump gitleaks/gitleaks-action from 2.3.6 to 3.0.0 (#11)
 
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
 - **deps:** Bump actions/setup-python from 5 to 7 (#12)
 
 - **deps-dev:** Update pre-commit requirement from >=3.0 to >=4.6.1 (#8)
 
 - **deps-dev:** Update scapy requirement from >=2.5.0 to >=2.7.0 (#13)
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
 
 - **deps-dev:** Update requirement pip-audit>=2.7.0 to pip-audit>=2.10.1 (#10)
 
@@ -207,16 +164,8 @@
 
 - **deps-dev:** Update pytest requirement from >=8.0 to >=9.1.1 (#14)
 
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
 
 ### Documentation
-
-- Update CHANGELOG for v1.0.0 [skip ci]
 
 - Add the CI/CD debugging saga to lessons learned
 
@@ -274,12 +223,6 @@
 - Update HMI and EWS IP addresses and modify gateway script execution command in docker-compose
 
 - Trim compliance gate permissions and document the diagnostics step
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
-
-- **evidence:** Refresh compliance gate alert evidence [skip ci]
 
 
 ### Documentation
