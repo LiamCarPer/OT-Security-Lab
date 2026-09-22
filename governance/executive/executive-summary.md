@@ -18,7 +18,7 @@ enforcement are implemented and test-verified; the material weaknesses are the
 absence of implemented historian backups (SR_7.3, simulated) and unencrypted
 control protocols (SR_4.1).
 
-## 2. Detection Posture (evidence window: 2026-09-22T10:45:53.787043 → 2026-09-22T10:47:32.477455)
+## 2. Detection Posture (evidence window: 2026-09-22T16:36:56.107084 → 2026-09-22T16:39:26.025962)
 | Detection | Alerts |
 | :--- | ---: |
 | `CROSS_ZONE_VIOLATION` | 50 |
@@ -35,7 +35,9 @@ control protocols (SR_4.1).
 | `OPCUA_BROWSE_REQUEST` | 2 |
 | `OPCUA_WRITE_REQUEST` | 2 |
 | `OPCUA_METHOD_CALL` | 2 |
-| **Total** | **121** |
+| `C2_BEACON` | 1 |
+| `DETECTION_SERVICE_DOWN` | 1 |
+| **Total** | **123** |
 
 Distinct source addresses observed: 172.23.0.20, 172.24.0.10, 172.24.0.30. Source:
 `detection/logs/alerts.json`, aggregated by `automation/metrics.py`.
@@ -47,7 +49,7 @@ Registered risks by level: **1 EXTREME, 8 HIGH, 3 MEDIUM, 0 LOW** (see `governan
 - **Compliance:** IEC 62443-3-3 implementation score **72.7%**
   (weighted; see `iec62443/compliance-summary.md`).
 - **Zoning:** IEC 62443-3-2 zones/conduits verified by `tests/test_zone_isolation.py`.
-- **Detection:** 121 alerts from 3 distinct
+- **Detection:** 123 alerts from 3 distinct
   sources; `make compliance` asserts every scenario is detected.
 - **Recovery:** RTO/RPO defined per asset in `governance/bia.md`; restore
   exercises outstanding (roadmap RD-10).
