@@ -11,6 +11,7 @@ repos:
       - id: check-json
         exclude: detection/logs/  # NDJSON evidence, not JSON documents
       - id: check-added-large-files
+        exclude: ^evidence/demo\.(gif|mp4)$  # committed demo media
       - id: check-case-conflict
 
   - repo: https://github.com/astral-sh/ruff-pre-commit

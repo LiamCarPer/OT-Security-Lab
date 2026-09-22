@@ -9,6 +9,12 @@
 [![Contributing](https://img.shields.io/badge/Contributing-Guide-green)](./CONTRIBUTING.md)
 [![Security](https://img.shields.io/badge/Security-Policy-important)](./SECURITY.md)
 
+**Live demo** — the SOC dashboard and `make compliance` passing 11/11 on a cold boot:
+
+![OT-Security-Lab demo: the live SOC dashboard and the compliance suite passing 11/11](./evidence/demo.gif)
+
+<sub>Rendered from a real run: [`evidence/demo.mp4`](./evidence/demo.mp4) · reproducible via [`docs/media/capture-demo.sh`](./docs/media/capture-demo.sh).</sub>
+
 | Category | Specification |
 | :--- | :--- |
 | **Industry** | Water Treatment & Filtration |
