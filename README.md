@@ -13,9 +13,47 @@
 | :--- | :--- |
 | **Industry** | Water Treatment & Filtration |
 | **Frameworks** | IEC 62443, MITRE ATT&CK for ICS, ISA-95 Purdue Model |
-| **Environment** | 4-Zone Segmented Docker Lab (L1–L4) + simulated L0 |
+| **Environment** | 5-Zone Segmented Docker Lab (Enterprise, Industrial DMZ, Operations, Supervisory, Control) + simulated L0 |
 | **Monitoring** | Protocol-aware anomaly detection (Modbus/TCP, DNP3, OPC UA, S7comm) |
 | **Evidence** | [Verified Attack Simulation Logs](./detection/logs/alerts.json) |
+
+## At a glance
+
+**11/11 automated compliance checks pass on a cold boot** (`make compliance`):
+the gate boots the whole lab, replays nine attack scenarios, and asserts both the
+JSON alert **and** the matching Loki ruler rule for each protocol scenario.
+
+| Check | What it proves |
+| :--- | :--- |
+| Cross-Zone Violation | IT → Control traffic is dropped by the gateway firewall **and** detected |
+| Unauthorized Modbus Write | A write from an unauthorized source is detected |
+| Modbus Brute-Force Scan | Reconnaissance against Modbus is detected |
+| Lateral Movement | East-west movement inside the plant is detected |
+| HMI Login Brute Force | Repeated failed logins raise `HMI_LOGIN_FAILURE` |
+| Physics-Aware Safety Violation | An unauthorized write moves the **real** process out of its safe band |
+| DNP3 Adversary Emulation | Unauthorized control, restart and unsolicited-disable are detected |
+| OPC UA Adversary Emulation | Browse, write and method-call are detected |
+| S7comm Adversary Emulation | Program download/upload and operating-mode change are detected |
+| Historian Ingestion | Modbus → L2 collector → InfluxDB → Grafana is live end to end |
+| Remote Engineering Hop | bastion → EWS over conduit C11 (key-only SSH) is reachable |
+
+| Metric | Value |
+| :--- | ---: |
+| Detection types in the live evidence | **14** |
+| ICS protocols covered | **4** (Modbus/TCP, DNP3, OPC UA, S7comm) |
+| IEC 62443-3-3 implementation score | **72.7%** across 12 requirements |
+| Automated tests | **94** |
+| CI gates (+ Compliance Gate) | **11** |
+| Zones / active conduits | **5** / **10** |
+
+Every number traces to an artifact and, where possible, an automated check — see
+**[`CLAIMS.md`](./CLAIMS.md)**. The authoritative runtime evidence is
+**[`evidence/runtime_evidence.json`](./evidence/runtime_evidence.json)**
+(machine-generated from the running lab by `governance/testing/capture_evidence.py`);
+the derived board-level figures are in
+**[`governance/executive/executive-summary.md`](./governance/executive/executive-summary.md)**;
+the checks themselves run in
+**[`.github/workflows/compliance-gate.yml`](./.github/workflows/compliance-gate.yml)**.
 
 ## Project Overview
 This repository contains a full-scale, simulated industrial environment designed to demonstrate the implementation of robust security controls within an Operational Technology (OT) context. The project encompasses the entire lifecycle of an IT/OT Security Engineer's responsibilities: from **architectural design** and **network segmentation** based on the Purdue Model, to **threat modeling**, **detection engineering**, and **IEC 62443 compliance mapping**.
