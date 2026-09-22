@@ -43,7 +43,7 @@ DISPLAY="$DISPLAY_NUM" xterm -fa Monospace -fs 15 -bg '#0b0f14' -fg '#e6e6e6' \
 TPID=$!
 sleep 1
 DISPLAY="$DISPLAY_NUM" ffmpeg -y -f x11grab -video_size 1280x720 -framerate "$FPS" \
-    -i "$DISPLAY_NUM" -t 175 -c:v libx264 -preset ultrafast -crf 23 \
+    -i "$DISPLAY_NUM" -t 280 -c:v libx264 -preset ultrafast -crf 23 \
     "$WORK/terminal.mp4" >"$WORK/ffmpeg.log" 2>&1
 kill "$TPID" 2>/dev/null || true
 TPID=""
@@ -53,7 +53,7 @@ XPID=""
 echo "[demo] composing title + dashboard + terminal..."
 convert -size 1280x720 xc:'#0b0f14' -gravity center \
     -pointsize 62 -fill '#e6e6e6' -annotate +0-70 'OT-Security-Lab' \
-    -pointsize 32 -fill '#33ff66' -annotate +0+10 'make compliance  ->  11/11 checks' \
+    -pointsize 32 -fill '#33ff66' -annotate +0+10 'make compliance  ->  14/14 checks' \
     -pointsize 20 -fill '#8aa0b4' \
     -annotate +0+80 'real IEC 61131-3 PLCs  -  Modbus / DNP3 / OPC UA / S7comm  -  protocol-aware detection' \
     "$WORK/title.png"
@@ -63,7 +63,7 @@ ffmpeg -y -loop 1 -i "$WORK/title.png" -t 2.6 -r "$FPS" -pix_fmt yuv420p \
 ffmpeg -y -loop 1 -i "$WORK/dashboard.png" \
     -vf "scale=1600:900,zoompan=z='min(zoom+0.0007,1.12)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1280x720:fps=$FPS,format=yuv420p" \
     -t 6 -c:v libx264 -crf 20 "$WORK/dash.mp4" >/dev/null 2>&1
-ffmpeg -y -ss 100 -i "$WORK/terminal.mp4" -t 12 -an -c:v libx264 -crf 20 \
+ffmpeg -y -ss 199 -i "$WORK/terminal.mp4" -t 14 -an -c:v libx264 -crf 20 \
     -pix_fmt yuv420p "$WORK/term.mp4" >/dev/null 2>&1
 
 ffmpeg -y -i "$WORK/title.mp4" -i "$WORK/dash.mp4" -i "$WORK/term.mp4" \

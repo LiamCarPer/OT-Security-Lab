@@ -9,7 +9,7 @@
 [![Contributing](https://img.shields.io/badge/Contributing-Guide-green)](./CONTRIBUTING.md)
 [![Security](https://img.shields.io/badge/Security-Policy-important)](./SECURITY.md)
 
-**Live demo** — the SOC dashboard and `make compliance` passing 11/11 on a cold boot:
+**Live demo** — the SOC dashboard and `make compliance` passing 14/14 on a cold boot:
 
 ![OT-Security-Lab demo: the live SOC dashboard and the compliance suite passing 11/11](./evidence/demo.gif)
 
@@ -25,12 +25,14 @@
 
 ## At a glance
 
-**11/11 automated compliance checks pass on a cold boot** (`make compliance`):
-the gate boots the whole lab, replays nine attack scenarios, and asserts both the
-JSON alert **and** the matching Loki ruler rule for each protocol scenario.
+**14/14 automated compliance checks pass on a cold boot** (`make compliance`):
+the gate boots the whole lab, samples the benign steady state, replays ten attack
+scenarios, and asserts both the JSON alert **and** the matching Loki ruler rule
+for each protocol scenario.
 
 | Check | What it proves |
 | :--- | :--- |
+| Benign Baseline | The idle lab (no attacks) produces **zero** false OT alerts |
 | Cross-Zone Violation | IT → Control traffic is dropped by the gateway firewall **and** detected |
 | Unauthorized Modbus Write | A write from an unauthorized source is detected |
 | Modbus Brute-Force Scan | Reconnaissance against Modbus is detected |
@@ -40,12 +42,14 @@ JSON alert **and** the matching Loki ruler rule for each protocol scenario.
 | DNP3 Adversary Emulation | Unauthorized control, restart and unsolicited-disable are detected |
 | OPC UA Adversary Emulation | Browse, write and method-call are detected |
 | S7comm Adversary Emulation | Program download/upload and operating-mode change are detected |
+| C2 Beaconing (blocked egress) | Regular-interval blocked egress from the OT host is detected (`C2_BEACON`, stateful) |
+| Detection-Service Watchdog | A stopped detection producer raises `DETECTION_SERVICE_DOWN` |
 | Historian Ingestion | Modbus → L2 collector → InfluxDB → Grafana is live end to end |
 | Remote Engineering Hop | bastion → EWS over conduit C11 (key-only SSH) is reachable |
 
 | Metric | Value |
 | :--- | ---: |
-| Detection types in the live evidence | **14** |
+| Detection types in the live evidence | **16** |
 | ICS protocols covered | **4** (Modbus/TCP, DNP3, OPC UA, S7comm) |
 | IEC 62443-3-3 implementation score | **72.7%** across 12 requirements |
 | Automated tests | **94** |
