@@ -2,6 +2,159 @@
 
 ### Bug Fixes
 
+- Suppress the bandit urlopen finding for the fixed Loki URL
+
+- **scada:** Verify the session before trusting the JSESSIONID
+
+- **ci:** Compare PLC bundle content, not zip bytes
+
+- **plc:** Pin the STruC++ asset and regenerate the bundles
+
+- **compose:** Drop the inert PLC host-port mappings
+
+
+### CI/CD
+
+- Rebuild PLC program bundles and fail on drift
+
+- Build every lab image on pull requests
+
+- **compliance:** Serialise gates and harden the evidence push
+
+- **release:** Harden the CHANGELOG push and attach the machine-generated evidence
+
+
+### Chores
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- Refresh the generated rules with a single trailing newline
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **plc:** Print a unified diff when a bundle entry changes
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **repo:** Ignore all detection/logs output except the evidence JSON
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **deps:** Stop python base bumps for the dnp3 images
+
+- **deps:** Bump python from 3.12-slim to 3.14-slim in /lab-environment/plc-bootstrap (#35)
+
+- **deps:** Bump python in /lab-environment/modbus-sim (#33)
+
+- **deps:** Bump python in /lab-environment/historian-poller (#34)
+
+- **deps:** Bump python in /lab-environment/opcua-server (#36)
+
+- **deps:** Bump python in /lab-environment/s7-plc (#40)
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **deps-dev:** Update bandit requirement from >=1.7.0 to >=1.9.4 (#16)
+
+- **deps-dev:** Update pre-commit requirement from >=4.6.1 to >=4.6.2 (#21)
+
+- **deps:** Bump orhun/git-cliff-action from 4.8.0 to 4.9.0 (#27)
+
+- **deps:** Bump kalilinux/kali-rolling in /lab-environment/attacker (#32)
+
+- **deps-dev:** Update pyyaml requirement from >=6.0 to >=6.0.3 (#39)
+
+- **deps-dev:** Update ruff requirement from >=0.16.0 to >=0.16.7 (#38)
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+- **evidence:** Refresh compliance gate alert evidence [skip ci]
+
+
+### Documentation
+
+- Update CHANGELOG for v1.0.1 [skip ci]
+
+- Add security policy, contributing guide, and GitHub Pages site
+
+- Canonical Pages URL in the site badge
+
+- Add the claims register and fix stale README claims
+
+- **arch:** Correct network-design to the deployed 172.x schema
+
+- **ir:** Consolidate the two PLC-tampering playbooks
+
+- **evidence:** Add machine-generated runtime evidence
+
+- **automation:** Correct the metrics.json consumer claim
+
+- Fix drifted CI count, historian wording and typo
+
+- **adr:** Normalise ADR statuses to match the implementation
+
+- **claims:** Track the unbuilt ADR decisions as known gaps
+
+- Lead the README with the compliance results
+
+
+### Features
+
+- Codespaces devcontainer - one-click lab in the browser
+
+- Evaluate the generated detection bundle alongside the lab's rules
+
+- Deploy real OpenPLC v4 logic and Scada-LTS HMI through the gateway
+
+- Real multi-protocol endpoints and a live L2/L3 historian path
+
+- Deploy real OpenPLC v4 logic and tighten the zone firewall
+
+- **grc:** Make compliance, MITRE and executive claims data-derived
+
+- **soar:** Gateway-side containment, SBOM attestation, supply-chain coverage
+
+- **dmz:** Implement the Industrial DMZ (bastion, reverse proxy, corp workstation)
+
+- **hmi:** Non-default Scada credentials and login-failure detection
+
+- **dmz:** Implement the bastion -> EWS remote-engineering path (C11)
+
+
+### Other
+
+- Reconcile CI evidence refresh with the DMZ phase
+
+- Normalize end-of-file newlines for pre-commit
+
+
+### Testing
+
+- **claims:** Guard against unsupported absolute claims
+
+
+### Bug Fixes
+
 - Resilient evidence push (rebase-retry on concurrent pushes)
 
 - Normalize CHANGELOG trailing newline and cliff footer
