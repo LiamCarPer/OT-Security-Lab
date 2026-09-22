@@ -26,6 +26,7 @@ jobs:
 
       - name: Commit CHANGELOG
         run: |
+          set +e
           # normalize: exactly one trailing newline (pre-commit gate)
           python3 -c "import pathlib; p = pathlib.Path('CHANGELOG.md'); p.write_text(p.read_text().rstrip('\n') + '\n')"
           git config user.name "ot-security-lab-ci"
@@ -35,12 +36,22 @@ jobs:
           # tag checkouts land on detached HEAD; push by refspec and retry
           # through concurrent pushes (e.g. the gate's evidence commit)
           for attempt in 1 2 3 4 5; do
-            if git push origin HEAD:main 2>/dev/null; then
+            echo "Push attempt $attempt..."
+            if git push origin HEAD:main; then
               echo "CHANGELOG pushed."
               exit 0
             fi
-            echo "Push failed (attempt $attempt) - rebasing and retrying..."
-            git pull --rebase origin main 2>/dev/null || git rebase --abort 2>/dev/null
+            echo "Push failed (attempt $attempt) - syncing with origin and retrying..."
+            if ! git fetch origin main; then
+              sleep $((attempt * 5))
+              continue
+            fi
+            if ! git rebase origin/main; then
+              git rebase --abort 2>/dev/null
+              echo "CHANGELOG rebase conflicted; the next release regenerates it."
+              exit 0
+            fi
+            sleep $((attempt * 5))
           done
           echo "Could not push CHANGELOG after 5 attempts."
           exit 1
@@ -63,4 +74,6 @@ jobs:
             --notes-file RELEASE_NOTES.md \
             evidence/SOC_Overview_Dashboard.png \
             evidence/Loki_Raw_Logs.png \
-            evidence/physics_violation_demo.png
+            evidence/physics_violation_demo.png \
+            evidence/runtime_evidence.json \
+            detection/logs/alerts.json
