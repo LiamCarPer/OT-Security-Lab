@@ -1,0 +1,24 @@
+# source: rules/sigma/ot/ot_c2_beacon.yml
+groups:
+- name: ot_c2_beacon
+  rules:
+  - alert: C2_Beacon_From_OT_Host
+    annotations:
+      author: Liam Carvajal
+      description: 'Detects command-and-control beaconing from an OT host: repeated
+        egress attempts to the same enterprise/external address at a near-constant
+        interval. There is no OT -> Enterprise conduit in a correctly segmented
+        Purdue network, so every attempt is denied by the zone firewall - but the
+        *pattern* of the drops, not the individual drops, is the beacon.
+
+
+        The gateway''s firewall-events producer times the denied flows per source
+        and destination and flags them when the interval coefficient of variation
+        is low (regular callbacks). This is a stateful/behavioural detection.
+
+        '
+      summary: C2 Beacon From OT Host
+    expr: sum(count_over_time({job=~".+"} | logfmt | alert_type=~`(?i)^C2_BEACON$`
+      [5m])) or vector(0) > 0
+    labels:
+      severity: high

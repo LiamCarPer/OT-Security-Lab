@@ -20,13 +20,26 @@ from __future__ import annotations
 
 import ipaddress
 import json
+import os
 import time
 import urllib.request
+from collections import defaultdict, deque
 
 from otdpi import common
 from scapy.all import ICMP, IP, TCP, UDP, sniff
 
 LOKI_URL = "http://172.24.0.20:3100/loki/api/v1/push"
+
+# Beaconing detection (stateful): repeated denied egress from an OT host to the
+# Enterprise/external address at a near-constant interval is a C2 pattern.
+OT_ZONES = {"ops", "dmz", "supervisory", "control"}
+BEACON_WINDOW = float(os.getenv("OT_BEACON_WINDOW", "60"))
+BEACON_MIN_EVENTS = int(os.getenv("OT_BEACON_MIN_EVENTS", "5"))
+BEACON_MIN_INTERVAL = float(os.getenv("OT_BEACON_MIN_INTERVAL", "0.5"))
+BEACON_MAX_CV = float(os.getenv("OT_BEACON_MAX_CV", "0.35"))
+# Collapse TCP SYN retransmissions (same beacon) into one event.
+BEACON_DEBOUNCE = float(os.getenv("OT_BEACON_DEBOUNCE", "2.0"))
+_beacon_times: dict = defaultdict(deque)
 
 ZONES = {
     "it": ipaddress.ip_network("172.24.0.0/24"),
@@ -91,6 +104,57 @@ def push_to_loki(line: str) -> None:
         print(f"[firewall] loki push failed: {error}", flush=True)
 
 
+def interval_regularity(times):
+    """Return (coefficient_of_variation, mean_interval) for a timestamp list."""
+    intervals = [later - earlier for earlier, later in zip(times, times[1:], strict=False)]
+    mean = sum(intervals) / len(intervals)
+    if mean < BEACON_MIN_INTERVAL:
+        return 1.0, mean
+    variance = sum((value - mean) ** 2 for value in intervals) / len(intervals)
+    return (variance ** 0.5) / mean, mean
+
+
+def check_beacon(src_ip: str, dst_ip: str, dst_port: int, proto: str, now: float) -> None:
+    """Flag regular-interval denied egress (beaconing) from an OT host."""
+    key = (src_ip, dst_ip, dst_port, proto)
+    times = _beacon_times[key]
+    # Ignore TCP SYN retransmissions so one beacon counts once.
+    if times and now - times[-1] < BEACON_DEBOUNCE:
+        return
+    times.append(now)
+    while times and times[0] < now - BEACON_WINDOW:
+        times.popleft()
+    if len(times) < BEACON_MIN_EVENTS:
+        return
+
+    coefficient, mean = interval_regularity(list(times))
+    if coefficient > BEACON_MAX_CV:
+        return
+
+    fields = {
+        "alert_type": "C2_BEACON",
+        "source_ip": src_ip,
+        "dest_ip": dst_ip,
+        "dest_port": dst_port,
+        "proto": proto,
+        "beacon_count": len(times),
+        "interval_seconds": round(mean, 2),
+        "interval_cv": round(coefficient, 3),
+    }
+    common.push_to_loki("firewall", fields)
+    common.write_alert(
+        {
+            **fields,
+            "mitre_id": "T0869",
+            "description": (
+                "Regular-interval egress from an OT host to the enterprise/C2 "
+                "address (denied by the zone firewall): C2 beaconing pattern."
+            ),
+        }
+    )
+    _beacon_times[key].clear()
+
+
 def handle(packet) -> None:
     if IP not in packet or packet[IP].src in GATEWAY_IPS or packet[IP].dst in GATEWAY_IPS:
         return
@@ -124,6 +188,11 @@ def handle(packet) -> None:
     )
     push_to_loki(line)
     print(f"[firewall] DROP {src_zone}->{dst_zone} {src_ip}->{dst_ip}:{dst_port} {proto}", flush=True)
+
+    # Stateful: a denied OT -> Enterprise egress repeated at a regular interval
+    # is beaconing, regardless of the individual drops.
+    if dst_zone == "it" and src_zone in OT_ZONES:
+        check_beacon(src_ip, dst_ip, dst_port, proto, time.time())
 
 
 if __name__ == "__main__":

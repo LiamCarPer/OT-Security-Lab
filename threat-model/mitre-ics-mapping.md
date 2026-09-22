@@ -49,3 +49,5 @@ recorded in that file), so a stale or mistyped ID fails CI.
 | `S7COMM_PROGRAM_DOWNLOAD` | T0843 | Program Download |
 | `S7COMM_PROGRAM_UPLOAD` | T0845 | Program Upload |
 | `S7COMM_CHANGE_OPERATING_MODE` | T0858 | Change Operating Mode |
+| `C2_BEACON` | T0869 | Standard Application Layer Protocol |
+| `DETECTION_SERVICE_DOWN` | T0881 | Service Stop |

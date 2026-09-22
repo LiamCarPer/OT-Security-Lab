@@ -18,4 +18,4 @@ WORKDIR /app
 
 HEALTHCHECK CMD ["sh", "-c", "ip route | grep -q '172.21.0.0/24'"]
 
-CMD ["sh", "-c", "until ip route replace 172.21.0.0/24 via 172.23.0.2 2>/dev/null; do sleep 2; done; exec tail -f /dev/null"]
+CMD ["sh", "-c", "for net in 172.21.0.0/24 172.24.0.0/24; do until ip route replace $net via 172.23.0.2 2>/dev/null; do sleep 2; done; done; exec tail -f /dev/null"]

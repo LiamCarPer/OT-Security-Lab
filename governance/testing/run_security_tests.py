@@ -104,6 +104,12 @@ TESTS = [
             "S7comm_PLC_Control_Or_Stop",
         ],
     },
+    {
+        "name": "C2 Beaconing (blocked egress)",
+        "cmd": "docker exec ot_insider python3 /attacker/simulate_c2_beacon.py",
+        "expected": ["C2_BEACON"],
+        "loki_rules": ["C2_Beacon_From_OT_Host"],
+    },
 ]
 
 
@@ -291,6 +297,21 @@ def main():
     results = []
     all_passed = True
 
+    # Measure the benign steady state before any attack so we can report a
+    # false-positive figure rather than assert one.
+    print("\n[TEST] Benign Baseline (no attacks; false-positive check)")
+    baseline = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "governance" / "testing" / "measure_baseline.py")],
+        capture_output=True,
+        text=True,
+    )
+    print(baseline.stdout.strip() or baseline.stderr.strip())
+    if baseline.returncode == 0:
+        results.append(("Benign Baseline", "PASS"))
+    else:
+        results.append(("Benign Baseline", "FAIL"))
+        all_passed = False
+
     for test in TESTS:
         print(f"\n[TEST] {test['name']}")
         cmd = test["cmd"]
@@ -341,6 +362,33 @@ def main():
             results.append((test["name"], "FAIL"))
             all_passed = False
             dump_diagnostics()
+
+    print("\n[TEST] Detection-Service Watchdog (Inhibit Response Function)")
+    restart_cmd = (
+        "nohup python3 -u /detection/rules/dnp3_anomaly.py "
+        "> /detection/logs/dnp3_anomaly.out 2>&1 &"
+    )
+    down_before = alert_counts().get("DETECTION_SERVICE_DOWN", 0)
+    subprocess.run(
+        ["docker", "exec", "ot_gateway", "pkill", "-f", "dnp3_anomaly.py"],
+        capture_output=True,
+        text=True,
+    )
+    time.sleep(15)  # watchdog interval (10s) + margin
+    down_after = alert_counts().get("DETECTION_SERVICE_DOWN", 0)
+    if down_after > down_before:
+        print("[PASS] DETECTION_SERVICE_DOWN raised for a stopped producer")
+        results.append(("Detection-Service Watchdog", "PASS"))
+    else:
+        print("[FAIL] Watchdog did not raise DETECTION_SERVICE_DOWN")
+        results.append(("Detection-Service Watchdog", "FAIL"))
+        all_passed = False
+    # Restore the producer so the rest of the suite is unaffected.
+    subprocess.run(
+        ["docker", "exec", "ot_gateway", "sh", "-c", restart_cmd],
+        capture_output=True,
+        text=True,
+    )
 
     print("\n[TEST] Historian Ingestion (L1 -> L2 poller -> L3 InfluxDB -> Grafana)")
     check = subprocess.run(

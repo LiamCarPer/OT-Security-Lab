@@ -28,6 +28,9 @@ tested), `Partial`, `Planned`.
 | SBOMs are signed **and** attested with keyless Sigstore | Implemented | `ci.yml` (cosign sign-blob + attest-blob + verify) | CI job (needs network/oidc) |
 | Every lab Dockerfile is covered by Dependabot | Implemented | `.github/dependabot.yml` | static review |
 | 11 CI gates + Compliance Gate | Verified | `.github/workflows/` | GitHub Actions |
+| Stateful C2-beacon detection (regular-interval denied egress) | Verified | `detection/rules/firewall_events.py` interval analysis → `C2_BEACON` | `run_security_tests.py` "C2 Beaconing" (alert **and** Loki rule) |
+| Detection-service availability is monitored | Verified | `detection/rules/watchdog.py` → `DETECTION_SERVICE_DOWN` | `run_security_tests.py` "Detection-Service Watchdog" |
+| Benign steady state produces no false OT alerts | Verified | `governance/testing/measure_baseline.py` (quiet window) | `run_security_tests.py` "Benign Baseline" |
 
 ## Known gaps (claimed nowhere, tracked here)
 | Item | Status | Notes |
@@ -37,4 +40,4 @@ tested), `Partial`, `Planned`.
 | EDR on EWS/HMI | Planned | Sysmon sample telemetry exists for the dashboard; no live agent. |
 | SIS / BPCS separation (ADR-06) | Planned | PLC-03 runs on the shared control network; a dedicated SIS segment with a one-way feed is not built. |
 | Suricata sensor (ADR-07) | Planned | Passive monitoring is implemented via the gateway Scapy producers; the `tcpdump`->Suricata sensor is staged in `siem/suricata/` but not deployed. |
-| Simulated internet / C2 channel (ADR-08) | Planned | The attacker is Enterprise-local with pivot routes; no egress or C2 callback is implemented. |
+| Simulated internet / C2 channel (ADR-08) | Partial | C2 *egress* from the compromised insider is modelled and detected (`C2_BEACON`); the firewall blocks it, so there is no successful C2 channel or simulated internet. |
