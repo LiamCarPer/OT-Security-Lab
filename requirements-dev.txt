@@ -1,5 +1,5 @@
 pytest>=9.1.1
-scapy>=2.7.0
+scapy>=2.8.0
 ruff>=0.16.8
 bandit>=1.9.4
 pip-audit>=2.10.1
