@@ -28,6 +28,14 @@ def test_only_the_gateway_is_multihomed():
     assert set(multihomed) == {"gateway"}, f"unexpected multi-homed services: {multihomed}"
 
 
+def test_adversary_hosts_are_single_zoned():
+    """The optional Caldera control plane and the PowerShell workstation must
+    not become new multi-homed bridges."""
+    services = _compose()["services"]
+    assert set(services["caldera"]["networks"]) == {"it_network"}
+    assert set(services["powershell-ws"]["networks"]) == {"supervisory_network"}
+
+
 def test_gateway_bridges_every_zone():
     networks = set(_compose()["services"]["gateway"]["networks"])
     assert {

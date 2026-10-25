@@ -24,6 +24,10 @@ applied by `lab-environment/network-config/firewall-rules.sh` on the gateway.
 *   **Destination Zone:** Control Zone (Level 1) — PLCs `172.21.0.10-12`
 *   **Protocol:** Modbus/TCP (Port 502)
 *   **Requirement:** Operator read/write access to controller holding registers.
+*   **Source scope:** the firewall permits any Supervisory host on
+    C1; the Modbus detector's source allow-list (HMI and EWS) is the
+    behaviour control. The PowerShell workstation `172.22.0.30` deliberately
+    exercises that gap and is detected as an unauthorized writer.
 
 ### C2: Direct Historian Collection (Operations → Control) — not used
 *   **Status:** Removed. The historian host has **no L3 → L1 path**; the L2

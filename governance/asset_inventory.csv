@@ -16,3 +16,5 @@ A.14,Historian_Poller,Supervisory (L2),172.22.0.20,Multi-Zone,High,Historian col
 A.15,Process_Standin,Control (L1),172.21.0.60-62,Modbus TCP,Medium,Modbus process stand-in (x3),Operations
 A.16,DMZ_ReverseProxy,DMZ (L3.5),172.25.0.10,HTTP,Medium,Publishes operator UI,Security
 A.17,DMZ_Bastion,DMZ (L3.5),172.25.0.11,SSH,High,Remote maintenance jump host,Security
+A.18,PowerShell_WS,Supervisory (L2),172.22.0.30,Modbus TCP,Medium,PowerShell 7 operator workstation (adversary emulation),Security
+A.19,Caldera,Enterprise (L4),172.24.0.40,HTTP,Low,Optional Caldera adversary-emulation control plane,Security

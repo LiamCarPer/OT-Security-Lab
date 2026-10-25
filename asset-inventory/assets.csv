@@ -20,3 +20,5 @@ ASSET-18,modbus-sim-distribution,172.21.0.62,Control,L1,Process Simulator,Open S
 ASSET-19,reverse-proxy,172.25.0.10,DMZ,L3.5,Reverse Proxy,nginx,nginx-1.27,1.27,80/tcp,2026-04-23,Publishes operator UI (host :8080)
 ASSET-20,bastion,172.25.0.11,DMZ,L3.5,Jump Host,OpenSSH,alpine,10.3,22/tcp,2026-04-23,Remote maintenance entry point
 ASSET-21,corp-ws,172.24.0.30,Enterprise,L4,Corporate Workstation,Alpine,corp-ws,v1.0,None,2026-04-23,Exercises the DMZ access path
+ASSET-22,powershell-ws,172.22.0.30,Supervisory,L2,Operator Workstation,Microsoft,PowerShell-7.4,7.4.6,None,2026-10-25,PowerShell 7 adversary-emulation and detection operations host
+ASSET-23,caldera,172.24.0.40,Enterprise,L4,Adversary Emulation Control Plane,Apache,Caldera,5.3.0,8888/tcp,2026-10-25,Optional MITRE Caldera profile (not in the default boot)

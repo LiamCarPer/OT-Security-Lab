@@ -20,9 +20,10 @@ sudo docker compose up -d
 This starts: 3 OpenPLC runtimes (L1), real DNP3/OPC UA/S7comm endpoints (L1),
 Scada-LTS HMI + MySQL config store (L2), an Industrial DMZ with a reverse proxy
 and bastion (L3.5), InfluxDB historian (L3), the EWS/plc-bootstrap deployer (L3),
-a compromised-EWS insider (L3), the zone gateway (firewall + persistent IDS),
-the Kali attacker (L4), a corporate workstation (L4), and the
-Grafana/Loki/Promtail SIEM stack.
+a compromised-EWS insider (L3), a PowerShell 7 operator workstation (L2), the
+zone gateway (firewall + persistent IDS), the Kali attacker (L4), a corporate
+workstation (L4), and the Grafana/Loki/Promtail SIEM stack. The optional
+Caldera profile adds an Enterprise-zone adversary-emulation control plane.
 
 ### What happens on boot
 
@@ -62,6 +63,10 @@ Grafana/Loki/Promtail SIEM stack.
     raises `HMI_LOGIN_FAILURE` for repeated failed logins.
 12. `ot_scada_provisioner` rotates the Scada-LTS factory password to
     `OT_SCADA_PASS` (default `ot-lab-scada`) on first login.
+13. `ot_powershell` starts in the Supervisory zone, installs a route to the
+    Control subnet via the gateway, and exposes the PowerShell 7 OTSec toolkit
+    at `/opt/otsec`. It is used by the `PowerShell Adversary Emulation`
+    compliance scenario.
 
 ### Historian data path
 
@@ -105,6 +110,8 @@ The attacker container includes automated simulation scripts:
 | `simulate_dnp3_attack.py` | `DNP3_UNAUTHORIZED_CONTROL`, `DNP3_RESTART_COMMAND`, `DNP3_UNSOLICITED_DISABLED` (run from `ot_insider`) |
 | `simulate_opcua_attack.py` | `OPCUA_BROWSE_REQUEST`, `OPCUA_WRITE_REQUEST`, `OPCUA_METHOD_CALL` (run from `ot_insider`) |
 | `simulate_s7comm_attack.py` | `S7COMM_PROGRAM_DOWNLOAD`, `S7COMM_PROGRAM_UPLOAD`, `S7COMM_CHANGE_OPERATING_MODE` (run from `ot_insider`) |
+| `powershell/Invoke-OTAdversaryEmulation.ps1` | `UNAUTHORIZED_MODBUS_WRITE` (run from `ot_powershell`) |
+| `nmap -p 502,102,20000,4840 172.21.0.10-12` | `OT_PORT_SCAN` (run from `ot_attacker`) |
 
 ```bash
 sudo docker exec ot_attacker python3 /attacker/simulate_attack.py
@@ -120,6 +127,17 @@ previous evidence, replays every simulation, and asserts each expected alert):
 ```bash
 python3 governance/testing/run_security_tests.py --reset
 ```
+
+### Optional Caldera profile
+
+```bash
+make caldera-image
+make caldera
+# UI: http://localhost:8888 (red / ot-lab-caldera; API key ot-lab-caldera-api)
+```
+
+The Caldera server is in the Enterprise zone; the Sandcat agent runs on the
+existing attacker host. See `caldera/README.md`.
 
 ## 5. SIEM Access
 

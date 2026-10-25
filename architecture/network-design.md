@@ -66,6 +66,8 @@ graph TD
 | **Historian** | 3 | `172.23.0.10` | InfluxDB process historian. |
 | **EWS / bootstrap** | 3 | `172.23.0.4` | Deploys PLC program bundles. |
 | **Insider** | 3 | `172.23.0.20` | Compromised workstation running protocol clients. |
+| **PowerShell workstation** | 2 | `172.22.0.30` | PowerShell 7 automation host used by the adversary-emulation scenario. |
+| **Caldera** | 4 | `172.24.0.40` | Optional adversary-emulation control plane (profile `caldera`). |
 | **HMI** | 2 | `172.22.0.10` | Scada-LTS operator interface. |
 | **Historian Collector** | 2 | `172.22.0.20` | Modbus -> InfluxDB collector. |
 | **PLC-01/02/03** | 1 | `172.21.0.10/11/12` | Intake / Treatment / Distribution controllers. |
