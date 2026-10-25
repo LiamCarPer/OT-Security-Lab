@@ -37,6 +37,32 @@ jobs:
       - name: Run pytest
         run: python -m pytest tests -q
 
+  powershell:
+    name: PowerShell Lint & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Pester and PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.5.0 -Force -Scope CurrentUser
+          Install-Module PSScriptAnalyzer -MinimumVersion 1.22.0 -Force -Scope CurrentUser
+      - name: PSScriptAnalyzer
+        shell: pwsh
+        run: Invoke-ScriptAnalyzer -Path powershell -Recurse -Settings powershell/PSScriptAnalyzerSettings.psd1 -EnableExit
+      - name: Pester
+        shell: pwsh
+        run: Invoke-Pester -Path tests/powershell -Output Detailed -CI
+      - name: Detection coverage report
+        shell: pwsh
+        run: pwsh -File powershell/Get-OTDetectionReport.ps1 -AsMarkdown -OutputPath evidence/powershell-coverage.md
+      - name: Upload detection coverage
+        uses: actions/upload-artifact@v7
+        with:
+          name: powershell-detection-coverage
+          path: evidence/powershell-coverage.md
+
   shell:
     name: Shell Script Checks
     runs-on: ubuntu-latest

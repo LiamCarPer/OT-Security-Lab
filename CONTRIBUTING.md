@@ -10,7 +10,7 @@ pipeline are welcome.
 - **Conventional Commits** are required (`feat:`, `fix:`, `docs:`, `test:`,
   `ci:`, `chore:`, `refactor:`) — the release workflow generates the CHANGELOG
   from them via git-cliff.
-- Every change must pass the **10 CI gates** and, for changes that touch the
+- Every change must pass the **13 CI gates** and, for changes that touch the
   lab stack, the **Compliance Gate** (boots the lab, replays attacks, asserts
   detection).
 - No secrets. `gitleaks` runs in CI and as a pre-commit hook.
@@ -41,9 +41,11 @@ make compliance   # full validation: sims + detection assertions
 | Area | Path |
 | :--- | :--- |
 | Lab environment (compose, Dockerfiles, firewall) | `lab-environment/` |
-| Detection rules (Scapy IDS, DNP3, physics-aware monitor) | `detection/rules/` |
+| Detection rules (Scapy IDS, DNP3, physics-aware monitor, port scan) | `detection/rules/` |
 | Sigma rules and SIEM (Loki, Alertmanager, dashboards) | `detection/sigma/`, `siem/` |
 | Automation (metrics, enrichment, playbooks, webhook) | `automation/` |
+| PowerShell toolkit and Pester tests | `powershell/`, `tests/powershell/` |
+| Optional Caldera profile and OT abilities | `lab-environment/caldera/` |
 | PLC logic and integrity verification | `plc/` |
 | Tests (unit + policy) | `tests/` |
 | GRC, standards, policies, risk documentation | `governance/` |

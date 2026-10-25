@@ -1,6 +1,6 @@
 LAB = lab-environment
 
-.PHONY: up down ps simulate simulate-lateral simulate-process ids-log compliance historian test lint scan
+.PHONY: up down ps simulate simulate-lateral simulate-process ids-log compliance historian test lint scan powershell-test powershell-lint powershell-report caldera caldera-image caldera-down
 
 up:
 	cd $(LAB) && docker compose up -d
@@ -44,3 +44,22 @@ policy:
 
 precommit:
 	pre-commit run --all-files
+
+powershell-test:
+	pwsh -NoProfile -Command "Invoke-Pester -Path tests/powershell -Output Detailed -CI"
+
+powershell-lint:
+	pwsh -NoProfile -Command "Invoke-ScriptAnalyzer -Path powershell -Recurse -Settings powershell/PSScriptAnalyzerSettings.psd1 -EnableExit"
+
+powershell-report:
+	pwsh -NoProfile -File powershell/Get-OTDetectionReport.ps1 -AsMarkdown -OutputPath evidence/powershell-coverage.md
+
+caldera-image:
+	cd $(LAB) && sh caldera/build.sh
+
+caldera:
+	@docker image inspect $${OT_CALDERA_IMAGE:-ot-caldera:5.3.0} >/dev/null 2>&1 || $(MAKE) caldera-image
+	cd $(LAB) && CALDERA_URL=http://caldera:8888 docker compose --profile caldera up -d
+
+caldera-down:
+	cd $(LAB) && docker compose stop caldera

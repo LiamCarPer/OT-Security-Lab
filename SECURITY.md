@@ -49,6 +49,6 @@ What to include:
 ## Verification
 
 Every security fix is verified by the repository's automated gates:
-10 CI checks (lint, SAST, unit tests, policy-as-code, SBOM attestation, secret
+13 CI checks (lint, SAST, unit tests, PowerShell lint/tests, policy-as-code, SBOM attestation, secret
 scanning, dependency audits, container/IaC scans) and the Compliance Gate,
 which boots the full lab, replays attack simulations, and asserts detection.
