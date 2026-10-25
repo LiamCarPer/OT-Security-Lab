@@ -104,6 +104,8 @@ jobs:
             docker inspect ot_gateway --format "{{json .State}}"
             echo "### attacker logs"
             docker logs ot_attacker --tail 40
+            echo "### powershell workstation logs"
+            docker logs ot_powershell --tail 40
             echo "### webhook logs"
             docker logs ot_webhook --tail 40
             echo "### plc-bootstrap logs"
