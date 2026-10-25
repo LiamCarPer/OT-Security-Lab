@@ -1,49 +1,51 @@
 {
   "alerts": {
     "alert_counts": {
-      "C2_BEACON": 3,
-      "CROSS_ZONE_VIOLATION": 100,
-      "DETECTION_SERVICE_DOWN": 3,
-      "DNP3_RESTART_COMMAND": 4,
-      "DNP3_UNAUTHORIZED_CONTROL": 12,
-      "DNP3_UNSOLICITED_DISABLED": 4,
-      "HMI_LOGIN_FAILURE": 6,
-      "OPCUA_BROWSE_REQUEST": 4,
-      "OPCUA_METHOD_CALL": 4,
-      "OPCUA_WRITE_REQUEST": 4,
-      "OT_BRUTE_FORCE_SCAN": 8,
-      "PROCESS_SAFETY_VIOLATION": 15,
-      "S7COMM_CHANGE_OPERATING_MODE": 8,
-      "S7COMM_PROGRAM_DOWNLOAD": 12,
-      "S7COMM_PROGRAM_UPLOAD": 12,
-      "UNAUTHORIZED_MODBUS_WRITE": 46
+      "C2_BEACON": 4,
+      "CROSS_ZONE_VIOLATION": 352,
+      "DETECTION_SERVICE_DOWN": 6,
+      "DNP3_RESTART_COMMAND": 6,
+      "DNP3_UNAUTHORIZED_CONTROL": 18,
+      "DNP3_UNSOLICITED_DISABLED": 6,
+      "HMI_LOGIN_FAILURE": 9,
+      "OPCUA_BROWSE_REQUEST": 6,
+      "OPCUA_METHOD_CALL": 6,
+      "OPCUA_WRITE_REQUEST": 6,
+      "OT_BRUTE_FORCE_SCAN": 15,
+      "OT_PORT_SCAN": 11,
+      "PROCESS_SAFETY_VIOLATION": 18,
+      "S7COMM_CHANGE_OPERATING_MODE": 12,
+      "S7COMM_PROGRAM_DOWNLOAD": 18,
+      "S7COMM_PROGRAM_UPLOAD": 20,
+      "UNAUTHORIZED_MODBUS_WRITE": 68
     },
     "distinct_sources": [
+      "172.22.0.30",
       "172.23.0.20",
       "172.24.0.10",
       "172.24.0.30"
     ]
   },
-  "captured_at": "2026-09-22T16:24:37Z",
+  "captured_at": "2026-10-25T01:01:45Z",
   "grafana_datasources": [
     "InfluxDB-Historian",
     "Loki"
   ],
   "historian_last_values": {
     "plc_distribution": {
-      "pressure": 1
+      "pressure": 0
     },
     "plc_intake": {
-      "level": 92
+      "level": 42
     },
     "plc_treatment": {
-      "chlorine": 22
+      "chlorine": 0
     }
   },
   "ruler_rules": {
     "C2_Beacon_From_OT_Host": {
       "health": "ok",
-      "state": "firing"
+      "state": "inactive"
     },
     "CrossZoneViolation": {
       "health": "ok",
@@ -63,7 +65,7 @@
     },
     "Detection_Service_Stopped": {
       "health": "ok",
-      "state": "firing"
+      "state": "inactive"
     },
     "Industrial_Protocol_Traffic_From_Enterprise_To_Control_Zone": {
       "health": "ok",
@@ -97,6 +99,10 @@
       "health": "ok",
       "state": "inactive"
     },
+    "OT_Port_Scan_From_External_Zone": {
+      "health": "ok",
+      "state": "firing"
+    },
     "ProcessSafetyViolation": {
       "health": "ok",
       "state": "inactive"
@@ -107,15 +113,15 @@
     },
     "S7comm_PLC_Control_Or_Stop": {
       "health": "ok",
-      "state": "firing"
+      "state": "inactive"
     },
     "S7comm_Program_Download": {
       "health": "ok",
-      "state": "firing"
+      "state": "inactive"
     },
     "S7comm_Program_Upload": {
       "health": "ok",
-      "state": "firing"
+      "state": "inactive"
     },
     "UnauthorizedModbusWrite": {
       "health": "ok",
