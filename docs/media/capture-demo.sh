@@ -53,7 +53,7 @@ XPID=""
 echo "[demo] composing title + dashboard + terminal..."
 convert -size 1280x720 xc:'#0b0f14' -gravity center \
     -pointsize 62 -fill '#e6e6e6' -annotate +0-70 'OT-Security-Lab' \
-    -pointsize 32 -fill '#33ff66' -annotate +0+10 'make compliance  ->  14/14 checks' \
+    -pointsize 32 -fill '#33ff66' -annotate +0+10 'make compliance  ->  16/16 checks' \
     -pointsize 20 -fill '#8aa0b4' \
     -annotate +0+80 'real IEC 61131-3 PLCs  -  Modbus / DNP3 / OPC UA / S7comm  -  protocol-aware detection' \
     "$WORK/title.png"

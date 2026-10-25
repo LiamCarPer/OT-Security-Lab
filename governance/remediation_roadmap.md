@@ -31,6 +31,7 @@ Priorities are derived from the risk register (risk level) and the gap analysis 
 | RD-12 | Centralized configuration management with cryptographic signing for logic updates (SL-3 path) | sl-mapping.md Section 4 | **P3** | High (8-12 weeks) | 6-12 months | Engineering |
 | RD-13 | Hardware data diode between L3 and L4; SIS zone separation for safety functions | README known limitations; architecture/to-be-architecture.md | **P3** | High (project) | 6-12 months | Architecture |
 | RD-14 | Adversary emulation playbooks (Industroyer, TRITON-style) added to test plan | README future roadmap | **P3** | Medium (4-6 weeks) | 6-12 months | Detection Engineering |
+| RD-15 | Restrict conduit C1 to approved Supervisory Modbus masters and add live Windows 4104/Sysmon telemetry for the PowerShell Sigma rules | Caldera operation report; `CLAIMS.md` | **P2** | Medium (3-5 weeks) | 3-6 months | Detection Engineering / Network |
 
 ## 3. Narrative per Priority Tier
 
@@ -40,7 +41,7 @@ The P1 items close the gaps that a low-resource attacker could exploit today. Th
 
 ### P2 - Short term (3-6 months)
 
-P2 matures the environment from "detects well" to "contains well". **RD-06** (encrypted conduits) directly addresses the highest residual-risk item in the register (RSK-012, sniffing) and is a prerequisite for the SL-3 path; **RD-07** extends evidence retention so log tampering (RSK-006) no longer erases detection history; **RD-08** brings host-level visibility to the EWS and HMI, compensating for the deliberate absence of antivirus on the PLCs (SR_3.1). **RD-10** institutionalizes the BIA recovery strategy — quarterly restore exercises prove the RTO/RPO targets of Section 4 of the BIA rather than assuming them.
+P2 matures the environment from "detects well" to "contains well". **RD-06** (encrypted conduits) directly addresses the highest residual-risk item in the register (RSK-012, sniffing) and is a prerequisite for the SL-3 path; **RD-07** extends evidence retention so log tampering (RSK-006) no longer erases detection history; **RD-08** brings host-level visibility to the EWS and HMI, compensating for the deliberate absence of antivirus on the PLCs (SR_3.1). **RD-10** institutionalizes the BIA recovery strategy — quarterly restore exercises prove the RTO/RPO targets of Section 4 of the BIA rather than assuming them. **RD-15** closes the two gaps surfaced by the first Caldera/PowerShell exercise: C1 currently permits any Supervisory host to reach Modbus/502 (the source allow-list is the detection control), and the PowerShell Sigma rules have no live Windows 4104 source.
 
 ### P3 - Mid term (6-12 months)
 

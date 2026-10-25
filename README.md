@@ -9,11 +9,13 @@
 [![Contributing](https://img.shields.io/badge/Contributing-Guide-green)](./CONTRIBUTING.md)
 [![Security](https://img.shields.io/badge/Security-Policy-important)](./SECURITY.md)
 
-**Live demo** — the SOC dashboard and `make compliance` passing 14/14 on a cold boot:
+**Live demo** — the SOC dashboard and a cold-boot `make compliance` run:
 
-![OT-Security-Lab demo: the live SOC dashboard and the compliance suite passing 11/11](./evidence/demo.gif)
+![OT-Security-Lab demo: the live SOC dashboard and the compliance suite](./evidence/demo.gif)
 
 <sub>Rendered from a real run: [`evidence/demo.mp4`](./evidence/demo.mp4) · reproducible via [`docs/media/capture-demo.sh`](./docs/media/capture-demo.sh).</sub>
+
+<sub>Recorded on an earlier 14-check run; the current gate adds the PowerShell and OT service-port scan scenarios.</sub>
 
 | Category | Specification |
 | :--- | :--- |
@@ -25,10 +27,10 @@
 
 ## At a glance
 
-**14/14 automated compliance checks pass on a cold boot** (`make compliance`):
-the gate boots the whole lab, samples the benign steady state, replays ten attack
-scenarios, and asserts both the JSON alert **and** the matching Loki ruler rule
-for each protocol scenario.
+**16/16 automated compliance checks pass on a cold boot** (`make compliance`):
+the gate boots the whole lab, samples the benign steady state, replays the
+attack scenarios, and asserts both the JSON alert **and** the matching Loki
+ruler rule for each protocol scenario.
 
 | Check | What it proves |
 | :--- | :--- |
@@ -46,14 +48,16 @@ for each protocol scenario.
 | Detection-Service Watchdog | A stopped detection producer raises `DETECTION_SERVICE_DOWN` |
 | Historian Ingestion | Modbus → L2 collector → InfluxDB → Grafana is live end to end |
 | Remote Engineering Hop | bastion → EWS over conduit C11 (key-only SSH) is reachable |
+| PowerShell Adversary Emulation | A PowerShell 7 FC6 write from the L2 operator workstation raises `UNAUTHORIZED_MODBUS_WRITE` |
+| OT Service-Port Scan | A SYN scan across Modbus/S7comm/DNP3/OPC UA ports raises `OT_PORT_SCAN` |
 
 | Metric | Value |
 | :--- | ---: |
-| Detection types in the live evidence | **16** |
+| Detection types in the live evidence | **17** |
 | ICS protocols covered | **4** (Modbus/TCP, DNP3, OPC UA, S7comm) |
 | IEC 62443-3-3 implementation score | **72.7%** across 12 requirements |
-| Automated tests | **94** |
-| CI gates (+ Compliance Gate) | **11** |
+| Automated tests | **130** (116 pytest + 14 Pester) |
+| CI gates (+ Compliance Gate) | **13** |
 | Zones / active conduits | **5** / **10** |
 
 Every number traces to an artifact and, where possible, an automated check — see
@@ -152,24 +156,28 @@ graph TD
 4.  [Threat Model & Risk Analysis](./threat-model/)
     *   [Threat Landscape](./threat-model/THREAT_MODEL.md)
     *   [MITRE ATT&CK for ICS Mapping](./threat-model/mitre-ics-mapping.md)
-5. Detection & Monitoring
-
-![Physics-Aware Violation Demo](./evidence/physics_violation_demo.png)
-
-    * [Modbus Anomaly Detection](./detection/rules/modbus_anomaly.py)
-    * [**Physics-Aware Safety Monitor**](./detection/rules/process_safety_violation.py)
-    * [Cross-Zone Traffic Alerter](./detection/rules/cross_zone_traffic.py)
+5.  Detection & Monitoring
+    *   [Modbus Anomaly Detection](./detection/rules/modbus_anomaly.py)
+    *   [**Physics-Aware Safety Monitor**](./detection/rules/process_safety_violation.py)
+    *   [Cross-Zone Traffic Alerter](./detection/rules/cross_zone_traffic.py)
     *   [Brute Force Detection](./detection/rules/ot_brute_force.py)
+    *   [OT Service-Port Scan](./detection/rules/ot_port_scan.py)
     *   [DNP3 Telemetry & Detections](./detection/rules/dnp3_dpi.py) — real opendnp3 outstation
     *   [OPC UA Telemetry & Detections](./detection/rules/opcua_dpi.py) — real asyncua server
     *   [S7comm Telemetry & Detections](./detection/rules/s7comm_dpi.py) — real S7 server
     *   [**Live Detection Evidence (JSON Logs)**](./detection/logs/alerts.json) — refreshed automatically by the Compliance Gate on every green run
-6.  [Hardening & Compliance](./hardening/)
-    *   [Security Hardening Checklist](./hardening/HARDENING_CHECKLIST.md)
-    *   [IEC 62443 Gap Analysis](./iec62443/gap-analysis.csv)
-7.  [Incident Response](./incident-response/)
-    *   [PLC Unauthorized Change Playbook](./incident-response/ir-playbook-unauthorised-plc-change.md)
-8.  [Engineering Post-Mortem](./LESSONS_LEARNED.md)
+6.  [Key Findings & Engineering Judgments](#6-key-findings--engineering-judgments)
+    *   [Adversary Emulation & Detection Validation](#61-adversary-emulation--detection-validation)
+    *   [PowerShell Toolkit](./powershell/)
+    *   [Optional MITRE Caldera profile](./lab-environment/caldera/)
+    *   [Purple-team report](./governance/purple-team/caldera-operation-01.md)
+7.  [Getting Started](#7-getting-started)
+8.  [Technologies Used](#8-technologies-used)
+    *   [CI/CD & Supply Chain](#81-cicd--supply-chain)
+9.  [Known Limitations & Future Work](#9-known-limitations--future-work)
+10. [Compliance Mapping](#10-compliance-mapping)
+
+![Physics-Aware Violation Demo](./evidence/physics_violation_demo.png)
 
 ### Integrated SIEM Dashboard (Loki & Grafana)
 ![SOC Overview Dashboard](evidence/SOC_Overview_Dashboard.png)
@@ -198,6 +206,7 @@ To bridge the gap between technical implementation and industrial standards (Exc
 *   **[Policies & Procedures](./governance/policies/):** Access control, change management (MOC), remote access, backup/DR drafts.
 *   **[Assessment Methodology](./governance/assessment-methodology/):** Scoping questionnaire, discovery checklist, findings template.
 *   **[Executive Package](./governance/executive/executive-summary.md) & [Tabletop Kit](./governance/tabletop/tabletop-exercise-kit.md):** Board-level brief and IR exercise materials.
+*   **[Purple-Team Report](./governance/purple-team/caldera-operation-01.md):** First adversary-emulation cycle, expected vs observed detections, and the resulting gap actions.
 *   **[To-Be Architecture](./architecture/to-be-architecture.md):** Phased future-state roadmap (data diode, SIS zone, OT SOC).
 
 ---
@@ -223,6 +232,27 @@ Railway/Transportation):
 
 ---
 
+## 6.1 Adversary Emulation & Detection Validation
+
+The lab validates detections through three complementary paths:
+
+| Path | What it proves | How to run |
+| :--- | :--- | :--- |
+| **Deterministic BAS harness** | Every scenario produces the expected JSON alert and Loki ruler state, including a benign baseline | `make compliance` |
+| **PowerShell 7 scenario** | A real FC6 write from the L2 operator workstation is detected as `UNAUTHORIZED_MODBUS_WRITE` | `docker exec ot_powershell pwsh -File /opt/otsec/Invoke-OTAdversaryEmulation.ps1 -Scenario UnauthorizedWrite -Target 172.21.0.10 -AllowLab` |
+| **MITRE Caldera (optional)** | The same OT TTPs can be orchestrated through a recognised BAS/emulation platform | `make caldera-image && make caldera` |
+
+The PowerShell toolkit lives in [`powershell/`](./powershell/README.md) and is
+tested with Pester and PSScriptAnalyzer in CI. The tooling comparison,
+including the AttackIQ Academy path, is in
+[`docs/adversary-emulation.md`](./docs/adversary-emulation.md). The optional
+Caldera profile lives in [`lab-environment/caldera/`](./lab-environment/caldera/README.md); it
+is deliberately excluded from the default boot and the compliance gate. The
+first operation and its detection gaps are documented in the
+[purple-team report](./governance/purple-team/caldera-operation-01.md).
+
+---
+
 ## 7. Getting Started
 To spin up the entire simulated environment (OpenPLC, HMI, Historian, and Firewall):
 
@@ -242,6 +272,17 @@ The gateway container applies the IEC 62443 zone firewall on boot and launches
 all custom detection rules as persistent services (`make up` is sufficient; no
 manual `docker cp`/`docker exec` steps are required).
 
+Optional adversary-emulation control plane (large image, built on demand):
+
+```bash
+make caldera-image   # build Caldera 5.3.0 once
+make caldera         # start Caldera + the attacker Sandcat agent
+# UI: http://localhost:8888 (red / ot-lab-caldera; API key ot-lab-caldera-api)
+```
+
+The default stack and the compliance gate do not depend on Caldera. See
+[`lab-environment/caldera/README.md`](./lab-environment/caldera/README.md).
+
 The OpenPLC runtimes are headless: each runs a committed `program.zip` under
 `plc/programs/`, built automatically by `plc/build.sh` from the ST sources with
 the STruC++ toolchain (no desktop editor required), then uploaded at boot by the
@@ -258,7 +299,7 @@ No local Docker required — the whole lab runs in your browser:
 3. Wait for the automatic build and boot (first time ~5-10 min; progress is
    visible in the terminal). The devcontainer forwards:
    Grafana `:3000` · SCADA HMI `:8080` (via the DMZ reverse proxy) ·
-   Bastion SSH `:2222` · Alertmanager `:9093`. (The PLC runtime API is internal
+   Bastion SSH `:2222` · Alertmanager `:9093` · Caldera (optional profile) `:8888`. (The PLC runtime API is internal
    to the Control zone and reached by the EWS, so it is not host-published.)
 4. Validate the environment:
    ```bash
@@ -287,14 +328,16 @@ No local Docker required — the whole lab runs in your browser:
     unprogrammed or unreachable.
 *   **Security Infrastructure:** `iptables` (Zone Firewall), Scapy (Custom IDS), `iputils-ping`, `nmap`
 *   **Frameworks:** IEC 62443-3-2 (Zones/Conduits), MITRE ATT&CK for ICS, ISA-95 Purdue Model
+*   **Adversary emulation:** MITRE/Apache Caldera (optional profile), custom Python/Scapy BAS harness, PowerShell 7 OTSec toolkit
 *   **Monitoring:** Grafana 11 + Loki 3 (SIEM), Promtail (log shipping), centralized JSON logging
-*   **DevSecOps:** GitHub Actions (CI + Compliance Gate + Release), ruff, bandit, shellcheck, gitleaks, pip-audit, checkov, Trivy, pytest, **OPA/conftest (policy-as-code)**, **Syft SBOMs with keyless Sigstore signing**, **pre-commit hooks**, **Dependabot**
+*   **DevSecOps:** GitHub Actions (CI + Compliance Gate + Release), ruff, bandit, shellcheck, gitleaks, pip-audit, checkov, Trivy, pytest, **Pester + PSScriptAnalyzer**, **OPA/conftest (policy-as-code)**, **Syft SBOMs with keyless Sigstore signing**, **pre-commit hooks**, **Dependabot**
 
 ## 8.1 CI/CD & Supply Chain
 
-*   **CI (`ci.yml`):** 11 gates — lint & SAST (ruff/bandit), unit tests (pytest), shellcheck, gitleaks, pip-audit, checkov, Trivy, OPA policy enforcement on the compose stack, pre-commit hooks, PLC bundle reproducibility (`plc/check_bundles.py`), and SBOM generation with keyless Sigstore signing and a provenance attestation.
+*   **CI (`ci.yml`):** 13 gates — lint & SAST (ruff/bandit), unit tests (pytest), PowerShell lint/tests (PSScriptAnalyzer + Pester), shellcheck, gitleaks, pip-audit, checkov, Trivy, OPA policy enforcement on the compose stack, pre-commit hooks, PLC bundle reproducibility (`plc/check_bundles.py`), and SBOM generation with keyless Sigstore signing and a provenance attestation.
 *   **Compliance Gate (`compliance-gate.yml`):** boots the full lab, replays all attack simulations, asserts detection, and **commits the fresh alert evidence back to `detection/logs/alerts.json`** — the repository always shows current, machine-generated evidence.
 *   **Release (`release.yml`):** tagged releases (v*) with a git-cliff changelog and evidence screenshots attached.
+*   **Caldera (`caldera.yml`):** manual, heavy workflow that builds Caldera, boots the optional profile, runs the `OT External Adversary` operation and uploads the evidence.
 *   **Dependabot:** weekly dependency updates for pip, GitHub Actions, and the lab Dockerfiles.
 
 ---
@@ -304,9 +347,11 @@ No local Docker required — the whole lab runs in your browser:
 *   **Logical vs. Physical Data Diode:** Unidirectional flow is enforced via `iptables`. High-consequence sites require hardware-based optical data diodes.
 *   **Protocol Scope:** Detection is implemented for **Modbus/TCP**, **DNP3**, **OPC UA** and **S7comm** (see `detection/rules/*_dpi.py` and the generated `siem/rules/ot_*.yaml`). The DNP3 emulation drives the real outstation with a raw master because the `dnp3-python` master aborts headless (see `LESSONS_LEARNED.md` §9.4).
 *   **Simulation vs. Emulation:** PLCs are software-simulated (OpenPLC) rather than hardware-emulated.
+*   **Commercial BAS:** Caldera is integrated as an optional profile; AttackIQ is commercial and is not deployed in the lab. The repository documents the mapping and the free AttackIQ Academy training path instead of claiming product experience.
+*   **Windows telemetry:** The PowerShell host is PowerShell 7 on Linux. The PowerShell Sigma rules target Windows 4104/Script Block Logging and are statically validated; live 4104 validation is a known gap until a Windows EDR endpoint is added.
 
 ### Future Roadmap:
-*   **EDR Integration:** Wazuh agent on the Engineering Workstation, correlated with network alerts in the SIEM.
+*   **EDR Integration:** Wazuh/Sysmon on a Windows Engineering Workstation with PowerShell 4104 and Sysmon event forwarding, correlated with the network alerts in the SIEM.
 *   **Suricata:** Deploy gateway-side Suricata (config and rules exist in `siem/suricata/`) with the ET ICS ruleset alongside the custom Scapy rules.
 *   **Automation:** SOAR containment is implemented gateway-side (`detection/rules/responder.py` drops repeat unauthorized-write sources; dry-run by default, armed with `OT_RESPONDER_ENFORCE=1`), with the Alertmanager webhook receiver and host-side playbook in `automation/`.
 

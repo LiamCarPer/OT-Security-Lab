@@ -104,7 +104,7 @@ This lab is not just a simulation; it is a demonstration of how **Engineering Ju
 
 ## 7. CI/CD Debugging: The Compliance Gate Saga
 
-Adding a machine-verified pipeline (10 CI gates + a live Compliance Gate that boots the lab and replays attacks) produced some of the hardest bugs in this project — all of them invisible to local development. These are the traps and the reasoning that cracked each one.
+Adding a machine-verified pipeline (13 CI gates + a live Compliance Gate that boots the lab and replays attacks) produced some of the hardest bugs in this project — all of them invisible to local development. These are the traps and the reasoning that cracked each one.
 
 ### 7.1 The Yanked Image Trap
 - **Problem:** The Trivy container-scan job failed instantly with no useful error; the Dockerfile-based action `aquasecurity/trivy-action@0.24.0` pulls `ghcr.io/aquasecurity/trivy:0.53.0`.
@@ -416,3 +416,45 @@ true turned out to be tractable by reusing the compiler the editor itself uses.
 **Outcome:** `process_safety_violation` now fires on the live OpenPLC process
 (alert `source_ip` is the real attacker, `tank_level_pct` an observed value),
 and the controller claim in the README is literally true.
+
+## 12. Adding PowerShell and Caldera Without Breaking the Lab
+
+### 12.1 PowerShell Must Be a Real Client, Not a Wrapper
+- **Problem:** A PowerShell script that shells out to `curl` or the Python
+  scenarios would not demonstrate PowerShell or exercise the detection.
+- **Solution:** `powershell/OTSec` implements MBAP/PDU encoding, TCP framing,
+  response parsing and a bounded adversary scenario in PowerShell itself. The
+  Pester suite pins the byte layout; the live compliance scenario proves a real
+  FC6 write is detected.
+- **The Lesson:** If the language is on the CV, the language must do the work.
+
+### 12.2 The Zone Placement Determines Whether the Scenario Is Possible
+- **Problem:** A normal `TcpClient` write from the EWS dies at the SYN because
+  C5 denies Modbus/502; no PDU reaches the gateway, so a Modbus-write detection
+  cannot fire.
+- **Solution:** Put the PowerShell operator workstation in L2, where C1 permits
+  Modbus/502. The source (`172.22.0.30`) is not in the write allow-list, so the
+  real write is detected.
+- **The Lesson:** In OT, "can the attack reach the asset?" is a firewall
+  question before it is a detection question.
+
+### 12.3 Caldera Is a Control Plane, Not a Detection Source
+- **Problem:** It is tempting to make Caldera the compliance gate. That couples
+  a deterministic regression suite to a large, stateful UI product.
+- **Solution:** Keep the Python gate as the regression test and add Caldera as
+  an optional profile that executes the same scripts through an
+  `OT External Adversary` profile. The operation evidence is captured
+  separately.
+- **The Lesson:** A BAS platform orchestrates; it does not replace the
+  repeatable assertions that protect the detection content.
+
+### 12.4 A Port Scan Is Not a Modbus Exception Flood
+- **Problem:** The existing `OT_BRUTE_FORCE_SCAN` rule only sees Modbus
+  exception responses. An nmap SYN scan produces no Modbus PDU, so it was
+  invisible as reconnaissance.
+- **Solution:** `ot_port_scan.py` tracks distinct OT destination ports per
+  source over a window, with a cooldown so one scan does not flood the alert
+  stream.
+- **The Lesson:** Detection coverage has to be expressed in the protocol
+  behaviour the adversary actually produces, not in the protocol you already
+  decode.

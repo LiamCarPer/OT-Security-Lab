@@ -27,10 +27,16 @@ tested), `Partial`, `Planned`.
 | Failed HMI logins are detected | Implemented | `lab-environment/hmi-login-monitor` → `HMI_LOGIN_FAILURE` | `tests/test_login_monitor.py`; `run_security_tests.py` scenario |
 | SBOMs are signed **and** attested with keyless Sigstore | Implemented | `ci.yml` (cosign sign-blob + attest-blob + verify) | CI job (needs network/oidc) |
 | Every lab Dockerfile is covered by Dependabot | Implemented | `.github/dependabot.yml` | static review |
-| 11 CI gates + Compliance Gate | Verified | `.github/workflows/` | GitHub Actions |
+| 13 CI gates + Compliance Gate | Verified | `.github/workflows/` | GitHub Actions |
 | Stateful C2-beacon detection (regular-interval denied egress) | Verified | `detection/rules/firewall_events.py` interval analysis → `C2_BEACON` | `run_security_tests.py` "C2 Beaconing" (alert **and** Loki rule) |
 | Detection-service availability is monitored | Verified | `detection/rules/watchdog.py` → `DETECTION_SERVICE_DOWN` | `run_security_tests.py` "Detection-Service Watchdog" |
 | Benign steady state produces no false OT alerts | Verified | `governance/testing/measure_baseline.py` (quiet window) | `run_security_tests.py` "Benign Baseline" |
+| PowerShell 7 module implements Modbus/TCP and detection operations | Verified | `powershell/OTSec/` | Pester (`tests/powershell/OTSec.Tests.ps1`); PSScriptAnalyzer CI job |
+| A PowerShell-based Modbus write is detected | Verified | `UNAUTHORIZED_MODBUS_WRITE` from `172.22.0.30` in `detection/logs/alerts.json` | `run_security_tests.py` "PowerShell Adversary Emulation" |
+| OT service-port scans are detected | Verified | `OT_PORT_SCAN` from the nmap scenario | `run_security_tests.py` "OT Service-Port Scan"; `tests/test_ot_port_scan.py` |
+| Sigma rules are statically validated | Implemented | `detection/sigma/*.yml` | `tests/test_sigma_rules.py` |
+| Optional Caldera profile with OT abilities | Implemented | `lab-environment/caldera/`; `ot-external-adversary.yml` | `tests/test_caldera_plugin.py`; manual `caldera.yml` workflow |
+| Caldera operation evidence is reproducible | Verified | `evidence/caldera_operation.json` (operation `77e7ca6a-88f3-41b9-8ca6-9e7b9ae1feee`) | `Invoke-OTCalderaOperation.ps1`; manual `caldera.yml` workflow |
 
 ## Known gaps (claimed nowhere, tracked here)
 | Item | Status | Notes |
@@ -41,3 +47,5 @@ tested), `Partial`, `Planned`.
 | SIS / BPCS separation (ADR-06) | Planned | PLC-03 runs on the shared control network; a dedicated SIS segment with a one-way feed is not built. |
 | Suricata sensor (ADR-07) | Planned | Passive monitoring is implemented via the gateway Scapy producers; the `tcpdump`->Suricata sensor is staged in `siem/suricata/` but not deployed. |
 | Simulated internet / C2 channel (ADR-08) | Partial | C2 *egress* from the compromised insider is modelled and detected (`C2_BEACON`); the firewall blocks it, so there is no successful C2 channel or simulated internet. |
+| AttackIQ / commercial BAS product | Not deployed | AttackIQ is commercial. The lab integrates Caldera and documents the shared BAS workflow; AttackIQ Academy training is the honest CV path. |
+| Live Windows 4104 / Sysmon telemetry | Planned | The PowerShell Sigma rules are statically validated; the lab has no Windows EDR endpoint yet. |
