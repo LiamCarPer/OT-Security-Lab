@@ -39,6 +39,7 @@ recorded in that file), so a stale or mistyped ID fails CI.
 | `PROCESS_SAFETY_VIOLATION` | T0836 | Modify Parameter |
 | `CROSS_ZONE_VIOLATION` | T0886 | Remote Services |
 | `OT_BRUTE_FORCE_SCAN` | T0846 | Remote System Discovery |
+| `OT_PORT_SCAN` | T0846 | Remote System Discovery |
 | `PLC_LOGIC_TAMPERED` | T0843 | Program Download |
 | `DNP3_UNAUTHORIZED_CONTROL` | T1692.001 | Command Message |
 | `DNP3_RESTART_COMMAND` | T0816 | Device Restart/Shutdown |

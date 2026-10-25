@@ -1,0 +1,23 @@
+title: OT Service Port Scan
+id: 209a6e27-520a-4ed9-ac70-9355ae052b1d
+status: test
+description: Detects a single source probing three or more OT service ports (Modbus 502, S7comm 102, DNP3 20000, OPC UA 4840, OpenPLC API 8443) inside the detection window, indicative of service discovery.
+references:
+  - https://attack.mitre.org/techniques/T0846/
+author: OT Security Lab
+date: 2026/10/25
+tags:
+  - attack.ics
+  - attack.ics.t0846
+logsource:
+  product: ot
+  service: network
+  category: gateway
+detection:
+  selection:
+    alert_type: OT_PORT_SCAN
+  condition: selection
+falsepositives:
+  - Authorised OT asset discovery or vulnerability scanning
+  - A misconfigured engineering tool probing several protocol endpoints
+level: medium

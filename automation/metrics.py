@@ -22,6 +22,7 @@ RULE_LABELS = {
     "OT_BRUTE_FORCE_SCAN": "T0846 Reconnaissance",
     "CROSS_ZONE_VIOLATION": "T0886 Lateral Movement",
     "PROCESS_SAFETY_VIOLATION": "T0836 Safety Interlock",
+    "OT_PORT_SCAN": "T0846 Remote System Discovery",
 }
 
 def load_alerts(path):

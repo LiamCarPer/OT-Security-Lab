@@ -22,5 +22,16 @@
     "error_count": 7,
     "mitre_id": "T0846",
     "description": "Excessive Modbus exceptions detected. Possible scanning or brute-force activity."
+  },
+  {
+    "timestamp": "2026-10-25T00:15:43.397Z",
+    "alert_type": "OT_PORT_SCAN",
+    "source_ip": "172.24.0.10",
+    "dest_ips": "172.21.0.10,172.21.0.11,172.21.0.12",
+    "dest_ports": "102,502,20000",
+    "port_count": 3,
+    "window_seconds": 60,
+    "mitre_id": "T0846",
+    "description": "A single source probed multiple OT service ports: service discovery."
   }
 ]

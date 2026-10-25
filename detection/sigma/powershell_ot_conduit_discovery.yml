@@ -1,0 +1,37 @@
+title: PowerShell OT Conduit Discovery
+id: 7fe6801f-7c37-41f1-a861-96e5e2c9bdd2
+status: experimental
+description: Detects PowerShell script-block logging events that probe OT service ports (Modbus, S7comm, DNP3, OPC UA or the OpenPLC API) from an engineering host.
+references:
+  - https://attack.mitre.org/techniques/T0846/
+  - https://attack.mitre.org/techniques/T1059.001/
+author: OT Security Lab
+date: 2026/10/25
+tags:
+  - attack.ics
+  - attack.ics.t0846
+  - attack.discovery
+  - attack.discovery.t1059.001
+logsource:
+  product: windows
+  service: powershell
+  category: ps_script
+detection:
+  selection_client:
+    ScriptBlockText|contains:
+      - 'Test-NetConnection'
+      - 'System.Net.Sockets.TcpClient'
+      - 'Invoke-OTAdversaryEmulation'
+      - 'nmap'
+  selection_ot_ports:
+    ScriptBlockText|contains:
+      - '502'
+      - '102'
+      - '20000'
+      - '4840'
+      - '8443'
+  condition: all of selection_*
+falsepositives:
+  - Legitimate OT network troubleshooting by an engineer
+  - Vulnerability scanning performed under an approved change record
+level: medium

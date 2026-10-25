@@ -20,6 +20,10 @@ and copied from its `deploy/loki/rules/` output.
   all rules sit flat here and no other files may be present.
   `configs/loki-config.yaml` enables the ruler.
 
+`alerting-rules.yml` is hand-written and includes the `OT_PORT_SCAN` rule
+(`OT_Port_Scan_From_External_Zone`), which evaluates the alert stream rather
+than the generated NDR bundle.
+
 The generated rules match normalized events shipped by the lab's telemetry
 producers: `detection/rules/firewall_events.py` emits `ot_firewall` events, and
 `detection/rules/{dnp3,opcua,s7comm}_dpi.py` emit the `ot_ndr` DNP3/OPC UA/S7comm

@@ -1,0 +1,40 @@
+title: PowerShell Modbus Client Against OT Controller
+id: 05888bf9-9880-4624-bcbf-89d94dd04871
+status: experimental
+description: Detects PowerShell script-block logging events that open a TCP client to Modbus/TCP port 502 and issue write function codes, indicative of a PowerShell-based OT attack.
+references:
+  - https://attack.mitre.org/techniques/T0831/
+  - https://attack.mitre.org/techniques/T1059.001/
+author: OT Security Lab
+date: 2026/10/25
+tags:
+  - attack.ics
+  - attack.ics.t0831
+  - attack.execution
+  - attack.execution.t1059.001
+logsource:
+  product: windows
+  service: powershell
+  category: ps_script
+detection:
+  selection_client:
+    ScriptBlockText|contains:
+      - 'System.Net.Sockets.TcpClient'
+      - 'Invoke-OTModbus'
+      - 'Invoke-OTModbusWrite'
+  selection_modbus:
+    ScriptBlockText|contains:
+      - '502'
+      - 'Modbus'
+  selection_write:
+    ScriptBlockText|contains:
+      - 'WriteSingleRegister'
+      - 'WriteMultipleRegisters'
+      - 'ConvertTo-OTModbusFrame'
+      - '0x06'
+      - '0x10'
+  condition: all of selection_*
+falsepositives:
+  - Legitimate OT engineering automation using the OTSec module
+  - Authorised maintenance scripts run under a change record
+level: high

@@ -13,6 +13,7 @@ are launched automatically on gateway startup by `lab-environment/scripts/start_
 | `process_safety_violation.py` | Inhibit Response / Impair Process Control | **T0836** | Stateful process shadowing: alerts when a safety interlock would be violated (e.g., opening the inlet valve while tank level > 90%). Shadows the **live** level from real PLC→HMI Modbus responses (register map in `plc/register-map.md`). |
 | `cross_zone_traffic.py` | Lateral Movement | **T0886** | Detects direct IP communication between Level 4 (IT `172.24.0.0/24`) and Level 1 (Control `172.21.0.0/24`). |
 | `ot_brute_force.py` | Reconnaissance | **T0846** | Sliding-window detection of high-frequency Modbus Exception codes (FC > 128), indicating scanning/brute-force. |
+| `ot_port_scan.py` | Reconnaissance | **T0846** | Stateful detection of one source probing three or more OT service ports (502/102/20000/4840/8443), including probes the firewall drops. |
 | `firewall_events.py` | (telemetry) | — | Ships a normalized `ot_firewall` event to Loki for each new cross-zone flow the conduit policy denies, so the generated detection bundle in `siem/rules/` can evaluate firewall drops. |
 | `dnp3_dpi.py` | Manipulation of Control / Inhibit Response / Discovery | **T1692.001, T0816, T0878** | Live DNP3 decoder (link/transport/application). Ships the `ot_ndr`/`dnp3` contract to Loki and writes unauthorized-control, cold/warm-restart and disable-unsolicited alerts. |
 | `opcua_dpi.py` | Discovery / Manipulation of Control / Execution | **T0888, T1692.001, T0871** | Live OPC UA decoder (message header + service NodeId). Ships the `ot_ndr`/`opcua` contract and writes browse, write and method-call alerts. Only plaintext (None/Sign) channels expose the service. |
@@ -72,6 +73,19 @@ to Loki for SIEM visualization and alerting (`siem/`).
   (`ci.yml`) enforces linting (ruff), static analysis (bandit), and the tests.
 - The `Compliance Gate` workflow boots the lab, runs the attack simulations, and
   asserts that each rule produced the expected alerts.
+
+## 4.1 Sigma rules and PowerShell coverage
+
+`detection/sigma/` contains the portable Sigma rules. The PowerShell rules
+(`powershell_ot_modbus_client.yml`, `powershell_ot_conduit_discovery.yml`)
+target Windows Script Block Logging (event 4104) and are **statically
+validated** by `tests/test_sigma_rules.py`; the lab does not yet run a Windows
+EDR endpoint, so they are not live-validated. The live PowerShell scenario in
+`make compliance` validates the network effect instead:
+`UNAUTHORIZED_MODBUS_WRITE` from the L2 operator workstation.
+
+The `OT_PORT_SCAN` Sigma rule is live-validated by the nmap scenario in
+`run_security_tests.py`.
 
 ## 5. Sample Alerts & Evidence
 

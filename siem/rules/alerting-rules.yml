@@ -37,6 +37,15 @@ groups:
           summary: "Process safety interlock violation"
           description: "A protocol-valid command would violate the physical safety logic of the process."
 
+      - alert: OT_Port_Scan_From_External_Zone
+        expr: sum(count_over_time({job="ot_alerts"} | json | alert_type="OT_PORT_SCAN" [5m])) > 0
+        labels:
+          severity: medium
+          mitre: T0846
+        annotations:
+          summary: "OT service-port scan detected"
+          description: "A single source probed three or more OT service ports (Modbus, S7comm, DNP3, OPC UA or OpenPLC API)."
+
   - name: ot_siem_health
     rules:
       - alert: NoOTAlertsIngested

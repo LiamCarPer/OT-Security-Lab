@@ -1,5 +1,5 @@
 # Cybersecurity Test Plan: Industrial Lab
-**System:** OT Security Lab v1.5
+**System:** OT Security Lab v1.6
 **Reference:** ISA/IEC 62443-4-1 (V&V), MAGERIT Safeguard Verification
 
 ## 1. Test Objectives
@@ -7,7 +7,7 @@ To verify the effectiveness of the safeguards identified in the **MAGERIT Risk A
 
 ## 2. Test Environment
 - **Zone:** Level 3 (Ops Network)
-- **Tooling:** Docker-based Attacker (ot_attacker)
+- **Tooling:** Docker-based attacker (`ot_attacker`), PowerShell 7 operator workstation (`ot_powershell`), optional MITRE Caldera profile
 - **Monitors:** Grafana SIEM (Level 4), `alerts.json` (Local)
 
 ## 3. Test Cases (Casos de Prueba)
@@ -31,5 +31,22 @@ To verify the effectiveness of the safeguards identified in the **MAGERIT Risk A
 - **Expected Result:** Alert `PROCESS_SAFETY_VIOLATION` in SIEM.
 - **Status:** PASS
 
+### [TC-04] PowerShell Adversary Emulation
+- **Description:** Verify that a PowerShell 7 Modbus FC6 write from the L2 operator workstation is detected.
+- **Execution:** `pwsh -File /opt/otsec/Invoke-OTAdversaryEmulation.ps1 -Scenario UnauthorizedWrite -Target 172.21.0.10 -AllowLab`.
+- **Expected Result:** Alert `UNAUTHORIZED_MODBUS_WRITE` with source `172.22.0.30`.
+- **Status:** PASS
+
+### [TC-05] OT Service-Port Scan
+- **Description:** Verify that a SYN scan across Modbus, S7comm, DNP3 and OPC UA ports is detected.
+- **Execution:** `nmap -Pn -n -p 502,102,20000,4840 172.21.0.10-12`.
+- **Expected Result:** Alert `OT_PORT_SCAN`.
+- **Status:** PASS
+
 ## 4. Test Summary
-All three critical safeguards have been verified through automated simulation. The system correctly correlates network telemetry with physical state to identify high-impact process threats.
+The authoritative scenario list is `governance/testing/run_security_tests.py`; it
+covers the protocol detections, the benign baseline, the PowerShell scenario,
+the OT port scan, the detection-service watchdog, the historian path and the
+remote-engineering hop. The three original safety-critical safeguards remain
+verified, and the two new scenarios extend coverage to PowerShell and
+reconnaissance behaviour.

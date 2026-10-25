@@ -110,6 +110,24 @@ TESTS = [
         "expected": ["C2_BEACON"],
         "loki_rules": ["C2_Beacon_From_OT_Host"],
     },
+    {
+        "name": "PowerShell Adversary Emulation",
+        "cmd": (
+            "docker exec ot_powershell pwsh -NoProfile "
+            "-File /opt/otsec/Invoke-OTAdversaryEmulation.ps1 "
+            "-Scenario UnauthorizedWrite -Target 172.21.0.10 -Register 1 -TestValue 42 -AllowLab"
+        ),
+        "expected": ["UNAUTHORIZED_MODBUS_WRITE"],
+    },
+    {
+        "name": "OT Service-Port Scan",
+        "cmd": (
+            "docker exec ot_attacker nmap -Pn -n -T4 --max-retries 1 --host-timeout 15s "
+            "-p 502,102,20000,4840 172.21.0.10-12"
+        ),
+        "expected": ["OT_PORT_SCAN"],
+        "loki_rules": ["OT_Port_Scan_From_External_Zone"],
+    },
 ]
 
 
@@ -224,6 +242,25 @@ def wait_for_insider_ready(retries=36, delay=5):
     return False
 
 
+def wait_for_powershell_ready(retries=36, delay=5):
+    """Wait until the PowerShell workstation has pwsh and the Control route."""
+    checks = [
+        "docker exec ot_powershell pwsh -NoProfile -Command 'exit 0'",
+        "docker exec ot_powershell sh -c 'ip route | grep -q 172.21.0.0/24'",
+    ]
+    for attempt in range(1, retries + 1):
+        if all(
+            subprocess.run(check, shell=True, capture_output=True, text=True).returncode == 0
+            for check in checks
+        ):
+            print("[READY] PowerShell workstation initialized (pwsh + Control route).")
+            return True
+        if attempt % 6 == 0:
+            print(f"[WAIT] PowerShell workstation not ready yet (attempt {attempt}/{retries})...")
+        time.sleep(delay)
+    return False
+
+
 def loki_rule_states():
     """Return ``{rule_name: (state, health)}`` from the Loki ruler."""
     try:
@@ -259,6 +296,7 @@ def dump_diagnostics():
         "docker exec ot_gateway sh -c 'for f in /detection/logs/*.out; do echo --- $f; tail -10 $f; done'",
         "docker exec ot_attacker sh -c 'ip route'",
         "docker logs ot_insider --tail 30",
+        "docker logs ot_powershell --tail 30",
         "docker logs ot_dnp3_outstation --tail 15",
         "docker logs ot_opcua_server --tail 15",
         "docker logs ot_s7_plc --tail 15",
@@ -292,6 +330,10 @@ def main():
 
     if not wait_for_insider_ready():
         print("[FATAL] Insider container not ready after timeout.")
+        return 1
+
+    if not wait_for_powershell_ready():
+        print("[FATAL] PowerShell workstation not ready after timeout.")
         return 1
 
     results = []
