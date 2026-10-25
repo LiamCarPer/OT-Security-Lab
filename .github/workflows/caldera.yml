@@ -1,0 +1,68 @@
+name: Caldera Adversary Emulation (Manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Optional, heavy workflow. The default CI and Compliance Gate stay
+# deterministic; this workflow is the reproducible live Caldera exercise.
+jobs:
+  caldera-operation:
+    name: Build Caldera, Boot Lab, Run OT Operation
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CALDERA_API_KEY: ot-lab-caldera-api
+      CALDERA_URL: http://caldera:8888
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the optional Caldera image
+        run: make caldera-image
+
+      - name: Boot the lab with the Caldera profile
+        working-directory: lab-environment
+        run: docker compose --profile caldera up -d --build --wait --wait-timeout 900
+
+      - name: Wait for the Sandcat agent
+        run: |
+          for attempt in $(seq 1 60); do
+            agents=$(curl -fsS -H "KEY: ${CALDERA_API_KEY}" \
+              http://localhost:8888/api/v2/agents 2>/dev/null || true)
+            if printf '%s' "$agents" | grep -q '"paw"'; then
+              echo "Sandcat agent checked in."
+              exit 0
+            fi
+            echo "waiting for agent (${attempt}/60)..."
+            sleep 3
+          done
+          echo "Sandcat agent did not check in." >&2
+          docker logs ot_attacker --tail 80 || true
+          docker logs ot_caldera --tail 120 || true
+          exit 1
+
+      - name: Run the OT External Adversary operation
+        run: |
+          pwsh -File powershell/Invoke-OTCalderaOperation.ps1 \
+            -CalderaUrl http://localhost:8888 \
+            -ApiKey "$CALDERA_API_KEY" \
+            -AdversaryName "OT External Adversary" \
+            -EvidencePath evidence/caldera_operation.json
+
+      - name: Collect evidence
+        if: always()
+        run: |
+          mkdir -p evidence/ci
+          cp evidence/caldera_operation.json evidence/ci/ 2>/dev/null || true
+          cp detection/logs/alerts.json evidence/ci/ 2>/dev/null || true
+          docker logs ot_caldera > evidence/ci/caldera.log 2>&1 || true
+          docker logs ot_attacker > evidence/ci/attacker.log 2>&1 || true
+
+      - name: Upload Caldera evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: caldera-operation-evidence
+          path: evidence/ci/

@@ -47,6 +47,8 @@ rule-alerts.json/
 htmlcov/
 coverage.xml
 bandit.json
+testResults.xml
+evidence/ci/
 
 # PLC build toolchain (downloaded by plc/build.sh)
 plc/.toolchain/

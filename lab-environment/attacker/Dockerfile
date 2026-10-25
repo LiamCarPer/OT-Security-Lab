@@ -11,6 +11,7 @@ RUN apt-get update \
         iputils-ping \
         iproute2 \
         nmap \
+        curl \
     && rm -rf /var/lib/apt/lists/*
 
 # checkov:skip=CKV_DOCKER_3:Attacker needs NET_ADMIN/NET_RAW (pivot routes,

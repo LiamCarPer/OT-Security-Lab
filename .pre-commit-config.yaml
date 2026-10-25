@@ -23,7 +23,11 @@ repos:
     rev: v0.10.0.1
     hooks:
       - id: shellcheck
-        args: [lab-environment/network-config/firewall-rules.sh, lab-environment/scripts/start_ids.sh]
+        args:
+          - lab-environment/network-config/firewall-rules.sh
+          - lab-environment/scripts/start_ids.sh
+          - lab-environment/attacker/caldera-agent.sh
+          - lab-environment/caldera/build.sh
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
