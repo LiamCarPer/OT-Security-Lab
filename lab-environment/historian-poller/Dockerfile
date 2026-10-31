@@ -2,7 +2,7 @@
 #
 # checkov:skip=CKV_DOCKER_3:Root is required to install the Control/Ops routes
 #   via the gateway (CAP_NET_ADMIN); only that capability is retained.
-FROM python:3.14-slim
+FROM python:3.15-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends iproute2 \
