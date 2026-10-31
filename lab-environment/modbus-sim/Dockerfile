@@ -2,7 +2,7 @@
 #
 # checkov:skip=CKV_DOCKER_3:Port 502 is privileged; the server binds it as root.
 #   Only NET_BIND_SERVICE is retained and no-new-privileges is enforced.
-FROM python:3.14-slim
+FROM python:3.15-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends iproute2 \
