@@ -18,12 +18,12 @@ enforcement are implemented and test-verified; the material weaknesses are the
 absence of implemented historian backups (SR_7.3, simulated) and unencrypted
 control protocols (SR_4.1).
 
-## 2. Detection Posture (evidence window: 2026-11-24T01:42:07.451003 → 2026-11-24T01:44:51.681749)
+## 2. Detection Posture (evidence window: 2026-11-24T01:49:40.394101 → 2026-11-24T01:52:20.686022)
 | Detection | Alerts |
 | :--- | ---: |
 | `CROSS_ZONE_VIOLATION` | 74 |
 | `UNAUTHORIZED_MODBUS_WRITE` | 27 |
-| `PROCESS_SAFETY_VIOLATION` | 6 |
+| `PROCESS_SAFETY_VIOLATION` | 7 |
 | `DNP3_UNAUTHORIZED_CONTROL` | 6 |
 | `S7COMM_PROGRAM_DOWNLOAD` | 6 |
 | `S7COMM_PROGRAM_UPLOAD` | 6 |
@@ -38,7 +38,7 @@ control protocols (SR_4.1).
 | `OT_PORT_SCAN` | 2 |
 | `C2_BEACON` | 1 |
 | `DETECTION_SERVICE_DOWN` | 1 |
-| **Total** | **150** |
+| **Total** | **151** |
 
 Distinct source addresses observed: 172.22.0.30, 172.23.0.20, 172.24.0.10, 172.24.0.30. Source:
 `detection/logs/alerts.json`, aggregated by `automation/metrics.py`.
@@ -50,7 +50,7 @@ Registered risks by level: **1 EXTREME, 8 HIGH, 3 MEDIUM, 0 LOW** (see `governan
 - **Compliance:** IEC 62443-3-3 implementation score **72.7%**
   (weighted; see `iec62443/compliance-summary.md`).
 - **Zoning:** IEC 62443-3-2 zones/conduits verified by `tests/test_zone_isolation.py`.
-- **Detection:** 150 alerts from 4 distinct
+- **Detection:** 151 alerts from 4 distinct
   sources; `make compliance` asserts every scenario is detected.
 - **Recovery:** RTO/RPO defined per asset in `governance/bia.md`; restore
   exercises outstanding (roadmap RD-10).
