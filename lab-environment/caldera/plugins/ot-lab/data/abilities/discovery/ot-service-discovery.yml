@@ -1,0 +1,16 @@
+- id: 9e4b7259-4fa8-40a8-8022-cdb4e127c9d2
+  name: OT Service Discovery
+  description: >
+    Probe the control zone for Modbus/TCP (502), S7comm (102), DNP3 (20000),
+    OPC UA (4840) and the OpenPLC API (8443) from the enterprise adversary host.
+    The zone firewall drops the probes, but the gateway observes the SYNs.
+  tactic: discovery
+  technique:
+    attack_id: T0846
+    name: Remote System Discovery
+  platforms:
+    linux:
+      sh:
+        command: |
+          nmap -Pn -n -T4 --max-retries 1 --host-timeout 20s -p 502,102,20000,4840,8443 172.21.0.10-12
+        timeout: 120

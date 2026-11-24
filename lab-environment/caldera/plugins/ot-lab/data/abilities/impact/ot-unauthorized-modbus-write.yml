@@ -1,0 +1,16 @@
+- id: 8190254e-3da8-4fc1-b0e7-88a29bc67bc1
+  name: Unauthorized Modbus Write
+  description: >
+    Send Modbus FC6 writes and an exception burst from the enterprise adversary
+    host. The gateway detects the cross-zone flow, the unauthorized write and
+    the exception-rate reconnaissance pattern.
+  tactic: impact
+  technique:
+    attack_id: T0831
+    name: Manipulation of Control
+  platforms:
+    linux:
+      sh:
+        command: |
+          python3 /attacker/simulate_attack.py
+        timeout: 120

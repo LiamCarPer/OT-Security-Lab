@@ -1,4 +1,5 @@
 # PowerShell 7 operator workstation (Supervisory / L2).
+# checkov:skip=CKV_DOCKER_3: Root is required to install the Control-zone route with NET_ADMIN; all other capabilities are dropped.
 #
 # The image is pinned by digest. The host is deliberately placed in L2 rather
 # than L3: conduit C1 permits Supervisory -> Control Modbus/502, while C5

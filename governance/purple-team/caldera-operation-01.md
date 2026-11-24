@@ -1,8 +1,8 @@
 # Purple-Team Report: First Adversary-Emulation Cycle
 
-**Date:** 2026-10-25  
+**Date:** 2026-10-25
 **Scope:** Isolated OT Security Lab (water-treatment range), not a production
-engagement.  
+engagement.
 **Objective:** Validate that the lab's detection content catches a
 PowerShell-based OT write and an OT service-port scan, and record the gaps that
 the exercise exposed.

@@ -1,0 +1,17 @@
+- id: 681d7620-7402-42b2-8c57-1100ef65a505
+  name: Process Safety Interlock Stimulus
+  description: >
+    Inject the unsafe process precondition and issue an OPEN command while the
+    tank is above the safety envelope. This is the deterministic stimulus used
+    by the compliance gate when the live process is not already in the unsafe
+    band; the detector still evaluates the real process logic.
+  tactic: impact
+  technique:
+    attack_id: T0836
+    name: Modify Parameter
+  platforms:
+    linux:
+      sh:
+        command: |
+          python3 /attacker/simulate_process_violation_spoof.py
+        timeout: 120

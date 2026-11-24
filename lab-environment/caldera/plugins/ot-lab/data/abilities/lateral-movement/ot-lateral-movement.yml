@@ -1,0 +1,15 @@
+- id: 54c831c4-49ff-4edc-a646-337e689ac75a
+  name: OT Lateral Movement
+  description: >
+    Probe the Intake, Treatment and Distribution controllers in sequence to
+    emulate east-west movement inside the control zone.
+  tactic: lateral-movement
+  technique:
+    attack_id: T0886
+    name: Remote Services
+  platforms:
+    linux:
+      sh:
+        command: |
+          python3 /attacker/simulate_lateral_movement.py
+        timeout: 120

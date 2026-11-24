@@ -24,6 +24,8 @@ wheels/
 # Docker
 .docker/
 data/
+!lab-environment/caldera/plugins/ot-lab/data/
+!lab-environment/caldera/plugins/ot-lab/data/**
 db/
 
 # Project Specific

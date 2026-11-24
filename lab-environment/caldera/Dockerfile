@@ -1,4 +1,6 @@
 # MITRE/Apache Caldera, built from a pinned release tag.
+# checkov:skip=CKV_DOCKER_2: The healthcheck is defined in the compose service (HTTP port is a runtime concern).
+# checkov:skip=CKV_DOCKER_3: Caldera upstream runs as root and builds Sandcat agents; this is an isolated lab control plane.
 #
 # The pre-built ghcr.io/apache/caldera image is convenient but the registry
 # access is not guaranteed in CI and the project recommends building locally.

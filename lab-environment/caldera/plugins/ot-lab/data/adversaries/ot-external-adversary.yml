@@ -1,0 +1,11 @@
+id: 1ef8dee7-e814-455e-99d3-d7d3e09ca515
+name: OT External Adversary
+description: >
+  A deterministic external-adversary profile for the water-treatment lab:
+  discover the control-zone services, attempt unauthorized Modbus writes,
+  move laterally across the PLCs and exercise the process-safety interlock.
+atomic_ordering:
+  - 9e4b7259-4fa8-40a8-8022-cdb4e127c9d2
+  - 8190254e-3da8-4fc1-b0e7-88a29bc67bc1
+  - 54c831c4-49ff-4edc-a646-337e689ac75a
+  - 681d7620-7402-42b2-8c57-1100ef65a505
