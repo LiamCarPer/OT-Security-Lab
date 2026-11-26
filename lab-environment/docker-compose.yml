@@ -471,6 +471,27 @@ services:
       it_network:
         ipv4_address: 172.24.0.10
 
+  snmp-switch:
+    build: ./snmp
+    container_name: ot_snmp_switch
+    restart: unless-stopped
+    mem_limit: 64m
+    networks:
+      ops_network:
+        ipv4_address: 172.23.0.30
+
+  snmp-poller:
+    build: ./snmp
+    container_name: ot_snmp_poller
+    restart: unless-stopped
+    mem_limit: 64m
+    command: python3 -u /app/poll.py
+    volumes:
+      - ../detection/logs:/logs
+    networks:
+      ops_network:
+        ipv4_address: 172.23.0.31
+
   # 7c. Optional MITRE/Apache Caldera control plane (Enterprise / L4).
   # Not part of the default boot or the compliance gate. The custom ot-lab
   # plugin supplies the OT adversary profile; the Sandcat agent runs inside the
