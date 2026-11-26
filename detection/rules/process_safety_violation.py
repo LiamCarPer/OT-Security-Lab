@@ -181,7 +181,8 @@ def poll_level_loop():
 def main():
     print("--- Starting Physics-Aware Process Monitor ---")
     print(f"Monitoring PLC {PLC_IP} for Tank Overflow conditions (Threshold: {LEVEL_THRESHOLD}%)...")
-    threading.Thread(target=poll_level_loop, daemon=True).start()
+    if os.getenv("OT_POLL_LEVEL", "1") == "1":
+        threading.Thread(target=poll_level_loop, daemon=True).start()
     scapy.sniff(iface=common.capture_interfaces(), filter="tcp port 502", prn=process_packet, store=0)
 
 if __name__ == "__main__":
