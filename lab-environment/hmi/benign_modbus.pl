@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 # Benign Modbus traffic from the approved HMI (172.22.0.10).
 #
-# Reads the normal HR0..6 block, writes the unused pump-speed register
-# (HR1 = 50) as an approved writer, and every tenth cycle reads the unmapped
-# HR100 to produce a benign exception response. No process or safety register
-# is changed.
+# Reads the normal HR0..6 block, writes the pump-speed register (HR1 = 50) as
+# an approved writer and restores its previous value, and every tenth cycle
+# reads the unmapped HR100 to produce a benign exception response. No process or
+# safety register is left changed.
 use strict;
 use warnings;
 use IO::Socket::INET;
@@ -35,11 +35,18 @@ while (1) {
     my $read = exchange($sock, pack("C n n", 3, 0, 7), $tid);
     print "[modbus] read HR0..6 ", (defined $read ? unpack("H*", $read) : "no response"), "\n";
 
-    my $write = exchange($sock, pack("C n n", 6, 1, 50), ($tid + 1) & 0xffff);
+    my $before = exchange($sock, pack("C n n", 3, 1, 1), ($tid + 1) & 0xffff);
+    my $original = 0;
+    if (defined $before && length($before) >= 5) {
+        $original = unpack("n", substr($before, 3, 2));
+    }
+    my $write = exchange($sock, pack("C n n", 6, 1, 50), ($tid + 2) & 0xffff);
     print "[modbus] write HR1=50 ", (defined $write ? unpack("H*", $write) : "no response"), "\n";
+    my $restore = exchange($sock, pack("C n n", 6, 1, $original), ($tid + 3) & 0xffff);
+    print "[modbus] restore HR1=$original ", (defined $restore ? unpack("H*", $restore) : "no response"), "\n";
 
     if ($cycle % 10 == 0) {
-        my $probe = exchange($sock, pack("C n n", 3, 100, 1), ($tid + 2) & 0xffff);
+        my $probe = exchange($sock, pack("C n n", 3, 100, 1), ($tid + 4) & 0xffff);
         print "[modbus] probe HR100 ", (defined $probe ? unpack("H*", $probe) : "no response"), "\n";
     }
 
