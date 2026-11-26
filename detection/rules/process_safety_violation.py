@@ -3,11 +3,15 @@
 # Logic: Alert if the Inlet Valve (HR 0) is OPENED while the Tank Level (HR 5)
 # is above the safety envelope.
 #
-# State shadowing: the process image is learned passively from real PLC -> HMI
-# Modbus FC 3 responses (no injected/spoofed state). The register map is
-# documented in plc/register-map.md and is overridable via OT_* env vars.
+# State shadowing: the process image is learned from real PLC -> HMI Modbus FC 3
+# responses and, when the HMI is not polling, from a dedicated FC 3 poll. No
+# state is injected. The register map is documented in plc/register-map.md and
+# is overridable via OT_* env vars.
 import json
 import os
+import socket
+import time
+import threading
 from datetime import datetime
 
 import scapy.all as scapy
@@ -15,6 +19,7 @@ from otdpi import common
 
 # 1. Configuration
 PLC_IP = os.getenv("OT_PLC_IP", "172.21.0.10")
+PLC_PORT = int(os.getenv("OT_PLC_PORT", "502"))
 PLC_ASSET = os.getenv("OT_PLC_ASSET", "PLC-01")
 INLET_VALVE_REG = int(os.getenv("OT_REG_INLET_VALVE", "0"))
 TANK_LEVEL_REG = int(os.getenv("OT_REG_TANK_LEVEL", "5"))
@@ -149,9 +154,34 @@ def process_packet(packet):
                     )
             shadow_registers[INLET_VALVE_REG] = value
 
+def poll_level_loop():
+    """Keep the level shadow current even if the HMI is not polling.
+
+    The original monitor only learned the level from PLC -> HMI responses. When
+    the HMI's data source is down, the shadow freezes and a real unsafe write is
+    invisible. The gateway can reach the PLC's Modbus server directly, so poll
+    the level on a dedicated connection and keep the passive shadow as well.
+    """
+    request = bytes.fromhex("000100000006010300050001")
+    while True:
+        try:
+            with socket.create_connection((PLC_IP, PLC_PORT), timeout=2) as sock:
+                while True:
+                    sock.sendall(request)
+                    response = sock.recv(256)
+                    if len(response) >= 11 and response[7] == 3:
+                        shadow_registers[TANK_LEVEL_REG] = int.from_bytes(
+                            response[9:11], "big"
+                        )
+                    time.sleep(0.5)
+        except OSError:
+            time.sleep(2)
+
+
 def main():
     print("--- Starting Physics-Aware Process Monitor ---")
     print(f"Monitoring PLC {PLC_IP} for Tank Overflow conditions (Threshold: {LEVEL_THRESHOLD}%)...")
+    threading.Thread(target=poll_level_loop, daemon=True).start()
     scapy.sniff(iface=common.capture_interfaces(), filter="tcp port 502", prn=process_packet, store=0)
 
 if __name__ == "__main__":
