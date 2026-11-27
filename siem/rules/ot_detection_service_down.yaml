@@ -5,19 +5,26 @@ groups:
   - alert: Detection_Service_Stopped
     annotations:
       author: Liam Carvajal
-      description: 'Detects a detection producer that has stopped running. In OT,
-        a sensor that dies - from a crash or from an adversary stopping it - leaves
-        the plant blind without any event on the wire. The gateway watchdog checks
-        every producer process and raises this so the loss of visibility is itself
-        detected (Inhibit Response Function).
+      description: 'Detects a detection producer that has stopped running. A sensor
+        that dies,
+
+        from a crash or from an adversary stopping it, leaves the plant blind without
+
+        any event on the wire. The watchdog checks every producer process and emits
+
+        this event so the loss of visibility is itself detected (Inhibit Response
+
+        Function).
 
 
-        This is the counterpart to the "monitor the monitors" requirement: the
-        absence of an expected heartbeat is the signal.
+        This is the counterpart to "monitor the monitors": the absence of an expected
+
+        heartbeat is the signal. The producer name is carried in `producer`.
 
         '
       summary: Detection Service Stopped
-    expr: sum(count_over_time({job=~".+"} | logfmt | alert_type=~`(?i)^DETECTION_SERVICE_DOWN$`
-      [5m])) or vector(0) > 0
+    expr: sum(count_over_time({job=~".+", service="watchdog"} | logfmt | event_type=~`(?i)^detection_service_down$`
+      | line_format "{{.producer}} {{.severity}} {{.description}}" [1m])) or vector(0)
+      > 0
     labels:
       severity: critical

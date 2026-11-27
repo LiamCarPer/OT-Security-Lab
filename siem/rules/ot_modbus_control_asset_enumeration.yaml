@@ -1,0 +1,52 @@
+# source: rules/sigma/ot/ot_modbus_control_asset_enumeration.yml
+groups:
+- name: ot_modbus_control_asset_enumeration
+  rules:
+  - alert: Modbus_Control_Asset_Enumeration
+    annotations:
+      author: Liam Carvajal
+      description: 'Detects one host reading process data from several distinct control
+        assets
+
+        inside a short window.
+
+
+        A supervisory host polling a single PLC is normal on an OT network. One host
+
+        touching several control assets it has no operational reason to touch is
+
+        consistent with discovery before an operation, and it is the step the committed
+
+        NDR evidence shows four minutes before an unauthorised setpoint write.
+
+
+        This is a correlation rule, not a signature. It counts the distinct
+
+        destinations among the events the referenced rule matches, per source, inside
+
+        a five-minute window. The distinction matters: a first-order rule that counts
+
+        reads cannot tell a polling master from an enumerator, because normal polling
+
+        produces more matches than enumeration does. Only the distinct-destination
+
+        count separates them.
+
+
+        T0846 is asserted because the behaviour enumerates the control assets; T0888
+        is
+
+        asserted because it reads their process state. Both are true of the same
+
+        traffic, and a defender responding to either framing takes the same first
+        step.
+
+        '
+      summary: Modbus Control Asset Enumeration
+    expr: count without (dst_ip) (sum by (src_ip, dst_ip) (count_over_time({job=~".+",
+      service="modbus"} | logfmt | direction=~`(?i)^request$` and (function_code=3
+      or function_code=4) and src_ip!="" and src_ip!~`(?i)^172\.21\.0\.2$` and src_ip!~`(?i)^172\.22\.0\.10$`
+      and src_ip!~`(?i)^172\.22\.0\.20$` | line_format "{{.src_ip}} {{.dst_ip}} {{.function_code}}
+      {{.register}}" [5m]))) >= 3
+    labels:
+      severity: high

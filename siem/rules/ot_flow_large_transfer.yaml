@@ -1,0 +1,35 @@
+# source: rules/sigma/ot/ot_flow_large_transfer.yml
+groups:
+- name: ot_flow_large_transfer
+  rules:
+  - alert: Large_Transfer_From_OT_To_An_External_Destination
+    annotations:
+      author: Liam Carvajal
+      description: 'Detects a flow carrying more data than normal OT polling or control
+        traffic
+
+        from an OT address to a destination outside the plant''s OT address ranges.
+
+        A large internal flow is usually a backup or historian replication; a large
+
+        outbound flow is how collected process data leaves the plant, which is theft
+
+        of operational information rather than lateral tool transfer.
+
+
+        The threshold is site-specific. It is expressed against a single flow, so
+        a
+
+        slow exfiltration spread over many small flows will not trip it; pair it with
+
+        the flow-volume baseline for that case.
+
+        '
+      summary: Large Transfer From OT To An External Destination
+    expr: sum(count_over_time({job=~".+", service="flow"} | logfmt | bytes>=5000000
+      and dst_ip!=ip("172.21.0.0/24") and dst_ip!=ip("172.22.0.0/24") and dst_ip!=ip("172.23.0.0/24")
+      and dst_ip!=ip("172.24.0.0/24") and dst_ip!=ip("172.25.0.0/24") | line_format
+      "{{.src_ip}} {{.dst_ip}} {{.bytes}} {{.packets}} {{.duration}}" [1m])) or vector(0)
+      > 0
+    labels:
+      severity: medium
