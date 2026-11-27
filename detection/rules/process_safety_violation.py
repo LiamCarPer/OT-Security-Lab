@@ -10,8 +10,8 @@
 import json
 import os
 import socket
-import time
 import threading
+import time
 from datetime import datetime
 
 import scapy.all as scapy
